@@ -62,7 +62,7 @@ int Server::run(int PORT){
 }
 int Server::runSocket(int new_socket){
 
-        char request_data[2024];
+        char request_data[4048];
         read(new_socket,request_data,sizeof(request_data));
         std::string s;
         s = request_data;
@@ -74,14 +74,73 @@ int Server::runSocket(int new_socket){
 
 std::string Server::rout(std::string req){
     URL url = parseRequest(&req);
-    std::string res = "HTTP/1.1";
+    std::string res = "HTTP/1.1 200 OK\r\n\n";
     if(url.req_path.compare("/") == 0){
-        res+= "200 OK\r\n\n";
-        FILE *html_data;
-        html_data = fopen("../../lafayette53/backend/index.html", "r");
-        char response_data[1024];
-        char response[4096];
-        while(fgets(response_data,1024,html_data)!=NULL)
+        FILE *data;
+        data = fopen("../../lafayette53/backend/index.html", "r");
+        char response_data[1000000];
+        char response[1000000];
+        while(fgets(response_data,1024,data)!=NULL)
+        {
+            strcat(response,response_data);
+        }
+        res += response;
+        return res;
+    }
+    if(url.req_path.compare("/styles.832740494a448f7916a6.css") == 0){
+        FILE *data;
+        data = fopen("../../lafayette53/frontend/styles.832740494a448f7916a6.css", "r");
+        char response_data[1000000];
+        char response[1000000];
+        while(fgets(response_data,1024,data)!=NULL)
+        {
+            strcat(response,response_data);
+        }
+        res += response;
+        return res;
+    }
+    if(url.req_path.compare("/runtime-es2015.0811dcefd377500b5b1a.js") == 0){
+        FILE *data;
+        data = fopen("../../lafayette53/frontend/runtime-es2015.0811dcefd377500b5b1a.js", "r");
+        char response_data[1000000];
+        char response[1000000];
+        while(fgets(response_data,1024,data)!=NULL)
+        {
+            strcat(response,response_data);
+        }
+        res += response;
+        return res;
+    }
+    if(url.req_path.compare("/polyfills-es2015.1f913f16a2d346cc8bdc.js") == 0){
+        FILE *data;
+        data = fopen("../../lafayette53/frontend/polyfills-es2015.1f913f16a2d346cc8bdc.js", "r");
+        char response_data[1000000];
+        char response[1000000];
+        while(fgets(response_data,1024,data)!=NULL)
+        {
+            strcat(response,response_data);
+        }
+        res += response;
+        return res;
+    }
+    if(url.req_path.compare("/scripts.463e420e5d947f5f75a6.js") == 0){
+        FILE *data;
+        data = fopen("../../lafayette53/frontend/scripts.463e420e5d947f5f75a6.js", "r");
+        char response_data[1000000];
+        char response[1000000];
+        while(fgets(response_data,1024,data)!=NULL)
+        {
+            strcat(response,response_data);
+        }
+        res += response;
+        return res;
+    }
+    if(url.req_path.compare("/main-es2015.7974333faf31492579f2.js") == 0){
+        FILE *data;
+        data = fopen("../../lafayette53/frontend/main-es2015.7974333faf31492579f2.js", "r");
+        char response_data[1000000];
+        char response[1000000];
+        while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
         }
