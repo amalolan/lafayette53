@@ -77,9 +77,9 @@ std::string Server::rout(std::string req){
     std::string res = "HTTP/1.1 200 OK\r\n\n";
     if(url.req_path.compare("/") == 0){
         FILE *data;
-        data = fopen("../../lafayette53/frontend/index.html", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
+        data = fopen("../../lafayette53/backend/index.html", "r");
+        char response_data[1000000];
+        char response[1000000];
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -90,8 +90,8 @@ std::string Server::rout(std::string req){
     if(url.req_path.compare("/styles.832740494a448f7916a6.css") == 0){
         FILE *data;
         data = fopen("../../lafayette53/frontend/styles.832740494a448f7916a6.css", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
+        char response_data[1000000];
+        char response[1000000];
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -102,8 +102,8 @@ std::string Server::rout(std::string req){
     if(url.req_path.compare("/runtime-es2015.0811dcefd377500b5b1a.js") == 0){
         FILE *data;
         data = fopen("../../lafayette53/frontend/runtime-es2015.0811dcefd377500b5b1a.js", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
+        char response_data[1000000];
+        char response[1000000];
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -114,8 +114,8 @@ std::string Server::rout(std::string req){
     if(url.req_path.compare("/polyfills-es2015.1f913f16a2d346cc8bdc.js") == 0){
         FILE *data;
         data = fopen("../../lafayette53/frontend/polyfills-es2015.1f913f16a2d346cc8bdc.js", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
+        char response_data[1000000];
+        char response[1000000];
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -126,8 +126,8 @@ std::string Server::rout(std::string req){
     if(url.req_path.compare("/scripts.463e420e5d947f5f75a6.js") == 0){
         FILE *data;
         data = fopen("../../lafayette53/frontend/scripts.463e420e5d947f5f75a6.js", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
+        char response_data[1000000];
+        char response[1000000];
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -135,11 +135,11 @@ std::string Server::rout(std::string req){
         res += response;
         return res;
     }
-    if(url.req_path.compare("/main-es2015.21426060f8fb7c2395aa.js") == 0){
+    if(url.req_path.compare("/main-es2015.7974333faf31492579f2.js") == 0){
         FILE *data;
-        data = fopen("../../lafayette53/frontend/main-es2015.21426060f8fb7c2395aa.js", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
+        data = fopen("../../lafayette53/frontend/main-es2015.7974333faf31492579f2.js", "r");
+        char response_data[1000000];
+        char response[1000000];
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
