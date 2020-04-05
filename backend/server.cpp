@@ -9,7 +9,7 @@ URL Server::parseRequest(std::string *s){
         //std::cout << *s << "\n";
         URL a;
         char cstr[(*s).size()];
-        strcpy(cstr, (*s).c_str());
+        strcpy(cstr, s->c_str());
         char *token = strtok(cstr," ");
         a.req_type  = token;
         std::cout << a.req_type << std::endl;
@@ -61,13 +61,13 @@ int Server::run(int PORT){
 
 }
 int Server::runSocket(int new_socket){
-
         char request_data[4048];
         read(new_socket,request_data,sizeof(request_data));
+        //std::cout << "request : \n" << request_data << std::endl;
         std::string s;
         s = request_data;
         std::string res = rout(s);
-        send(new_socket , res.c_str(), strlen(res.c_str()) , 0 );
+        send(new_socket , res.c_str(), strlen(res.c_str()) , 0 );       
         close(new_socket);
         return 0;
 }
@@ -147,5 +147,5 @@ std::string Server::rout(std::string req){
         res += response;
         return res;
     }
-
+    return "";
 }

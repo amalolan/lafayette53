@@ -5,10 +5,12 @@ CONFIG -= qt
 
 SOURCES += \
         main.cpp\
+    museum.cpp \
         server.cpp\
         url.cpp\
 
 HEADERS += \
+        museum.h \
         server.h\
         router.h\
         url.h
