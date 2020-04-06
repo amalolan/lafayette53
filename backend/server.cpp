@@ -74,12 +74,14 @@ int Server::runSocket(int new_socket){
 
 std::string Server::rout(std::string req){
     URL url = parseRequest(&req);
-    std::string res = "HTTP/1.1 200 OK\r\n\n";
+    std::string res = "HTTP/1.1 200 OK\r\n";
     if(url.req_path.compare("/") == 0){
+        res += "\n";
+        //res += "Access-Control-Allow-Origin: *\n\n";
         FILE *data;
-        data = fopen("../../lafayette53/backend/index.html", "r");
-        char response_data[1000000];
-        char response[1000000];
+        data = fopen("../../lafayette53/frontend/index.html", "r");
+        char response_data[1000000] = {0};
+        char response[1000000] = {0};
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -87,11 +89,14 @@ std::string Server::rout(std::string req){
         res += response;
         return res;
     }
+    std::cout << res << "\n";
     if(url.req_path.compare("/styles.832740494a448f7916a6.css") == 0){
+        res += "Content-Type: text/css;charset=UTF-8";
+        res += "Access-Control-Allow-Origin: *\n\n";
         FILE *data;
         data = fopen("../../lafayette53/frontend/styles.832740494a448f7916a6.css", "r");
-        char response_data[1000000];
-        char response[1000000];
+        char response_data[1000000] = {0};
+        char response[1000000] = {0};
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -100,10 +105,12 @@ std::string Server::rout(std::string req){
         return res;
     }
     if(url.req_path.compare("/runtime-es2015.0811dcefd377500b5b1a.js") == 0){
+        res += "Content-Type: text/javascript;charset=UTF-8";
+        res += "Access-Control-Allow-Origin: *\n\n";
         FILE *data;
         data = fopen("../../lafayette53/frontend/runtime-es2015.0811dcefd377500b5b1a.js", "r");
-        char response_data[1000000];
-        char response[1000000];
+        char response_data[1000000] = {0};
+        char response[1000000] = {0};
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -112,10 +119,12 @@ std::string Server::rout(std::string req){
         return res;
     }
     if(url.req_path.compare("/polyfills-es2015.1f913f16a2d346cc8bdc.js") == 0){
+        res += "Content-Type: text/javascript;charset=UTF-8";
+        res += "Access-Control-Allow-Origin: *\n\n";
         FILE *data;
         data = fopen("../../lafayette53/frontend/polyfills-es2015.1f913f16a2d346cc8bdc.js", "r");
-        char response_data[1000000];
-        char response[1000000];
+        char response_data[1000000] = {0};
+        char response[1000000] = {0};
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -124,10 +133,12 @@ std::string Server::rout(std::string req){
         return res;
     }
     if(url.req_path.compare("/scripts.463e420e5d947f5f75a6.js") == 0){
+        res +="Content-Type: text/javascript;charset=UTF-8";
+        res +="Access-Control-Allow-Origin: *\n\n";
         FILE *data;
         data = fopen("../../lafayette53/frontend/scripts.463e420e5d947f5f75a6.js", "r");
-        char response_data[1000000];
-        char response[1000000];
+        char response_data[1000000] = {0};
+        char response[1000000] = {0};
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
@@ -135,16 +146,24 @@ std::string Server::rout(std::string req){
         res += response;
         return res;
     }
-    if(url.req_path.compare("/main-es2015.7974333faf31492579f2.js") == 0){
+    if(url.req_path.compare("/main-es2015.39f4892dd1f08664ef3e.js") == 0){
+        res +="Content-Type: text/javascript;charset=UTF-8\n";
+        res +="Access-Control-Allow-Origin: *\n\n";
         FILE *data;
-        data = fopen("../../lafayette53/frontend/main-es2015.7974333faf31492579f2.js", "r");
-        char response_data[1000000];
-        char response[1000000];
+        data = fopen("../../lafayette53/frontend/main-es2015.39f4892dd1f08664ef3e.js", "r");
+        char response_data[1000000] = {0};
+        char response[1000000] = {0};
         while(fgets(response_data,1024,data)!=NULL)
         {
             strcat(response,response_data);
         }
         res += response;
+        return res;
+    }
+    if(url.req_path.compare("/get-data/museum-list/") == 0) {
+        res+="\n";
+        Museum *m = new Museum();
+        res += m->getAllMuseums();
         return res;
     }
     return "";

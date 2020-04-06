@@ -15,5 +15,16 @@ Museum::Museum()
 }
 
 std::string Museum::getAllMuseums(){
+    std::string allm = "";
+    allm += "[\n";
 
+    for(int i = 0; i < (int)museums.size(); i ++){
+        allm = allm + "{" + "\"name\": " + "\"" + museums[i].name +
+                "\", " + "\"description\": " + "\"" + museums[i].description +
+                "\", " + "\"id\": " + std::to_string(museums[i].id) + "}";
+        if(i + 1 < (int)museums.size() ) allm += ",";
+        allm += "\n";
+    }
+    allm += "]\n";
+    return allm;
 }
