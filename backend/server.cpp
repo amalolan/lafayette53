@@ -108,6 +108,10 @@ std::string Server::rout(std::string *req){
         fclose(data);
         return res;
     }
+    if(url.req_path.compare("/get-data/museum-list/") == 0){
+        res += ModelClass::getMuseumListJSON();
+        return res;
+    }
 
     return "HTTP/1.1 400 EROR\r\n";
 

@@ -4,14 +4,11 @@ CONFIG += console c++11
 
 SOURCES += \
         main.cpp\
-        museum.cpp\
-        museum.cpp \
         server.cpp\
         url.cpp\
         ../model/modelclass.cpp\
 
 HEADERS += \
-        museum.h \
         server.h\
         router.h\
         url.h
