@@ -95,7 +95,7 @@ std::string Server::rout(std::string *req){
     if((data = fopen(filePath.c_str(), "r"))){
         if(url.req_path.find(".css") != -1) {
             res += "Content-Type: text/css;charset=UTF-8";
-        } else {
+        } else if(url.req_path.find(".js") != -1) {
             res += "Content-Type: text/javascript;charset=UTF-8";
         }
         res += "Access-Control-Allow-Origin: *\n\n";
