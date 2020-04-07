@@ -9,7 +9,6 @@
 #include <netinet/in.h>
 #include <iostream>
 #include "url.h"
-#include <thread>
 #include "museum.h"
 class Server
 {
