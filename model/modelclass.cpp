@@ -1,18 +1,25 @@
 #include "modelclass.h"
-QSqlDatabase ModelClass:: db = QSqlDatabase::addDatabase("QSQLITE",QSqlDatabase::defaultConnection);
+QSqlDatabase ModelClass:: db = QSqlDatabase::addDatabase("QSQLITE", "Connection");
 QSqlQuery ModelClass::query(db);
-
 void ModelClass::initdb(){
-    db.setDatabaseName("db.db");
+    db.setDatabaseName("../database/db.db");
+    if (!db.open()) {
+            qDebug("Error occurred opening the database.");
+            qDebug("%s.", qPrintable(db.lastError().text()));
+        }
 }
 
 bool ModelClass::open(){
-    db.open();
+    if(!db.isOpen()){
+        db.open();
+    }
     return db.isOpen();
 }
 
 bool ModelClass::close(){
-    db.close();
+    if(db.isOpen()){
+        db.close();
+    }
     return !db.isOpen();
 }
 
@@ -21,8 +28,8 @@ bool ModelClass::status(){
 }
 
 std::string ModelClass::getMuseumListJSON(){
-    query.prepare("SELECT museumID, userID, name, description, FROM museum;");
-    query.exec();
+    query.exec("SELECT museumID, userID, name, description FROM museum;");
+    qDebug() << query.lastError();
     QJsonArray array;
     while(query.next()){
         QJsonObject object;
@@ -38,10 +45,11 @@ std::string ModelClass::getMuseumListJSON(){
 
 std::string ModelClass::getUserInfoJSON(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
-    query.prepare("SELECT username, email, FROM public WHERE userID = "+id+";");
-    query.exec();
+    query.exec("SELECT username, email FROM public WHERE userID = "+id+";");
+    qDebug() << query.lastError();
+    query.next();
     QJsonObject object;
-    object["name"] = query.value(0).toString();
+    object["username"] = query.value(0).toString();
     object["email"] = query.value(1).toString();
     QJsonDocument doc;
     doc.setObject(object);
@@ -50,8 +58,9 @@ std::string ModelClass::getUserInfoJSON(int userID){
 
 std::string ModelClass::getMuseumInfoJSON(int museumID){
     QString id(QString::fromStdString(std::to_string(museumID)));
-    query.prepare("SELECT name, description, FROM museum WHERE museumID = "+id+";");
-    query.exec();
+    query.exec("SELECT name, description FROM museum WHERE museumID = "+id+";");
+    query.next();
+    qDebug() << query.lastError();
     QJsonObject object;
     object["name"] = query.value(0).toString();
     object["description"] = query.value(1).toString();

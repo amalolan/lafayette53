@@ -164,7 +164,7 @@ std::string Server::rout(std::string req){
         res+="\n";
         Museum *m = new Museum();
         res += m->getAllMuseums();
-        return res;
+        return "\n"+ModelClass::getMuseumListJSON()+"\n";
     }
     return "";
 }
