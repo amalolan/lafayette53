@@ -61,19 +61,19 @@ int Server::run(int PORT){
 
 }
 int Server::runSocket(int new_socket){
-        char request_data[4048];
+        char request_data[4048] = {0};
         read(new_socket,request_data,sizeof(request_data));
         //std::cout << "request : \n" << request_data << std::endl;
         std::string s;
         s = request_data;
-        std::string res = rout(s);
+        std::string res = rout(&s);
         send(new_socket , res.c_str(), strlen(res.c_str()) , 0 );       
         close(new_socket);
         return 0;
 }
 
-std::string Server::rout(std::string req){
-    URL url = parseRequest(&req);
+std::string Server::rout(std::string *req){
+    URL url = parseRequest(req);
     std::string res = "HTTP/1.1 200 OK\r\n";
     if(url.req_path.compare("/") == 0){
         res += "\n";
@@ -89,82 +89,26 @@ std::string Server::rout(std::string req){
         res += response;
         return res;
     }
-    std::cout << res << "\n";
-    if(url.req_path.compare("/styles.832740494a448f7916a6.css") == 0){
-        res += "Content-Type: text/css;charset=UTF-8";
+    FILE *data = new FILE();
+    std::string filePath = "../../lafayette53/frontend"+url.req_path;
+    //data = fopen(filePath.c_str(), "r");
+    if((data = fopen(filePath.c_str(), "r"))){
+        if(url.req_path.find(".css") != -1) {
+            res += "Content-Type: text/css;charset=UTF-8";
+        } else {
+            res += "Content-Type: text/javascript;charset=UTF-8";
+        }
         res += "Access-Control-Allow-Origin: *\n\n";
-        FILE *data;
-        data = fopen("../../lafayette53/frontend/styles.832740494a448f7916a6.css", "r");
         char response_data[1000000] = {0};
         char response[1000000] = {0};
-        while(fgets(response_data,1024,data)!=NULL)
-        {
+        while(fgets(response_data,1024,data)!=NULL){
             strcat(response,response_data);
         }
         res += response;
+        fclose(data);
         return res;
     }
-    if(url.req_path.compare("/runtime-es2015.0811dcefd377500b5b1a.js") == 0){
-        res += "Content-Type: text/javascript;charset=UTF-8";
-        res += "Access-Control-Allow-Origin: *\n\n";
-        FILE *data;
-        data = fopen("../../lafayette53/frontend/runtime-es2015.0811dcefd377500b5b1a.js", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
-        while(fgets(response_data,1024,data)!=NULL)
-        {
-            strcat(response,response_data);
-        }
-        res += response;
-        return res;
-    }
-    if(url.req_path.compare("/polyfills-es2015.1f913f16a2d346cc8bdc.js") == 0){
-        res += "Content-Type: text/javascript;charset=UTF-8";
-        res += "Access-Control-Allow-Origin: *\n\n";
-        FILE *data;
-        data = fopen("../../lafayette53/frontend/polyfills-es2015.1f913f16a2d346cc8bdc.js", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
-        while(fgets(response_data,1024,data)!=NULL)
-        {
-            strcat(response,response_data);
-        }
-        res += response;
-        return res;
-    }
-    if(url.req_path.compare("/scripts.463e420e5d947f5f75a6.js") == 0){
-        res +="Content-Type: text/javascript;charset=UTF-8";
-        res +="Access-Control-Allow-Origin: *\n\n";
-        FILE *data;
-        data = fopen("../../lafayette53/frontend/scripts.463e420e5d947f5f75a6.js", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
-        while(fgets(response_data,1024,data)!=NULL)
-        {
-            strcat(response,response_data);
-        }
-        res += response;
-        return res;
-    }
-    if(url.req_path.compare("/main-es2015.39f4892dd1f08664ef3e.js") == 0){
-        res +="Content-Type: text/javascript;charset=UTF-8\n";
-        res +="Access-Control-Allow-Origin: *\n\n";
-        FILE *data;
-        data = fopen("../../lafayette53/frontend/main-es2015.39f4892dd1f08664ef3e.js", "r");
-        char response_data[1000000] = {0};
-        char response[1000000] = {0};
-        while(fgets(response_data,1024,data)!=NULL)
-        {
-            strcat(response,response_data);
-        }
-        res += response;
-        return res;
-    }
-    if(url.req_path.compare("/get-data/museum-list/") == 0) {
-        res+="\n";
-        Museum *m = new Museum();
-        res += m->getAllMuseums();
-        return "\n"+ModelClass::getMuseumListJSON()+"\n";
-    }
-    return "";
+
+    return "HTTP/1.1 400 EROR\r\n";
+
 }
