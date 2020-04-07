@@ -11,6 +11,8 @@
 #include "url.h"
 #include <thread>
 #include "museum.h"
+#include "../model/modelclass.h"
+
 class Server
 {
 public:
