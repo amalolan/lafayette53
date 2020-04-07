@@ -20,7 +20,7 @@ URL Server::parseRequest(std::string *s){
     }
 }
 int Server::run(int PORT){
-    int server_fd, new_socket, valread;
+    int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
 
@@ -61,19 +61,19 @@ int Server::run(int PORT){
 
 }
 int Server::runSocket(int new_socket){
-        char request_data[4048];
+        char request_data[4048] = {0};
         read(new_socket,request_data,sizeof(request_data));
         //std::cout << "request : \n" << request_data << std::endl;
         std::string s;
         s = request_data;
-        std::string res = rout(s);
+        std::string res = rout(&s);
         send(new_socket , res.c_str(), strlen(res.c_str()) , 0 );       
         close(new_socket);
         return 0;
 }
 
-std::string Server::rout(std::string req){
-    URL url = parseRequest(&req);
+std::string Server::rout(std::string *req){
+    URL url = parseRequest(req);
     std::string res = "HTTP/1.1 200 OK\r\n";
     if(url.req_path.compare("/") == 0){
         res += "\n";
