@@ -5,7 +5,7 @@ CONFIG -= qt
 
 SOURCES += \
         main.cpp\
-    museum.cpp \
+        museum.cpp\
         server.cpp\
         url.cpp\
 

@@ -20,7 +20,7 @@ URL Server::parseRequest(std::string *s){
     }
 }
 int Server::run(int PORT){
-    int server_fd, new_socket, valread;
+    int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
 
