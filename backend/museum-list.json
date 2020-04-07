@@ -1,0 +1,14 @@
+[
+            {
+            "name": "some museum",
+            "description": "museum description",
+            "id": 1
+            },
+
+            {
+            "name": "museum2",
+            "description": "this is cool museum!",
+            "id": 2
+            }
+]
+
