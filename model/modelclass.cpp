@@ -2,7 +2,9 @@
 QSqlDatabase ModelClass:: db = QSqlDatabase::addDatabase("QSQLITE", "Connection");
 QSqlQuery ModelClass::query(db);
 void ModelClass::initdb(){
-    db.setDatabaseName("../database/db.db");
+    std::string path = "../../lafayette53/database/db.db";
+    QString qpath = QString::fromStdString(path);
+    db.setDatabaseName(qpath);
     if (!db.open()) {
             qDebug("Error occurred opening the database.");
             qDebug("%s.", qPrintable(db.lastError().text()));
