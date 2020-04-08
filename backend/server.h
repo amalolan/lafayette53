@@ -9,8 +9,6 @@
 #include <netinet/in.h>
 #include <iostream>
 #include "url.h"
-#include <thread>
-#include "museum.h"
 #include "../model/modelclass.h"
 
 class Server
@@ -20,7 +18,7 @@ public:
     int run(int PORT);
     URL parseRequest(std::string *s);
     int runSocket(int new_socket);
-    std::string rout(std::string req);
+    std::string rout(std::string *req);
 };
 
 #endif // SERVER_H
