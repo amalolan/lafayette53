@@ -1,0 +1,3 @@
+/home/leksoBor/Desktop/CS205/lafayette53/build-cpprestTest-Desktop-Debug/CMakeFiles/rebuild_cache.dir
+/home/leksoBor/Desktop/CS205/lafayette53/build-cpprestTest-Desktop-Debug/CMakeFiles/main.dir
+/home/leksoBor/Desktop/CS205/lafayette53/build-cpprestTest-Desktop-Debug/CMakeFiles/edit_cache.dir

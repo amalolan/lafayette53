@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/leksoBor/Desktop/CS205/lafayette53/cpprestTest/main.cpp
+cpprest/http_listener.h
+-
+cpprest/json.h
+-
+cpprest/uri.h
+-
+cpprest/ws_client.h
+-
+cpprest/containerstream.h
+-
+cpprest/interopstream.h
+-
+cpprest/rawptrstream.h
+-
+cpprest/producerconsumerstream.h
+-
+thread
+-
+cpprest/http_client.h
+-
+cpprest/filestream.h
+-
+
