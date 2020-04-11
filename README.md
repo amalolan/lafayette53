@@ -7,16 +7,16 @@ permissions.
 Project Website: https://github.com/iamyevesky/lafayette53 
 
 To Set up the project :
+1. Run "git clone git@github.com:iamyevesky/lafayette53.git" to clone.
+2. This is	qt based project. Once cloned open the project using QT creator by selection lafayette53.pro
 
-run $ git clone git@github.com:iamyevesky/lafayette53.git to clone.
-This is	qt based project. 
-once cloned open the project using qt creator by selection lafayette53.pro
-Install cpprest-dev library and all dependencies. For more information visit https://github.com/microsoft/cpprestsdk.
-Run Backend subproject to start up the server.
+To run tests you need to manually add gtest (Google Test) to	your project directory. How to get gtest: https://github.com/google/googletest
 
-To run tests you need to manually add gtests to	your directory.
+Libraries needed to be installed to run program:
+PThreads - Needed to run gtest library.
+CPPrestsdk = Needed wth all dependencies to run server. For more information visit https://github.com/microsoft/cpprestsdk.
 
-Linux: Program runs without a problem on Linux
-For Macs: The program faces few relative path issues because of qt build
-path. We are working on	this error and will be fixed in	near future.
->>>>>>> backend
+How to run program:
+1. Run main.cpp in lafayette53/backend directory.
+2. Open any web browser and enter URL: 'http://localhost:5300/'
+
