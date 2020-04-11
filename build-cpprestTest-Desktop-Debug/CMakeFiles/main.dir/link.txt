@@ -1,1 +1,0 @@
-/usr/lib64/ccache/g++  -g   CMakeFiles/main.dir/main.cpp.o CMakeFiles/main.dir/server.cpp.o  -o main  /usr/lib64/libcpprest.so.2.10 -lpthread /usr/lib64/libssl.so /usr/lib64/libcrypto.so 
