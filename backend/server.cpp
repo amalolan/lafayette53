@@ -108,6 +108,7 @@ std::string Server::rout(std::string *req){
         fclose(data);
         return res;
     }
+    res += "\n";
     if(url.req_path.compare("/get-data/museum-list/") == 0){
         res += ModelClass::getMuseumListJSON();
         return res;
