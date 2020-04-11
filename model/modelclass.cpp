@@ -2,13 +2,43 @@
 QSqlDatabase ModelClass:: db = QSqlDatabase::addDatabase("QSQLITE", "Connection");
 QSqlQuery ModelClass::query(db);
 void ModelClass::initdb(){
-    std::string path = "../../lafayette53/database/db.db";
-    QString qpath = QString::fromStdString(path);
-    db.setDatabaseName(qpath);
-    if (!db.open()) {
+    /*
+     * Builds are different on different on Linux and Mac OS.
+     * Known support for Linux flavors: Ubuntu and Fedora.
+     */
+
+    std::string linuxPath = "../../lafayette53/database/db.db";
+    QString qLinuxPath = QString::fromStdString(linuxPath);
+    std::string macPath = "../../../../../lafayette53/database/db.db";
+    QString qMacPath = QString::fromStdString(macPath);
+
+    db.setDatabaseName(qLinuxPath);
+    for (int i = 3; i > 0 && !db.open(); i--) {
+            qDebug("Try %d opening database failed.", i - 3);
             qDebug("Error occurred opening the database.");
-            qDebug("%s.", qPrintable(db.lastError().text()));
+            qDebug("Reason: %s.", qPrintable(db.lastError().text()));
+            qDebug("Trying again. Tries left : %d.", i);
+            db.setDatabaseName(qLinuxPath);
         }
+
+    if(!db.open()){
+        qDebug("Model class build failed for Linux setup.");
+        qDebug("Checking if system is a Mac OS X build.");
+        db.setDatabaseName(qMacPath);
+        for (int i = 3; i > 0 && !db.open(); i--) {
+                qDebug("Try %d opening database failed", i - 3);
+                qDebug("Error occurred opening the database.");
+                qDebug("Reason: %s.", qPrintable(db.lastError().text()));
+                qDebug("Trying again. Tries left : %d.", i);
+                db.setDatabaseName(qMacPath);
+            }
+    }
+
+    if(!db.open()){
+        qDebug("Model class build failed for both builds.");
+    }else{
+        qDebug("Model class build successful.");
+    }
 }
 
 bool ModelClass::open(){
