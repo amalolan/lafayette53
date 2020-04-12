@@ -61,10 +61,23 @@ void Handler::handle_get(http_request message)
 
     //check for specific urls
     // /get-data/museum-list/
-    if(message.relative_uri().to_string().compare("/get-data/museum-list")){
+    if(message.relative_uri().to_string().compare("/get-data/museum-list/") == 0){
         returnMuseumList(message);
         return;
     }
+    // /get-data/museum-list/id
+    if(paths[0].compare("get-data") == 0 && paths[1].compare("museum-list") == 0  && paths.size() == 3){
+        ucout << "museum\n";
+        std::string musId = paths[2];
+        returnMuseumById(message,std::stoi(musId));
+    }
+    // /get-data/user/id
+    if(paths[0].compare("get-data") == 0 && paths[1].compare("user") == 0 && paths.size() == 3){
+        ucout << "user\n";
+        std::string usrId = paths[2];
+        returnUserById(message,std::stoi(usrId));
+    }
+    message.reply(status_codes::NotFound,U("This url not found"));
     return;
 
 };
@@ -124,7 +137,28 @@ void Handler::returnMuseumList(http_request message){
     return;
 };
 
+void Handler::returnMuseumById(http_request message,int musId){
 
+    message.reply(status_codes::OK,ModelClass::getMuseumInfoJSON(musId))
+            .then([=](pplx::task<void> t){
+        try {
+            t.get();
+        } catch (...) {
+            message.reply(status_codes::InternalError);
+        }
+    });
+}
+
+void Handler::returnUserById(http_request message,int usrId){
+    message.reply(status_codes::OK,ModelClass::getUserInfoJSON(usrId))
+            .then([=](pplx::task<void> t){
+        try {
+            t.get();
+        } catch (...) {
+            message.reply(status_codes::InternalError);
+        }
+    });
+}
 
 //
 // A POST request
@@ -132,7 +166,6 @@ void Handler::returnMuseumList(http_request message){
 void Handler::handle_post(http_request message)
 {
     ucout <<  message.to_string() << std::endl;
-
 
      message.reply(status_codes::OK,message.to_string());
     return ;
@@ -156,7 +189,7 @@ void Handler::handle_delete(http_request message)
 //
 void Handler::handle_put(http_request message)
 {
-    ucout <<  message.to_string() << std::endl;
+     ucout <<  message.to_string() << std::endl;
      std::string rep = U("WRITE YOUR OWN PUT OPERATION");
      message.reply(status_codes::OK,rep);
     return;

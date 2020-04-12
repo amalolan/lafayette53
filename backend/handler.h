@@ -44,6 +44,8 @@ class Handler
         void handle_get(http_request message);
         void returnFrontendFile(http_request message);
         void returnMuseumList(http_request message);
+        void returnMuseumById(http_request message,int musId);
+        void returnUserById(http_request message,int usrId);
 
         void handle_put(http_request message);
         void handle_post(http_request message);
