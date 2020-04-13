@@ -12,6 +12,7 @@ Handler::Handler(utility::string_t url):m_listener(url)
     m_listener.support(methods::DEL, std::bind(&Handler::handle_delete, this, std::placeholders::_1));
 
 }
+
 Handler::~Handler()
 {
     //dtor
@@ -61,12 +62,12 @@ void Handler::handle_get(http_request message)
 
     //check for specific urls
     // /get-data/museum-list/
-    if(message.relative_uri().to_string().compare("/get-data/museum-list/") == 0){
+    if(message.relative_uri().to_string().compare("/get-data/museum-list") == 0){
         returnMuseumList(message);
         return;
     }
     // /get-data/museum-list/id
-    if(paths[0].compare("get-data") == 0 && paths[1].compare("museum-list") == 0  && paths.size() == 3){
+    if(paths[0].compare("get-data") == 0 && paths[1].compare("museum") == 0  && paths.size() == 3){
         ucout << "museum\n";
         std::string musId = paths[2];
         returnMuseumById(message,std::stoi(musId));
@@ -166,8 +167,10 @@ void Handler::returnUserById(http_request message,int usrId){
 void Handler::handle_post(http_request message)
 {
     ucout <<  message.to_string() << std::endl;
-
-     message.reply(status_codes::OK,message.to_string());
+    message.extract_string(false).then([](utility::string_t s){
+       ucout << s << std::endl;
+    });
+    message.reply(status_codes::OK,message.to_string());
     return ;
 };
 

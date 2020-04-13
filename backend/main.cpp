@@ -28,7 +28,8 @@ void on_initialize(const string_t& address)
 
 void on_shutdown()
 {
-     g_httpHandler->close().wait();
+    g_httpHandler->close().wait();
+    delete g_httpHandler;
     return;
 }
 void printallDir(){

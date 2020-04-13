@@ -14,7 +14,7 @@ To run tests you need to manually add gtest (Google Test) to	your project direct
 
 Libraries needed to be installed to run program:
 PThreads - Needed to run gtest library.
-CPPrestsdk = Needed wth all dependencies to run server. For more information visit https://github.com/microsoft/cpprestsdk.
+CPPrestsdk = Needed with all dependencies including libboost to run server. For more information visit https://github.com/microsoft/cpprestsdk.
 
 How to run program:
 1. Run main.cpp in lafayette53/backend directory.
