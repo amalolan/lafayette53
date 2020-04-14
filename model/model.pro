@@ -10,6 +10,7 @@ SOURCES += \
         museum.cpp
 
 HEADERS += \
+    LafException.h \
     artifact.h \
     collection.h \
     modelclass.h \

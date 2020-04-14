@@ -31,10 +31,23 @@ using namespace http::experimental::listener;
 class Handler
 {
     public:
+        /**
+         * @brief Handler
+         */
         Handler();
+        /**
+         * @brief Handler sets up the object adds support to GET,PUT,POST,DEL http requests.
+         * @param url the url of the server
+         */
         Handler(utility::string_t url);
+        /**
+         * @brief ~Handler destructor.
+         */
         virtual ~Handler();
-
+        /**
+         * @brief open opens the listener callback method.
+         * @return  callback method
+         */
         pplx::task<void>open(){return m_listener.open();}
         pplx::task<void>close(){return m_listener.close();}
 

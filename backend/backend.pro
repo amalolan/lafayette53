@@ -13,6 +13,7 @@ LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
 HEADERS += \
     handler.h \
-    ../model/modelclass.h
+    ../model/modelclass.h \
+    ../model/LafException.h
 
 

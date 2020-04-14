@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include "../model/LafException.h"
 #include "handler.h"
 #include "../model/modelclass.h"
 using namespace web;

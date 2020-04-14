@@ -2,8 +2,9 @@
 
 Handler::Handler()
 {
-    //ctor
+
 }
+
 Handler::Handler(utility::string_t url):m_listener(url)
 {
     m_listener.support(methods::GET, std::bind(&Handler::handle_get, this, std::placeholders::_1));
@@ -15,7 +16,7 @@ Handler::Handler(utility::string_t url):m_listener(url)
 
 Handler::~Handler()
 {
-    //dtor
+
 }
 
 void Handler::handle_error(pplx::task<void>& t)
