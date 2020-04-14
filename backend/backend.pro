@@ -1,20 +1,18 @@
-QT += sql
 TEMPLATE = app
 CONFIG += console c++11
+QT += sql
 
 SOURCES += \
-        main.cpp\
-        server.cpp\
-        url.cpp\
-        ../model/modelclass.cpp\
+        handler.cpp \
+        main.cpp \
+        ../model/modelclass.cpp
+
+QMAKE_CXXFLAGS += -std=gnu++11
+
+LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
 HEADERS += \
-        server.h\
-        router.h\
-        url.h
-        ../model/modelclass.h\
+    handler.h \
+    ../model/modelclass.h
 
-OTHER_FILES += \
-        index.html\
-        museum-list.json
 
