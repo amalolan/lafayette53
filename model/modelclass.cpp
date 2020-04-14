@@ -1,4 +1,5 @@
 #include "modelclass.h"
+
 QSqlDatabase ModelClass:: db = QSqlDatabase::addDatabase("QSQLITE", "Connection");
 QSqlQuery ModelClass::query(db);
 void ModelClass::initdb(){
@@ -74,6 +75,7 @@ std::string ModelClass::getMuseumListJSON(){
     }
     QJsonDocument doc;
     doc.setArray(array);
+    query.finish();
     return doc.toJson().toStdString();
 }
 
@@ -103,6 +105,7 @@ std::string ModelClass::getMuseumInfoJSON(int museumID){
     object["userID"] = query.value(2).toString().toInt();
     QJsonDocument doc;
     doc.setObject(object);
+    query.finish();
     return doc.toJson().toStdString();
 }
 
@@ -120,6 +123,7 @@ bool ModelClass::saveMuseumToDB(Museum & museum){
 
     if(!query.exec()) return false;
     museum.setMuseumID(nextMuseumIndex);
+    query.finish();
     return true;
 }
 
@@ -127,6 +131,79 @@ bool ModelClass::removeMuseumFromDB(Museum & museum){
     if (!museum.indb()) return false;
     QString id(museum.getMuseumID());
     query.exec("DELETE FROM museum WHERE museumID = "+id+";");
-    museum.setMuseumID(-1);
+
+    bool done = query.numRowsAffected() == 1;
+    if (done)
+    {
+       museum.setMuseumID(-1);
+    }
+    query.finish();
+    return done;
+}
+
+bool ModelClass::updateMuseumInDB(Museum & museum){
+    if (!museum.indb()) return false;
+    QString id(museum.getMuseumID());
+    query.prepare("UPDATE museum SET name = ?, description = ?"
+                  " WHERE museumID = ?;");
+    query.addBindValue(QString::fromStdString(museum.getName()));
+    query.addBindValue(QString::fromStdString(museum.getDescription()));
+    query.addBindValue(museum.getMuseumID());
+    bool done = query.exec();
+    query.finish();
+    return done;
+}
+
+std::string ModelClass::getPasswordHash(std::string username){
+    query.prepare("SELECT password FROM public where username GLOB ?;");
+    query.addBindValue(QString::fromStdString(username));
+    query.exec();
+    query.next();
+    std::string output = query.value(0).toString().toStdString();
+    query.finish();
+    return output;
+}
+
+bool ModelClass::saveUserToBD(User & user){
+    if (user.indb()) return false;
+    query.exec("SELECT COUNT(*) FROM museum;");
+    query.next();
+    int nextUserIndex = query.value(0).toString().toInt();
+    query.finish();
+    QString name = QString::fromStdString(user.getName());
+    QString userID(nextUserIndex);
+    QString email = QString::fromStdString(user.getEmail());
+    query.prepare("INSERT INTO public(userID, username, email)"
+                  " VALUES ("+userID+", '"+name+"', '"+email+"')");
+
+    if(!query.exec()) return false;
+    user.setUserID(nextUserIndex);
+    query.finish();
     return true;
+}
+
+bool ModelClass::removeUserFromBD(User & user){
+    if (!user.indb()) return false;
+    QString id(user.getUserID());
+    query.exec("DELETE FROM public WHERE userID = "+id+";");
+
+    bool done = query.numRowsAffected() == 1;
+    if (done)
+    {
+       user.setUserID(-1);
+    }
+    query.finish();
+    return done;
+}
+
+bool ModelClass::updateUserInDB(User & user){
+    if (!user.indb()) return false;
+    QString id(user.getUserID());
+    query.prepare("UPDATE public SET email = ?"
+                  " WHERE userID = ?;");
+    query.addBindValue(QString::fromStdString(user.getEmail()));
+    query.addBindValue(user.getUserID());
+    bool done = query.exec();
+    query.finish();
+    return done;
 }

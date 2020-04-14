@@ -1,9 +1,10 @@
 #ifndef MODELCLASS_H
 #define MODELCLASS_H
+#include "museum.h"
+#include "user.h"
 #include <QtSql>
 #include <QDebug>
 #include <QFileInfo>
-#include "museum.h"
 
 class ModelClass
 {
@@ -17,6 +18,11 @@ public:
     static std::string getMuseumInfoJSON(int museumID);
     static bool saveMuseumToDB(Museum & museum);
     static bool removeMuseumFromDB(Museum & museum);
+    static bool updateMuseumInDB(Museum & museum);
+    static std::string getPasswordHash(std::string username);
+    static bool saveUserToBD(User & user);
+    static bool removeUserFromBD(User & user);
+    static bool updateUserInDB(User & user);
 
 private:
     static QSqlDatabase db;
