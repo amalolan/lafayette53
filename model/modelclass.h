@@ -3,6 +3,8 @@
 #include <QtSql>
 #include <QDebug>
 #include <QFileInfo>
+#include "museum.h"
+
 class ModelClass
 {
 public:
@@ -13,6 +15,8 @@ public:
     static std::string getMuseumListJSON();
     static std::string getUserInfoJSON(int userID);
     static std::string getMuseumInfoJSON(int museumID);
+    static bool saveMuseumToDB(Museum & museum);
+    static bool removeMuseumFromDB(Museum & museum);
 
 private:
     static QSqlDatabase db;

@@ -16,6 +16,13 @@ public:
     void setDescription(std::string desc);
     void setUserID(int id);
     void setMuseumID(int id);
+
+    std::string getName();
+    std::string getDescription();
+    int getUserID();
+    int getMuseumID();
+    bool indb();
+
     std::string getJSON();
 
     static Museum* fromJson(std::string jsonString);

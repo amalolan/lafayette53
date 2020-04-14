@@ -5,6 +5,7 @@ Museum::Museum(std::string name, std::string description, int userID)
     this->name = name;
     this->description = description;
     this->userID = userID;
+    this->museumID = -1;
 }
 
 Museum::Museum(std::string name, std::string description, int userID, int museumID)
@@ -40,14 +41,39 @@ void Museum::setMuseumID(int id)
     this->museumID = id;
 }
 
+std::string Museum::getName()
+{
+    return this->name;
+}
+
+std::string Museum::getDescription()
+{
+    return this->description;
+}
+
+int Museum::getUserID()
+{
+    return this->userID;
+}
+
+int Museum::getMuseumID()
+{
+    return this->museumID;
+}
+
+bool Museum::indb()
+{
+    return this->museumID > -1;
+}
+
 std::string Museum::getJSON()
 {
     QJsonObject properties;
-    properties["museumID"] = this->museumID;
-    properties["userID"] = this->userID;
     properties["name"] = QString::fromStdString(this->name);
     properties["introduction"] = QString::fromStdString("This is "+this->name);
     properties["description"] = QString::fromStdString(this->description);
+    properties["museumID"] = this->museumID;
+    properties["userID"] = this->userID;
     QJsonDocument doc;
     doc.setObject(properties);
     return doc.toJson().toStdString();

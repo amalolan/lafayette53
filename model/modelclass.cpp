@@ -66,6 +66,7 @@ std::string ModelClass::getMuseumListJSON(){
     while(query.next()){
         QJsonObject object;
         object["name"] = query.value(2).toString();
+        object["introduction"] = "This is "+ query.value(2).toString();
         object["description"] = query.value(3).toString();
         object["museumID"] = query.value(0).toString().toInt();
         object["userID"] = query.value(1).toString().toInt();
@@ -96,10 +97,36 @@ std::string ModelClass::getMuseumInfoJSON(int museumID){
     qDebug() << query.lastError();
     QJsonObject object;
     object["name"] = query.value(0).toString();
+    object["introduction"] = "This is "+ query.value(0).toString();
     object["description"] = query.value(1).toString();
     object["museumID"] = query.value(3).toString().toInt();
     object["userID"] = query.value(2).toString().toInt();
     QJsonDocument doc;
     doc.setObject(object);
     return doc.toJson().toStdString();
+}
+
+bool ModelClass::saveMuseumToDB(Museum & museum){
+    if (museum.indb()) return false;
+    query.exec("SELECT COUNT(*) FROM museum;");
+    query.next();
+    int nextMuseumIndex = query.value(0).toString().toInt();
+    QString name = QString::fromStdString(museum.getName());
+    QString museumID(nextMuseumIndex);
+    QString userID(museum.getUserID());
+    QString desc = QString::fromStdString(museum.getDescription());
+    query.prepare("INSERT INTO museum(museumID, userID, name, description)"
+                  " VALUES ("+museumID+", "+userID+", '"+name+"', '"+desc+"')");
+
+    if(!query.exec()) return false;
+    museum.setMuseumID(nextMuseumIndex);
+    return true;
+}
+
+bool ModelClass::removeMuseumFromDB(Museum & museum){
+    if (!museum.indb()) return false;
+    QString id(museum.getMuseumID());
+    query.exec("DELETE FROM museum WHERE museumID = "+id+";");
+    museum.setMuseumID(-1);
+    return true;
 }
