@@ -5,16 +5,16 @@ CONFIG += console c++11
 SOURCES += \
         artifact.cpp \
         collection.cpp \
-        main.cpp \
         modelclass.cpp \
-        museum.cpp
+        main.cpp
 
 HEADERS += \
     LafException.h \
     artifact.h \
     collection.h \
+    museum.h \
     modelclass.h \
-    museum.h
+    user.h
 
 LIBS += -pthread
 
