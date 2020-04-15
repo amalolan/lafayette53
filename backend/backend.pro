@@ -14,7 +14,8 @@ LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 HEADERS += \
     handler.h \
     ../model/modelclass.h \
-    ../model/LafException.h
+    ../model/LafException.h \
+    helper.h
 
 unix: LIBS += -L$$PWD/../../../../../../../usr/local/Cellar/cpprestsdk/2.10.15/lib/ -lcpprest.2.10
 

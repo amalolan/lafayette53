@@ -1,4 +1,7 @@
 #include "handler.h"
+#include "helper.h"
+
+std::string getFrontendPath();
 
 Handler::Handler()
 {
@@ -37,16 +40,16 @@ void Handler::handle_error(pplx::task<void>& t)
 //
 void Handler::handle_get(http_request message)
 {
-//    ucout <<  message.to_string() << std::endl;
-//    ucout << "----------" << std::endl;
-//    ucout << "\n relative URIIIIIIII " << message.relative_uri().path();
+    //    ucout <<  message.to_string() << std::endl;
+    //    ucout << "----------" << std::endl;
+    //    ucout << "\n relative URIIIIIIII " << message.relative_uri().path();
     auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
 
-//    ucout << "request uri " << message.request_uri().to_string() << "\n";
+    //    ucout << "request uri " << message.request_uri().to_string() << "\n";
     ucout << "relative uri " << message.relative_uri().to_string() << "\n";
 
     //check for frontend files.
-    QDirIterator dirIt("../../lafayette53/frontend", QDirIterator::NoIteratorFlags);
+    QDirIterator dirIt(getFrontendPath().c_str(), QDirIterator::NoIteratorFlags);
     if(message.relative_uri().to_string().compare("/") == 0) {
         returnFrontendFile(message);
         return;
@@ -64,21 +67,23 @@ void Handler::handle_get(http_request message)
 
     //check for specific urls
     // /get-data/museum-list/
-    if(message.relative_uri().to_string().compare("/get-data/museum-list") == 0){
-        returnMuseumList(message);
-        return;
-    }
-    // /get-data/museum-list/id
-    else if(paths[0].compare("get-data") == 0 && paths[1].compare("museum") == 0  && paths.size() == 3){
-        ucout << "museum\n";
-        std::string musId = paths[2];
-        returnMuseumById(message,std::stoi(musId));
-    }
-    // /get-data/user/id
-    else if(paths[0].compare("get-data") == 0 && paths[1].compare("user") == 0 && paths.size() == 3){
-        ucout << "user\n";
-        std::string usrId = paths[2];
-        returnUserById(message,std::stoi(usrId));
+    if (paths[0].compare("get-data") == 0) {
+        if(paths[1].compare("museum-list") == 0){
+            returnMuseumList(message);
+            return;
+        }
+        // /get-data/museum-list/id
+        else if(paths[1].compare("museum") == 0  && paths.size() == 3){
+            ucout << "museum\n";
+            std::string musId = paths[2];
+            returnMuseumById(message,std::stoi(musId));
+        }
+        // /get-data/user/id
+        else if(paths[1].compare("user") == 0 && paths.size() == 3){
+            ucout << "user\n";
+            std::string usrId = paths[2];
+            returnUserById(message,std::stoi(usrId));
+        }
     }
     else {
         ucout << "wildcard caught\n";
@@ -90,28 +95,31 @@ void Handler::handle_get(http_request message)
 };
 
 void Handler::returnFrontendFile(http_request message){
-    std::string path = "../../lafayette53/frontend" + message.relative_uri().to_string();
-    if(message.relative_uri().to_string().compare("/") == 0) {
-        path += "index.html";
-    }
     std::string mime = "text/html";
 
+    std::string base_path = getFrontendPath();
+    bool getIndex = false;
     if(message.relative_uri().to_string().find(".html") != std::string::npos){
         mime = "text/html";
-    }else
-        if(message.relative_uri().to_string().find(".js") != std::string::npos){
-            mime = "text/javascript";
-        }else
-            if(message.relative_uri().to_string().find(".css") != std::string::npos){
-                mime = "text/css";
-            }
-
+    } else if(message.relative_uri().to_string().find(".js") != std::string::npos){
+        mime = "text/javascript";
+    } else if(message.relative_uri().to_string().find(".css") != std::string::npos){
+        mime = "text/css";
+    } else {
+        getIndex = true;
+    }
+    std::string path;
+    if (getIndex) {
+        path = base_path + "/index.html";
+    } else {
+        path = base_path + message.relative_uri().to_string();
+    }
 
     concurrency::streams::fstream::open_istream(U(path),std::ios::in)
-    .then([=](concurrency::streams::istream is)
+            .then([=](concurrency::streams::istream is)
     {
         message.reply(status_codes::OK, is, U(mime))
-        .then([](pplx::task<void> t)
+                .then([](pplx::task<void> t)
         {
             try{
                 t.get();
@@ -120,7 +128,7 @@ void Handler::returnFrontendFile(http_request message){
             }
         });
     })
-    .then([=](pplx::task<void> t)
+            .then([=](pplx::task<void> t)
     {
         try {
             t.get();
@@ -134,7 +142,7 @@ void Handler::returnFrontendFile(http_request message){
 void Handler::returnMuseumList(http_request message){
 
     message.reply(status_codes::OK,ModelClass::getMuseumListJSON())
-        .then([=](pplx::task<void> t){
+            .then([=](pplx::task<void> t){
         try{
             t.get();
         }catch(...){
@@ -174,7 +182,7 @@ void Handler::handle_post(http_request message)
 {
     ucout <<  message.to_string() << std::endl;
     message.extract_string(false).then([](utility::string_t s){
-       ucout << s << std::endl;
+        ucout << s << std::endl;
     });
     message.reply(status_codes::OK,message.to_string());
     return ;
@@ -185,10 +193,10 @@ void Handler::handle_post(http_request message)
 //
 void Handler::handle_delete(http_request message)
 {
-     ucout <<  message.to_string() << std::endl;
+    ucout <<  message.to_string() << std::endl;
 
-        std::string rep = U("WRITE YOUR OWN DELETE OPERATION");
-      message.reply(status_codes::OK,rep);
+    std::string rep = U("WRITE YOUR OWN DELETE OPERATION");
+    message.reply(status_codes::OK,rep);
     return;
 };
 
@@ -198,8 +206,8 @@ void Handler::handle_delete(http_request message)
 //
 void Handler::handle_put(http_request message)
 {
-     ucout <<  message.to_string() << std::endl;
-     std::string rep = U("WRITE YOUR OWN PUT OPERATION");
-     message.reply(status_codes::OK,rep);
+    ucout <<  message.to_string() << std::endl;
+    std::string rep = U("WRITE YOUR OWN PUT OPERATION");
+    message.reply(status_codes::OK,rep);
     return;
 };
