@@ -47,7 +47,8 @@ void Handler::handle_get(http_request message)
     //check for frontend files.
     QDirIterator dirIt("../../lafayette53/frontend", QDirIterator::NoIteratorFlags);
     if(message.relative_uri().to_string().compare("/") == 0) {
-        return returnFrontendFile(message);
+        returnFrontendFile(message);
+        return;
     }
     while(dirIt.hasNext()){
         std::string s = "/" + dirIt.fileName().toStdString();
@@ -67,18 +68,22 @@ void Handler::handle_get(http_request message)
         return;
     }
     // /get-data/museum-list/id
-    if(paths[0].compare("get-data") == 0 && paths[1].compare("museum") == 0  && paths.size() == 3){
+    else if(paths[0].compare("get-data") == 0 && paths[1].compare("museum") == 0  && paths.size() == 3){
         ucout << "museum\n";
         std::string musId = paths[2];
         returnMuseumById(message,std::stoi(musId));
     }
     // /get-data/user/id
-    if(paths[0].compare("get-data") == 0 && paths[1].compare("user") == 0 && paths.size() == 3){
+    else if(paths[0].compare("get-data") == 0 && paths[1].compare("user") == 0 && paths.size() == 3){
         ucout << "user\n";
         std::string usrId = paths[2];
         returnUserById(message,std::stoi(usrId));
     }
-    message.reply(status_codes::NotFound,U("This url not found"));
+    else {
+        ucout << "wildcard caught\n";
+        returnFrontendFile(message);
+    }
+    // message.reply(status_codes::NotFound,U("This url not found"));
     return;
 
 };
