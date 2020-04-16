@@ -94,6 +94,18 @@ TEST_F(GameTest, testingModelClassReadInfo){
    QJsonDocument museumListDoc;
    museumListDoc.setArray(museumArray);
    ASSERT_EQ(museumListDoc.toJson().toStdString(), ModelClass::getMuseumListJSON());
+   ModelClass::close();
+}
+
+TEST_F(GameTest, testingUserInput){
+    User newUser("yevs", "yvs@lafayette.edu", "password");
+    ModelClass::open();
+    ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
+    ASSERT_TRUE(newUser.indb());
+    newUser.setEmail("senayevenyo@gmail.com");
+    //ASSERT_TRUE(ModelClass::updateUserInDB(newUser));
+    ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
+    ASSERT_TRUE(newUser.getUserID() == -1);
 }
 
 

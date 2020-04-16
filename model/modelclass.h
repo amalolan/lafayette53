@@ -20,8 +20,8 @@ public:
     static bool removeMuseumFromDB(Museum & museum);
     static bool updateMuseumInDB(Museum & museum);
     static std::string getPasswordHash(std::string username);
-    static bool saveUserToBD(User & user);
-    static bool removeUserFromBD(User & user);
+    static bool saveUserToDB(User & user);
+    static bool removeUserFromDB(User & user);
     static bool updateUserInDB(User & user);
 
 private:
