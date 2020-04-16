@@ -22,13 +22,13 @@ public:
         std::string intro = musObj["introduction"].toString().toStdString();
         std::string description = musObj["description"].toString().toStdString();
         std::string id = musObj["id"].toString().toStdString();
-        //TODO id is not necessary
         QJsonObject userObj = jsObj["user"].toObject();
-        //TODO create user object and add it to the museum object
+
         std::string username = userObj["username"].toString().toStdString();
         std::string password = userObj["password"].toString().toStdString();
-
-        return new Museum(name,description,1);
+        //TODO email and id
+        User u(username,"",password,-1);
+        return new Museum(name,description,u);
     }
 
     static User* parseUserJSON(std::string json){
@@ -42,7 +42,7 @@ public:
         std::string email = jsobj["email"].toString().toStdString();
         std::string password = jsobj["password"].toString().toStdString();
         //TODO fix constructor to add password
-        return new User(username,email);
+        return new User(username,email,password);
     }
 
     static bool checkLogin(User& u){

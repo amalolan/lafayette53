@@ -207,7 +207,7 @@ void Handler::addMuseum(http_request message){
             //TODO test and remove if statement
             if(t) {
                 ucout << "ok\n";
-            message.reply(status_codes::OK);
+                message.reply(status_codes::OK);
             } else {
                 ucout << "false\n";
                 message.reply(status_codes::Conflict,U("false"));
@@ -226,7 +226,7 @@ void Handler::addUser(http_request message){
         try {
             ucout << s << std::endl;
             User *u = util::parseUserJSON(s);
-            if(ModelClass::saveUserToBD(*u)){
+            if(ModelClass::saveUserToDB(*u)){
                 message.reply(status_codes::OK);
             } else{
                 message.reply(status_codes::Conflict);
