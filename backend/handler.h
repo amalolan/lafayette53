@@ -64,7 +64,7 @@ class Handler
 
         void handle_put(http_request message);
         void checkLogin(http_request message);
-        void getUserProfile(http_request message);
+        // void getUserProfile(http_request message);
 
         void handle_post(http_request message);
         void addMuseum(http_request message);

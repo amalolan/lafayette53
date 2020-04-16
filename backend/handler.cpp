@@ -84,6 +84,7 @@ void Handler::handle_get(http_request message)
     else {
         ucout << "wildcard caught\n";
         returnFrontendFile(message);
+        return;
     }
     message.reply(status_codes::NotFound,U("Check the url and try again"));
     // message.reply(status_codes::NotFound,U("This url not found"));
@@ -268,7 +269,7 @@ void Handler::handle_put(http_request message)
          return;
      }
      if(paths[0].compare("get-data") == 0 && paths[1].compare("user") == 0 && paths.size() == 3){
-         getUserProfile(message);
+         // getUserProfile(message);
          return;
      }
      //ucout <<  message.to_string() << std::endl;
