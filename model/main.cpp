@@ -94,8 +94,34 @@ TEST_F(GameTest, testingModelClassReadInfo){
    QJsonDocument museumListDoc;
    museumListDoc.setArray(museumArray);
    ASSERT_EQ(museumListDoc.toJson().toStdString(), ModelClass::getMuseumListJSON());
+   ModelClass::close();
 }
 
+TEST_F(GameTest, testingUserInput){
+    User newUser("yevs", "yvs@lafayette.edu", "password");
+    ModelClass::open();
+    ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
+    ASSERT_TRUE(newUser.indb());;
+    //ASSERT_TRUE(ModelClass::updateUserInDB(newUser));
+    ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
+    ASSERT_TRUE(newUser.getUserID() == -1);
+    ModelClass::close();
+}
+
+TEST_F(GameTest, testingMuseumInput){
+    User newUser("sena", "s@lafayette.edu", "password");
+    ModelClass::open();
+    ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
+    ASSERT_TRUE(newUser.indb());
+    Museum museum("aMuseum", "a sample museum", newUser);
+    ASSERT_TRUE(ModelClass::saveMuseumToDB(museum));
+    ASSERT_TRUE(museum.indb());
+    ASSERT_TRUE(ModelClass::removeMuseumFromDB(museum));
+    ASSERT_TRUE(!museum.indb());
+    ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
+    ASSERT_TRUE(!newUser.indb());
+    ModelClass::close();
+}
 
 
 int main(int argc, char **argv) {
