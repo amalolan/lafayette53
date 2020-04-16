@@ -118,7 +118,7 @@ bool ModelClass::saveMuseumToDB(Museum & museum){
     int nextMuseumIndex = rand();
     QString name = QString::fromStdString(museum.getName());
     QString museumID(QString::fromStdString(std::to_string(nextMuseumIndex)));
-    QString userID(museum.getUserID());
+    QString userID(QString::fromStdString(std::to_string(museum.getUserID())));
     QString desc = QString::fromStdString(museum.getDescription());
     query.prepare("INSERT INTO museum(museumID, userID, name, description)"
                   " VALUES ("+museumID+", "+userID+", '"+name+"', '"+desc+"')");
