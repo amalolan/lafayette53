@@ -75,7 +75,7 @@ public:
         properties["introduction"] = QString::fromStdString("This is "+this->name);
         properties["description"] = QString::fromStdString(this->description);
         properties["museumID"] = this->museumID;
-        properties["userID"] = this->user.getUserID();
+        properties["user"] = QString::fromStdString(this->user.getJSON());
         QJsonDocument doc;
         doc.setObject(properties);
         return doc.toJson().toStdString();
