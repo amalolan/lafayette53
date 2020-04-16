@@ -148,8 +148,8 @@ bool ModelClass::updateMuseumInDB(Museum & museum){
     QString name = QString::fromStdString(museum.getName());
     QString museumID = QString::fromStdString(std::to_string(museum.getMuseumID()));
     QString description = QString::fromStdString(museum.getDescription());
-    query.exec("UPDATE museum SET name = '"+name+"', description = '"+description+"' WHERE museumID = "+museumID+";");
-    bool done = query.exec();
+    bool done = query.exec("UPDATE museum SET name = '"+name+"', description = '"+description+"' WHERE museumID = "+museumID+";");
+    qDebug() << query.lastError();
     query.finish();
     return done;
 }
@@ -198,9 +198,10 @@ bool ModelClass::updateUserInDB(User & user){
     if (!user.indb()) return false;
     QString email = QString::fromStdString(user.getEmail());
     QString password = QString::fromStdString(user.getPassword());
-    QString id(QString::fromStdString(std::to_string(user.getUserID())));
-    query.prepare("UPDATE public SET email = '"+email+"', SET password = '"+password+"' WHERE userID = "+id+";");
-    bool done = query.exec();
+    QString id = QString::fromStdString(std::to_string(user.getUserID()));
+    QString queryText("UPDATE public SET email = '"+email+"', password = '"+password+"' WHERE userID = "+id+";");
+    bool done = query.exec(queryText);
+    qDebug() << query.lastError();
     query.finish();
     return done;
 }
