@@ -8,18 +8,20 @@
 class User
 {
 public:
-    User(std::string username, std::string email, int id)
+    User(std::string username, std::string email, std::string password, int id)
     {
         this->userID = id;
         this->username = username;
         this->email = email;
+        this->password = password;
     }
 
-    User(std::string username, std::string email)
+    User(std::string username, std::string email, std::string password)
     {
         this->userID = -1;
         this->username = username;
         this->email = email;
+        this->password = password;
     }
 
     ~User()
@@ -74,18 +76,20 @@ public:
         QJsonObject object = doc.object();
         std::string name = object["username"].toString().toStdString();
         std::string email = object["email"].toString().toStdString();
+        std::string password = object["password"].toString().toStdString();
         QJsonValue userID  = object["userID"];
 
         if(userID.isUndefined()){
-            return new User(name, email);
+            return new User(name, email, password);
         }
-        return new User(name, email, userID.toInt());
+        return new User(name, email, password, userID.toInt());
     }
 
 private:
     int userID;
     std::string username;
     std::string email;
+    std::string password;
 
 };
 
