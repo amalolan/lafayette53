@@ -1,6 +1,7 @@
 #ifndef MUSEUM_H
 #define MUSEUM_H
 #include <string>
+#include "user.h"
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -8,19 +9,17 @@
 class Museum
 {
 public:
-    Museum(std::string name, std::string description, int userID)
+    Museum(std::string name, std::string description, User & user):user(user)
     {
         this->name = name;
         this->description = description;
-        this->userID = userID;
         this->museumID = -1;
     }
 
-    Museum(std::string name, std::string description, int userID, int museumID)
+    Museum(std::string name, std::string description, User & user, int museumID):user(user)
     {
         this->name = name;
         this->description = description;
-        this->userID = userID;
         this->museumID = museumID;
     }
 
@@ -37,11 +36,6 @@ public:
     void setDescription(std::string desc)
     {
         this->description = desc;
-    }
-
-    void setUserID(int id)
-    {
-        this->userID = id;
     }
 
     void setMuseumID(int id)
@@ -61,7 +55,7 @@ public:
 
     int getUserID()
     {
-        return this->userID;
+        return this->user.getUserID();
     }
 
     int getMuseumID()
@@ -81,43 +75,16 @@ public:
         properties["introduction"] = QString::fromStdString("This is "+this->name);
         properties["description"] = QString::fromStdString(this->description);
         properties["museumID"] = this->museumID;
-        properties["userID"] = this->userID;
+        properties["userID"] = this->user.getUserID();
         QJsonDocument doc;
         doc.setObject(properties);
         return doc.toJson().toStdString();
     }
-
-    static Museum* fromJson(std::string jsonString)
-    {
-        //This method currently does not check if JSON String is correct.
-        //That is, it does not check if the string has all fields to create
-        //a museum object. Checks will be introducted in a later implementation
-        //if neccessary.
-
-        QJsonDocument doc = QJsonDocument::fromJson(QByteArray::fromStdString(jsonString));
-
-        if (doc.isNull() || !doc.isObject())
-        {
-            return nullptr;
-        }
-
-        QJsonObject object = doc.object();
-        std::string name = object["name"].toString().toStdString();
-        std::string desc = object["description"].toString().toStdString();
-        int userID = object["userID"].toInt();
-        QJsonValue museumID  = object["museumID"];
-
-        if(museumID.isUndefined()){
-            return new Museum(name, desc, userID);
-        }
-        return new Museum(name, desc, userID, museumID.toInt());
-    }
-
 private:
     std::string name;
     std::string description;
     int museumID;
-    int userID;
+    User & user;
 };
 
 #endif // MUSEUM_H

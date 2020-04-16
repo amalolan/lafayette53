@@ -8,18 +8,20 @@
 class User
 {
 public:
-    User(std::string username, std::string email, int id)
+    User(std::string username, std::string email, std::string password, int id)
     {
         this->userID = id;
         this->username = username;
         this->email = email;
+        this->password = password;
     }
 
-    User(std::string username, std::string email)
+    User(std::string username, std::string email, std::string password)
     {
         this->userID = -1;
         this->username = username;
         this->email = email;
+        this->password = password;
     }
 
     ~User()
@@ -35,6 +37,10 @@ public:
     std::string getName()
     {
         return this->username;
+    }
+
+    std::string getPassword(){
+        return this->password;
     }
 
     int getUserID()
@@ -57,35 +63,23 @@ public:
         return this->userID > -1;
     }
 
-    static User* fromJson(std::string jsonString)
+    std::string getJSON()
     {
-        //This method currently does not check if JSON String is correct.
-        //That is, it does not check if the string has all fields to create
-        //a museum object. Checks will be introducted in a later implementation
-        //if neccessary.
-
-        QJsonDocument doc = QJsonDocument::fromJson(QByteArray::fromStdString(jsonString));
-
-        if (doc.isNull() || !doc.isObject())
-        {
-            return nullptr;
-        }
-
-        QJsonObject object = doc.object();
-        std::string name = object["username"].toString().toStdString();
-        std::string email = object["email"].toString().toStdString();
-        QJsonValue userID  = object["userID"];
-
-        if(userID.isUndefined()){
-            return new User(name, email);
-        }
-        return new User(name, email, userID.toInt());
+        QJsonObject properties;
+        properties["username"] = QString::fromStdString(this->username);
+        properties["email"] = QString::fromStdString(this->email);
+        properties["userID"] = this->userID;
+        properties["password"] = QString::fromStdString(this->password);
+        QJsonDocument doc;
+        doc.setObject(properties);
+        return doc.toJson().toStdString();
     }
 
 private:
     int userID;
     std::string username;
     std::string email;
+    std::string password;
 
 };
 

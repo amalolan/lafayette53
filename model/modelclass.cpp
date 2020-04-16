@@ -1,4 +1,7 @@
 #include "modelclass.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 QSqlDatabase ModelClass:: db = QSqlDatabase::addDatabase("QSQLITE", "Connection");
 QSqlQuery ModelClass::query(db);
@@ -111,11 +114,10 @@ std::string ModelClass::getMuseumInfoJSON(int museumID){
 
 bool ModelClass::saveMuseumToDB(Museum & museum){
     if (museum.indb()) return false;
-    query.exec("SELECT COUNT(*) FROM museum;");
-    query.next();
-    int nextMuseumIndex = query.value(0).toString().toInt();
+    srand(time(NULL));
+    int nextMuseumIndex = rand();
     QString name = QString::fromStdString(museum.getName());
-    QString museumID(nextMuseumIndex);
+    QString museumID(QString::fromStdString(std::to_string(nextMuseumIndex)));
     QString userID(museum.getUserID());
     QString desc = QString::fromStdString(museum.getDescription());
     query.prepare("INSERT INTO museum(museumID, userID, name, description)"
@@ -129,7 +131,7 @@ bool ModelClass::saveMuseumToDB(Museum & museum){
 
 bool ModelClass::removeMuseumFromDB(Museum & museum){
     if (!museum.indb()) return false;
-    QString id(museum.getMuseumID());
+    QString id(QString::fromStdString(std::to_string(museum.getMuseumID())));
     query.exec("DELETE FROM museum WHERE museumID = "+id+";");
 
     bool done = query.numRowsAffected() == 1;
@@ -143,20 +145,18 @@ bool ModelClass::removeMuseumFromDB(Museum & museum){
 
 bool ModelClass::updateMuseumInDB(Museum & museum){
     if (!museum.indb()) return false;
-    QString id(museum.getMuseumID());
-    query.prepare("UPDATE museum SET name = ?, description = ?"
-                  " WHERE museumID = ?;");
-    query.addBindValue(QString::fromStdString(museum.getName()));
-    query.addBindValue(QString::fromStdString(museum.getDescription()));
-    query.addBindValue(museum.getMuseumID());
+    QString name = QString::fromStdString(museum.getName());
+    QString museumID = QString::fromStdString(std::to_string(museum.getMuseumID()));
+    QString description = QString::fromStdString(museum.getDescription());
+    query.exec("UPDATE museum SET name = '"+name+"', description = '"+description+"' WHERE museumID = "+museumID+";");
     bool done = query.exec();
     query.finish();
     return done;
 }
 
 std::string ModelClass::getPasswordHash(std::string username){
-    query.prepare("SELECT password FROM public where username GLOB ?;");
-    query.addBindValue(QString::fromStdString(username));
+    QString name = QString::fromStdString(username);
+    query.prepare("SELECT password FROM public where username GLOB '"+name+"';");
     query.exec();
     query.next();
     std::string output = query.value(0).toString().toStdString();
@@ -164,27 +164,25 @@ std::string ModelClass::getPasswordHash(std::string username){
     return output;
 }
 
-bool ModelClass::saveUserToBD(User & user){
+bool ModelClass::saveUserToDB(User & user){
     if (user.indb()) return false;
-    query.exec("SELECT COUNT(*) FROM museum;");
-    query.next();
-    int nextUserIndex = query.value(0).toString().toInt();
-    query.finish();
+    srand(time(NULL));
+    int nextUserIndex = rand();
     QString name = QString::fromStdString(user.getName());
-    QString userID(nextUserIndex);
+    QString userID(QString::fromStdString(std::to_string(nextUserIndex)));
     QString email = QString::fromStdString(user.getEmail());
-    query.prepare("INSERT INTO public(userID, username, email)"
-                  " VALUES ("+userID+", '"+name+"', '"+email+"')");
-
-    if(!query.exec()) return false;
+    QString password = QString::fromStdString(user.getPassword());
+    QString queryText("INSERT INTO public(userID,username,email,password) VALUES ("+userID+",'"+name+"','"+email+"','"+password+"');");
+    bool done = query.exec(queryText);
+    if (!done) return false;
     user.setUserID(nextUserIndex);
     query.finish();
     return true;
 }
 
-bool ModelClass::removeUserFromBD(User & user){
+bool ModelClass::removeUserFromDB(User & user){
     if (!user.indb()) return false;
-    QString id(user.getUserID());
+    QString id(QString::fromStdString(std::to_string(user.getUserID())));
     query.exec("DELETE FROM public WHERE userID = "+id+";");
 
     bool done = query.numRowsAffected() == 1;
@@ -198,11 +196,10 @@ bool ModelClass::removeUserFromBD(User & user){
 
 bool ModelClass::updateUserInDB(User & user){
     if (!user.indb()) return false;
-    QString id(user.getUserID());
-    query.prepare("UPDATE public SET email = ?"
-                  " WHERE userID = ?;");
-    query.addBindValue(QString::fromStdString(user.getEmail()));
-    query.addBindValue(user.getUserID());
+    QString email = QString::fromStdString(user.getEmail());
+    QString password = QString::fromStdString(user.getPassword());
+    QString id(QString::fromStdString(std::to_string(user.getUserID())));
+    query.prepare("UPDATE public SET email = '"+email+"', SET password = '"+password+"' WHERE userID = "+id+";");
     bool done = query.exec();
     query.finish();
     return done;
