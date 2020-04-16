@@ -182,6 +182,7 @@ void Handler::returnUserById(http_request message,int usrId){
 void Handler::handle_post(http_request message)
 {
     //ucout <<  message.to_string() << std::endl;
+    ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
     if(message.relative_uri().to_string().compare("/get-data/museum-list") == 0){
         addMuseum(message);
         return ;
@@ -200,6 +201,7 @@ void Handler::handle_post(http_request message)
 void Handler::addMuseum(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         try {
+            ucout << s << "\n";
             Museum *m = util::parseMuseumJSON(s);
             bool t = ModelClass::saveMuseumToDB(*m);
             //TODO test and remove if statement
@@ -222,6 +224,7 @@ void Handler::addMuseum(http_request message){
 void Handler::addUser(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         try {
+            ucout << s << std::endl;
             User *u = util::parseUserJSON(s);
             if(ModelClass::saveUserToBD(*u)){
                 message.reply(status_codes::OK);

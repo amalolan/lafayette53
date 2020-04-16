@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
-#include <../model/modelclass.h>
+#include "../model/modelclass.h"
+#include "../model/LafException.h"
 #include <QJsonObject>
 #include <iostream>
 class util
@@ -16,12 +17,17 @@ public:
 
         QJsonObject musObj = jsObj["museum"].toObject();
 
-        std::string user = jsObj["user"].toString().toStdString();
+
         std::string name = musObj["name"].toString().toStdString();
         std::string intro = musObj["introduction"].toString().toStdString();
         std::string description = musObj["description"].toString().toStdString();
         std::string id = musObj["id"].toString().toStdString();
-        //TODO fix the id and add intro
+        //TODO id is not necessary
+        QJsonObject userObj = jsObj["user"].toObject();
+        //TODO create user object and add it to the museum object
+        std::string username = userObj["username"].toString().toStdString();
+        std::string password = userObj["password"].toString().toStdString();
+
         return new Museum(name,description,1);
     }
 
@@ -39,6 +45,16 @@ public:
         return new User(username,email);
     }
 
+    static bool checkLogin(User& u){
+        try{
+            std::string s = ModelClass::getPasswordHash(u.getName());
+            //TODO check if passwords matches and return true
+        } catch(LafException &e){
+
+            std::cout << "user could not be found" << std::endl;
+            return false;
+        }
+    }
 };
 
 #endif // UTILITY_H
