@@ -338,17 +338,17 @@ void Handler::checkLogin(http_request message,std::string username){
 };
 
 //TODO getUserProfile by username;
-void Handler::getUserProfile(http_request message,std::string username){
-    message.extract_string(false).then([=](utility::string_t s){
-        try{
-            std::string password = util::parsePassword(s);
-            std::string dataPass = ModelClass::getPasswordHash(username);
-            if(password.compare(dataPass) == 0){
-                //TODO userJSON(username)
-            }
-        }
-    })
-}
+//void Handler::getUserProfile(http_request message,std::string username){
+//    message.extract_string(false).then([=](utility::string_t s){
+//        try{
+//            std::string password = util::parsePassword(s);
+//            std::string dataPass = ModelClass::getPasswordHash(username);
+//            if(password.compare(dataPass) == 0){
+//                //TODO userJSON(username)
+//            }
+//        }
+//    })
+//}
 
 
 
