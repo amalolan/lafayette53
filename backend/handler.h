@@ -23,6 +23,7 @@
 #include "../model/modelclass.h"
 #include "../model/LafException.h"
 #include "util.h"
+#include <exception>
 using namespace utility;                    // Common utilities like string conversions
 using namespace web;                        // Common features like URIs.
 using namespace web::http;                  // Common HTTP functionality
@@ -63,8 +64,8 @@ class Handler
         void returnUserById(http_request message,int usrId);
 
         void handle_put(http_request message);
-        void checkLogin(http_request message);
-        // void getUserProfile(http_request message);
+        void checkLogin(http_request message,std::string username);
+        void getUserProfile(http_request message,std::string username);
 
         void handle_post(http_request message);
         void addMuseum(http_request message);
