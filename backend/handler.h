@@ -21,6 +21,8 @@
 #include "cpprest/producerconsumerstream.h"
 #include <QDirIterator>
 #include "../model/modelclass.h"
+#include "../model/LafException.h"
+#include "util.h"
 using namespace utility;                    // Common utilities like string conversions
 using namespace web;                        // Common features like URIs.
 using namespace web::http;                  // Common HTTP functionality
@@ -31,10 +33,23 @@ using namespace http::experimental::listener;
 class Handler
 {
     public:
+        /**
+         * @brief Handler
+         */
         Handler();
+        /**
+         * @brief Handler sets up the object adds support to GET,PUT,POST,DEL http requests.
+         * @param url the url of the server
+         */
         Handler(utility::string_t url);
+        /**
+         * @brief ~Handler destructor.
+         */
         virtual ~Handler();
-
+        /**
+         * @brief open opens the listener callback method.
+         * @return  callback method
+         */
         pplx::task<void>open(){return m_listener.open();}
         pplx::task<void>close(){return m_listener.close();}
 
@@ -48,7 +63,13 @@ class Handler
         void returnUserById(http_request message,int usrId);
 
         void handle_put(http_request message);
+        void checkLogin(http_request message);
+        // void getUserProfile(http_request message);
+
         void handle_post(http_request message);
+        void addMuseum(http_request message);
+        void addUser(http_request message);
+
         void handle_delete(http_request message);
         void handle_error(pplx::task<void>& t);
         http_listener m_listener;
