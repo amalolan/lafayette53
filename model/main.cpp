@@ -123,7 +123,6 @@ TEST_F(GameTest, testingMuseumInput){
     Museum museum("aMuseum", "a sample museum", newUser);
     ASSERT_TRUE(ModelClass::saveMuseumToDB(museum));
     ASSERT_TRUE(museum.indb());
-
     museum.setName("newName");
     EXPECT_TRUE(ModelClass::updateMuseumInDB(museum));
     museum.getUser().setPassword("able");

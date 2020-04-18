@@ -9,18 +9,25 @@
 class Museum
 {
 public:
-    Museum(std::string name, std::string description, User & user):user(user)
+    Museum(std::string name, std::string description, User user):user(user)
     {
         this->name = name;
         this->description = description;
         this->museumID = -1;
     }
 
-    Museum(std::string name, std::string description, User & user, int museumID):user(user)
+    Museum(std::string name, std::string description, User user, int museumID):user(user)
     {
         this->name = name;
         this->description = description;
         this->museumID = museumID;
+    }
+
+    Museum(const Museum &museum):user(museum.getUser())
+    {
+        this->name = museum.getName();
+        this->description = museum.getDescription();
+        this->museumID = museum.getMuseumID();
     }
 
     ~Museum()
@@ -43,22 +50,22 @@ public:
         this->museumID = id;
     }
 
-    std::string getName()
+    std::string getName() const
     {
         return this->name;
     }
 
-    std::string getDescription()
+    std::string getDescription() const
     {
         return this->description;
     }
 
-    User & getUser()
+    User getUser() const
     {
         return this->user;
     }
 
-    int getMuseumID()
+    int getMuseumID() const
     {
         return this->museumID;
     }
@@ -75,7 +82,7 @@ public:
         properties["introduction"] = QString::fromStdString("This is "+this->name);
         properties["description"] = QString::fromStdString(this->description);
         properties["museumID"] = this->museumID;
-        properties["user"] = QString::fromStdString(this->user.getJSON());
+        properties["userID"] = this->user.getUserID();
         QJsonDocument doc;
         doc.setObject(properties);
         return doc.toJson().toStdString();
@@ -84,7 +91,7 @@ private:
     std::string name;
     std::string description;
     int museumID;
-    User & user;
+    User user;
 };
 
 #endif // MUSEUM_H
