@@ -4,7 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QByteArray>
-
+#include <iostream>
 class User
 {
 public:

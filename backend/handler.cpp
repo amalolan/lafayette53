@@ -203,12 +203,13 @@ void Handler::addMuseum(http_request message){
         try {
             //ucout << s << std::endl;
             Museum *m = util::parseMuseumJSON(s);
-            User u = m->getUser();
-            std::string username = u.getName();
-            std::string password = u.getPassword();
+            std::string username = m->getUsername();
+            std::string password = m->getUserPass();
+            //std::cout << password << '\n';
 
             std::string dataPass = ModelClass::getPasswordHash(username);
-
+            //ucout << dataPass << '\n';
+            //ucout << username << '\n';
             bool t =false;
             if (password.compare(dataPass) == 0)
             {
