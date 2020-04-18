@@ -53,9 +53,9 @@ public:
         return this->description;
     }
 
-    int getUserID()
+    User & getUser()
     {
-        return this->user.getUserID();
+        return this->user;
     }
 
     int getMuseumID()

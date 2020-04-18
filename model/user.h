@@ -58,6 +58,10 @@ public:
         this->userID = newID;
     }
 
+    void setPassword(std::string newPassword){
+        this->password = newPassword;
+    }
+
     bool indb()
     {
         return this->userID > -1;

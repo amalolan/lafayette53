@@ -103,6 +103,7 @@ TEST_F(GameTest, testingUserInput){
     ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
     ASSERT_TRUE(newUser.indb());;
     EXPECT_EQ(ModelClass::getPasswordHash(newUser.getName()), "password");
+    EXPECT_EQ(newUser.getEmail(), ModelClass::getUserObject("yevs").getEmail());
     newUser.setEmail("yevenyos");
     EXPECT_TRUE(ModelClass::updateUserInDB(newUser));
     ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
@@ -118,8 +119,11 @@ TEST_F(GameTest, testingMuseumInput){
     Museum museum("aMuseum", "a sample museum", newUser);
     ASSERT_TRUE(ModelClass::saveMuseumToDB(museum));
     ASSERT_TRUE(museum.indb());
+
     museum.setName("newName");
     EXPECT_TRUE(ModelClass::updateMuseumInDB(museum));
+    museum.getUser().setPassword("able");
+    EXPECT_EQ(newUser.getPassword(), museum.getUser().getPassword());
     ASSERT_TRUE(ModelClass::removeMuseumFromDB(museum));
     ASSERT_TRUE(!museum.indb());
     ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));

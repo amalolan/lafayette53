@@ -118,7 +118,7 @@ bool ModelClass::saveMuseumToDB(Museum & museum){
     int nextMuseumIndex = rand();
     QString name = QString::fromStdString(museum.getName());
     QString museumID(QString::fromStdString(std::to_string(nextMuseumIndex)));
-    QString userID(QString::fromStdString(std::to_string(museum.getUserID())));
+    QString userID(QString::fromStdString(std::to_string(museum.getUser().getUserID())));
     QString desc = QString::fromStdString(museum.getDescription());
     query.prepare("INSERT INTO museum(museumID, userID, name, description)"
                   " VALUES ("+museumID+", "+userID+", '"+name+"', '"+desc+"')");
@@ -162,6 +162,18 @@ std::string ModelClass::getPasswordHash(std::string username){
     std::string output = query.value(0).toString().toStdString();
     query.finish();
     return output;
+}
+
+User ModelClass::getUserObject(std::string username){
+    QString name = QString::fromStdString(username);
+    query.prepare("SELECT username, email, password, userID FROM public where username GLOB '"+name+"';");
+    query.exec();
+    query.next();
+    std::string uname = query.value(0).toString().toStdString();
+    std::string email = query.value(1).toString().toStdString();
+    std::string password = query.value(2).toString().toStdString();
+    int userID = query.value(0).toInt();
+    return User(uname, email, password, userID);
 }
 
 bool ModelClass::saveUserToDB(User & user){

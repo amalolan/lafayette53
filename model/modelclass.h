@@ -23,6 +23,7 @@ public:
     static bool saveUserToDB(User & user);
     static bool removeUserFromDB(User & user);
     static bool updateUserInDB(User & user);
+    static User getUserObject(std::string username);
 
 private:
     static QSqlDatabase db;
