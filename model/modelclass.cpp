@@ -197,7 +197,7 @@ std::string ModelClass::getPasswordHash(std::string username){
 
 User ModelClass::getUserObject(std::string username){
     QString name = QString::fromStdString(username);
-    query.prepare("SELECT username, email, password, userID FROM public where username GLOB '"+name+"';");
+    query.prepare("SELECT username, email, password, userID FROM public WHERE username GLOB '"+name+"';");
     if(!query.exec())
     {
         throw ModelException("Username does not exist in database");
@@ -208,6 +208,38 @@ User ModelClass::getUserObject(std::string username){
     std::string password = query.value(2).toString().toStdString();
     int userID = query.value(3).toInt();
     return User(uname, email, password, userID);
+}
+
+User ModelClass::getUserObject(int userID){
+    QString id(QString::fromStdString(std::to_string(userID)));
+    bool exec = query.exec("SELECT username, email, password FROM public WHERE userID = "+id+";");
+    if(!exec)
+    {
+        throw ModelException("UserID does not exist in database");
+    }
+    query.next();
+    std::string uname = query.value(0).toString().toStdString();
+    std::string email = query.value(1).toString().toStdString();
+    std::string password = query.value(2).toString().toStdString();
+    query.finish();
+    return User(uname, email, password, userID);
+}
+
+Museum ModelClass::getMuseumObject(std::string museumName){
+    QString name = QString::fromStdString(museumName);
+    query.prepare("SELECT museumID, userID, name, description FROM museum where name GLOB '"+name+"';");
+    if(!query.exec())
+    {
+        throw ModelException("Museum name does not exist in database");
+    }
+    query.next();
+    int museumID = query.value(0).toInt();
+    int userID = query.value(1).toInt();
+    std::string _museumName = query.value(2).toString().toStdString();
+    std::string description = query.value(3).toString().toStdString();
+    query.finish();
+    User user(ModelClass::getUserObject(userID));
+    return Museum(_museumName, description, user, museumID);
 }
 
 bool ModelClass::saveUserToDB(User & user){

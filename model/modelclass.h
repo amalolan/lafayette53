@@ -24,6 +24,8 @@ public:
     static bool removeUserFromDB(User & user);
     static bool updateUserInDB(User & user);
     static User getUserObject(std::string username);
+    static Museum getMuseumObject(std::string museumName);
+    static User getUserObject(int userID);
 
 private:
     static QSqlDatabase db;
