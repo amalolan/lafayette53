@@ -104,6 +104,10 @@ TEST_F(GameTest, testingUserInput){
     ASSERT_TRUE(newUser.indb());;
     EXPECT_EQ(ModelClass::getPasswordHash(newUser.getName()), "password");
     EXPECT_EQ(newUser.getEmail(), ModelClass::getUserObject("yevs").getEmail());
+    EXPECT_EQ(newUser.getPassword(), ModelClass::getUserObject("yevs").getPassword());
+    EXPECT_EQ(newUser.getUserID(), ModelClass::getUserObject("yevs").getUserID());
+    EXPECT_EQ(newUser.getJSON(), ModelClass::getUserObject("yevs").getJSON());
+    EXPECT_EQ(newUser.getName(), ModelClass::getUserObject("yevs").getName());
     newUser.setEmail("yevenyos");
     EXPECT_TRUE(ModelClass::updateUserInDB(newUser));
     ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
