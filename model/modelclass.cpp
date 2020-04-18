@@ -206,7 +206,7 @@ User ModelClass::getUserObject(std::string username){
     std::string uname = query.value(0).toString().toStdString();
     std::string email = query.value(1).toString().toStdString();
     std::string password = query.value(2).toString().toStdString();
-    int userID = query.value(0).toInt();
+    int userID = query.value(3).toInt();
     return User(uname, email, password, userID);
 }
 
