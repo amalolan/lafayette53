@@ -9,14 +9,14 @@
 class Museum
 {
 public:
-    Museum(std::string name, std::string description, User & user):user(user)
+    Museum(std::string name, std::string description, User user):user(user)
     {
         this->name = name;
         this->description = description;
         this->museumID = -1;
     }
 
-    Museum(std::string name, std::string description, User & user, int museumID):user(user)
+    Museum(std::string name, std::string description, User user, int museumID):user(user)
     {
         this->name = name;
         this->description = description;
@@ -68,6 +68,10 @@ public:
         return this->museumID > -1;
     }
 
+    User getUser(){
+        return this->user;
+    }
+
     std::string getJSON()
     {
         QJsonObject properties;
@@ -84,7 +88,7 @@ private:
     std::string name;
     std::string description;
     int museumID;
-    User & user;
+    User user;
 };
 
 #endif // MUSEUM_H

@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include "../model/LafException.h"
 #include "handler.h"
 #include "../model/modelclass.h"
 using namespace web;
@@ -44,7 +44,6 @@ void printallDir(){
 int main(int argc, char *argv[])
 {
 
-    //printallDir();
     ModelClass::initdb();
     utility::string_t port = U("5300");
     if(argc == 2)
