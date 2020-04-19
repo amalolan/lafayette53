@@ -5,23 +5,15 @@ CONFIG -= app_bundle
 QT += sql
 QMAKE_CXXFLAGS += -std=gnu++11
 
-LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
+SOURCES += \
+        main.cpp \
+        handlertest.cpp
 
-
-SOURCES += ../../gtest/googletest/src/gtest-all.cc
-
-INCLUDEPATH +=  ../../gtest                                   \
-                ../../gtest/googletest                        \
-                ../../gtest/googletest/include                \
-                ../../gtest/googletest/include/gtest
+HEADERS += \
+        handlertest.h
 
 SOURCES += \
-        main.cpp
-
-#HEADERS +=
-
-SOURCES += \
-    ../../backend/handler.cpp \
+#    ../../backend/handler.cpp \
     ../../backend/util.cpp \
     ../../model/modelclass.cpp \
     ../../model/artifact.cpp \
@@ -37,8 +29,27 @@ HEADERS += \
     ../../model/museum.h \
     ../../model/user.h \
     ../../model/LafException.h \
-    ../../model/ModelException.h
+    ../../model/ModelException.h \
 
+
+
+SOURCES += ../../gtest/googletest/src/gtest-all.cc \
+           ../../gtest/googlemock/src/gmock-all.cc
+
+
+INCLUDEPATH +=  ../../gtest                                   \
+                ../../gtest/googletest                        \
+                ../../gtest/googletest/include                \
+                ../../gtest/googletest/include/gtest          \
+                ../../gtest/googlemock                        \
+                ../../gtest/googlemock/include                \
+                ../../gtest/googlemock/include/gmock
+
+#LIBS += -lgtest -L$$PWD/../../
+#LIBS += -lgtest -L$$PWD/../../
+
+
+LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
 
 macx: LIBS += -L$$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/lib/ -lboost_system

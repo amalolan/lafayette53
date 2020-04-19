@@ -27,7 +27,7 @@
 #include "cpprest/containerstream.h"
 #include "cpprest/producerconsumerstream.h"
 #include <QDirIterator>
-#include "../model/modelclass.h"
+//#include "../model/modelclass.h"
 #include "../model/LafException.h"
 #include "../model/ModelException.h"
 #include "util.h"
@@ -38,7 +38,7 @@ using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 using namespace http::experimental::listener;
-
+template < class T >
 class Handler
 {
     public:
@@ -84,5 +84,5 @@ class Handler
         http_listener m_listener;
 };
 
-
+#include "handler.tpp"
 #endif // HANDLER_H

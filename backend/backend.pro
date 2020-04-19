@@ -3,7 +3,6 @@ CONFIG += console c++11
 QT += sql
 
 SOURCES += \
-        handler.cpp \
         main.cpp \
         ../model/modelclass.cpp \
         util.cpp
@@ -16,6 +15,7 @@ HEADERS += \
     handler.h \
     ../model/modelclass.h \
     ../model/ModelException.h \
+    handler.tpp \
     util.h
 
 
