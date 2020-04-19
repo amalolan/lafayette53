@@ -26,8 +26,10 @@ public:
 
         std::string username = userObj["username"].toString().toStdString();
         std::string password = userObj["password"].toString().toStdString();
-        //TODO email and id
-        User u(username,"",password,-1);
+        std::string email = userObj["email"].toString().toStdString();
+        //std::string id = ModelClass::
+        //TODO add userID by getting user from the database.
+        User u(username,email,password,-1);
         return new Museum(name,description,u);
     }
 
@@ -55,6 +57,46 @@ public:
             return false;
         }
     }
+    /**
+     * @brief successJSON generates success message for the server
+     * @return json object
+     */
+    static std::string successJSON(std::string message){
+        QJsonObject jsObj;
+        jsObj["success"] = true;
+        jsObj["message"] = QString::fromStdString(message);
+
+        QJsonDocument doc;
+        doc.setObject(jsObj);
+
+        return doc.toJson().toStdString();
+    }
+
+    /**
+     * @brief failureJSON generates failure message with given message
+     * @param message message for the failure
+     * @return json object
+     */
+    static std::string failureJSON(std::string message){
+        QJsonObject jsObj;
+        jsObj["success"] = false;
+        jsObj["message"] = QString::fromStdString(message);
+
+        QJsonDocument doc;
+        doc.setObject(jsObj);
+
+        return doc.toJson().toStdString();
+    }
+    static std::string parsePassword(std::string json){
+        QString s = QString::fromStdString(json);
+
+        QJsonDocument jsDoc = QJsonDocument::fromJson(s.toUtf8());
+
+        QJsonObject jsobj = jsDoc.object();
+
+        return jsobj["password"].toString().toStdString();
+    }
+
 };
 
 #endif // UTILITY_H

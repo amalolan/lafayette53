@@ -121,7 +121,7 @@ void Handler::returnFrontendFile(http_request message){
         {
             try{
                 t.get();
-            } catch(LafException e){
+            } catch(LafException &e){
                 ucout << e.what() << "\n";
             }
         });
@@ -143,7 +143,7 @@ void Handler::returnMuseumList(http_request message){
             .then([=](pplx::task<void> t){
         try{
             t.get();
-        }catch(LafException e){
+        }catch(LafException &e){
             ucout << e.what() << "\n";
             message.reply(status_codes::InternalError, e.what());
         }
@@ -157,7 +157,7 @@ void Handler::returnMuseumById(http_request message,int musId){
             .then([=](pplx::task<void> t){
         try {
             t.get();
-        } catch (LafException e) {
+        } catch (LafException &e) {
             ucout << e.what() << "\n";
             message.reply(status_codes::InternalError, e.what());
         }
@@ -169,7 +169,7 @@ void Handler::returnUserById(http_request message,int usrId){
             .then([=](pplx::task<void> t){
             try {
                 t.get();
-            } catch (LafException e) {
+            } catch (LafException &e) {
                 ucout << e.what() << "\n";
                 message.reply(status_codes::InternalError);
         }
@@ -201,20 +201,46 @@ void Handler::handle_post(http_request message)
 void Handler::addMuseum(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         try {
-            ucout << s << "\n";
+            //ucout << s << std::endl;
             Museum *m = util::parseMuseumJSON(s);
-            bool t = ModelClass::saveMuseumToDB(*m);
-            //TODO test and remove if statement
-            if(t) {
-                ucout << "ok\n";
-                message.reply(status_codes::OK);
-            } else {
-                ucout << "false\n";
-                message.reply(status_codes::Conflict,U("false"));
+            User u = m->getUser();
+            std::string username = u.getName();
+            std::string password = u.getPassword();
+
+            std::string dataPass = ModelClass::getPasswordHash(username);
+
+            bool t =false;
+            if (password.compare(dataPass) == 0)
+            {
+                ucout << "password Correct\n";
+                t = ModelClass::saveMuseumToDB(*m);
+                if(t) {
+                    ucout << "success\n";
+                    std::string reply = util::successJSON("Museum created");
+                    message.reply(status_codes::OK, U(reply));
+                    delete m;
+                    return;
+                } else {
+                    ucout << "error\n";
+                    std::string reply = util::failureJSON("Museum creation failed");
+                    message.reply(status_codes::Conflict,U(reply));
+                    delete m;
+                    return;
+                }
+            } else
+            {
+                ucout << "login info incorrect\n";
+                std::string reply = util::failureJSON("password incorrect");
+                message.reply(status_codes::Unauthorized, reply);
+                delete m;
+                return;
             }
-        } catch(LafException e){
-            message.reply(status_codes::InternalError,e.what());
+
+        } catch(LafException &e){
+            std::string reply  = util::failureJSON(e.what());
+            message.reply(status_codes::InternalError, U(reply));
             ucout << e.what() << "\n";
+            return;
         }
 
     });
@@ -227,14 +253,19 @@ void Handler::addUser(http_request message){
             ucout << s << std::endl;
             User *u = util::parseUserJSON(s);
             if(ModelClass::saveUserToDB(*u)){
-                message.reply(status_codes::OK);
+                ucout << "success add user\n";
+                std::string reply = util::successJSON("user registered");
+                message.reply(status_codes::OK, reply);
             } else{
-                message.reply(status_codes::Conflict);
+                ucout << "failed to add user\n";
+                std::string reply = util::failureJSON("user could not be registered");
+                message.reply(status_codes::Conflict, reply);
             }
 
-        } catch (LafException e) {
+        } catch (LafException &e) {
             ucout << e.what() << "\n";
-            message.reply(status_codes::InternalError,e.what());
+            std::string reply = util::failureJSON(e.what());
+            message.reply(status_codes::InternalError, reply);
         }
     });
 };
@@ -266,9 +297,10 @@ void Handler::handle_delete(http_request message)
 //
 void Handler::handle_put(http_request message)
 {
+     ucout << message.relative_uri().to_string() << "\n";
      auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
      if(paths[0].compare("get-data") == 0 && paths[1].compare("login") == 0 && paths.size() == 3){
-         checkLogin(message);
+         checkLogin(message,paths[2]);
          return;
      }
      if(paths[0].compare("get-data") == 0 && paths[1].compare("user") == 0 && paths.size() == 3){
@@ -282,12 +314,41 @@ void Handler::handle_put(http_request message)
      return;
 };
 
-void Handler::checkLogin(http_request message){
+void Handler::checkLogin(http_request message,std::string username){
+    message.extract_string(false).then([=](utility::string_t s){
+        try{
+            std::string password = util::parsePassword(s);
+            std::string dataPass = ModelClass::getPasswordHash(username);
+            if(password.compare(dataPass) == 0) {
+                ucout << "login successful\n";
+                std::string reply = util::successJSON("login successful");
+                message.reply(status_codes::OK, reply);
+            } else{
+                ucout << "login failed\n";
+                std::string reply = util::failureJSON("login failed");
+                message.reply(status_codes::Unauthorized, reply);
+            }
+        } catch(LafException &e){
+            ucout << e.what() << "\n";
+            std::string reply = util::failureJSON(e.what());
+            message.reply(status_codes::InternalError, reply);
+        }
+    });
 
 };
 
 //TODO getUserProfile by username;
-
+//void Handler::getUserProfile(http_request message,std::string username){
+//    message.extract_string(false).then([=](utility::string_t s){
+//        try{
+//            std::string password = util::parsePassword(s);
+//            std::string dataPass = ModelClass::getPasswordHash(username);
+//            if(password.compare(dataPass) == 0){
+//                //TODO userJSON(username)
+//            }
+//        }
+//    })
+//}
 
 
 
