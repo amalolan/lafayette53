@@ -7,7 +7,7 @@
 const std::string linuxFrontendPath = "../../lafayette53/frontend";
 const std::string osxFrontendPath = "../../../../../lafayette53/frontend";
 
-const bool usingLinux = true;
+const bool usingLinux = false;
 
 std::string getFrontendPath() {
     if (usingLinux) {
