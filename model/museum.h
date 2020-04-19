@@ -24,6 +24,13 @@ public:
         this->museumID = museumID;
     }
 
+    Museum(const Museum &museum):user(museum.getUser())
+    {
+        this->name = museum.getName();
+        this->description = museum.getDescription();
+        this->museumID = museum.getMuseumID();
+    }
+
     ~Museum()
     {
 
@@ -44,22 +51,22 @@ public:
         this->museumID = id;
     }
 
-    std::string getName()
+    std::string getName() const
     {
         return this->name;
     }
 
-    std::string getDescription()
+    std::string getDescription() const
     {
         return this->description;
     }
 
-    int getUserID()
+    User getUser() const
     {
-        return this->user.getUserID();
+        return this->user;
     }
 
-    int getMuseumID()
+    int getMuseumID() const
     {
         return this->museumID;
     }
@@ -84,7 +91,7 @@ public:
         properties["name"] = QString::fromStdString(this->name);
         properties["introduction"] = QString::fromStdString("This is "+this->name);
         properties["description"] = QString::fromStdString(this->description);
-        properties["museumID"] = this->museumID;
+        properties["id"] = this->museumID;
         properties["userID"] = this->user.getUserID();
         QJsonDocument doc;
         doc.setObject(properties);
