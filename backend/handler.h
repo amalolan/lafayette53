@@ -29,6 +29,7 @@
 #include <QDirIterator>
 #include "../model/modelclass.h"
 #include "../model/LafException.h"
+#include "../model/ModelException.h"
 #include "util.h"
 #include <exception>
 using namespace utility;                    // Common utilities like string conversions
