@@ -1,7 +1,6 @@
 #include "handler.h"
 #include "helper.h"
 
-std::string getFrontendPath();
 
 Handler::Handler()
 {
@@ -45,7 +44,7 @@ void Handler::handle_get(http_request message)
     ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
 
     //check for frontend files.
-    QDirIterator dirIt(getFrontendPath().c_str(), QDirIterator::NoIteratorFlags);
+    QDirIterator dirIt((std::string(CODE_BASE_DIRECTORY)+"frontend/").c_str(), QDirIterator::NoIteratorFlags);
     if(message.relative_uri().to_string().compare("/") == 0) {
         returnFrontendFile(message);
         return;
@@ -95,7 +94,7 @@ void Handler::handle_get(http_request message)
 void Handler::returnFrontendFile(http_request message){
     std::string mime = "text/html";
 
-    std::string base_path = getFrontendPath();
+    std::string base_path = (std::string(CODE_BASE_DIRECTORY) + "frontend/");
     bool getIndex = false;
     if(message.relative_uri().to_string().find(".html") != std::string::npos){
         mime = "text/html";

@@ -5,7 +5,7 @@
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/json.h>
-using namespace std;
+//using namespace std;
 using namespace utility;                    // Common utilities like string conversions
 using namespace web;                        // Common features like URIs.
 using namespace web::http;                  // Common HTTP functionality
@@ -45,27 +45,45 @@ class HandlerTest : public ::testing::Test {
     Handler h1;
     Handler h2;
 
-    string requestTask(method mtd, string uri) {
+    pplx::task<http_response> make_task_request(
+       method mtd,
+       std::string uri,
+       json::value const & jvalue)
+    {
         uri_builder builder(U(uri));
-        pplx::task<string_t> requestTask = this->client.request(mtd, builder.to_string())
-                .then([=](http_response response)
-        {
+       return (mtd == methods::GET || mtd == methods::HEAD) ?
+          this->client.request(mtd, builder.to_string()) :
+          this->client.request(mtd, builder.to_string(), jvalue);
+    }
+
+
+    std::string requestTask(method mtd,
+                       std::string uri,
+                       json::value const & jvalue = json::value::null()) {
+        pplx::task<string_t> requestTask = this->make_task_request(mtd, uri, jvalue)
+                .then([=](http_response response) {
             return response.extract_string();
         });
         try {
             requestTask.wait();
             return utility::conversions::to_string_t(requestTask.get());
-        } catch (const std::exception &e)
-        {
+        } catch (const std::exception &e) {
             printf("Error exception:%s\n", e.what());
         }
+        return "";
     }
 };
 
 
 TEST_F(HandlerTest, TEST_GET)  {
-   string result = this->requestTask(methods::GET, "/get-data/museum/1");
-   cout<<result;
+    auto putvalue = json::value::object();
+//    putvalue[L"username"] = json::value::string(L"amalolan");
+//    putvalue[L"email"] = json::value::string(L"amalolan@gmail.com");
+//    putvalue[L"password"] = json::value::string(L"iamgenius");
+
+
+   std::string result = this->requestTask(methods::POST, "/get-data/user", putvalue);
+   std::cout<<result;
    ASSERT_NE(result, "");
 }
 
