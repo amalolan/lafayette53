@@ -32,11 +32,13 @@
 #include "util.h"
 #include <exception>
 using namespace utility;                    // Common utilities like string conversions
-using namespace web;                        // Common features like URIs.
+//using namespace web; // Common features like URIs.
+//using http_request = web::http_request;
+//using http = web::http;
 using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
-using namespace http::experimental::listener;
+using namespace web::http::experimental::listener;
 template < class T >
 class Handler
 {

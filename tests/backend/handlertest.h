@@ -39,9 +39,8 @@ protected:
     // before the destructor).
     }
 
-    pplx::task<http_response> make_task_request(method mtd, std::string uri, json::value const & jvalue);
-    std::string requestTask(method mtd, std::string uri, json::value const & jvalue = json::value::null());
+    pplx::task<http_response> make_task_request(method mtd, std::string uri, web::json::value const & jvalue);
+    std::string requestTask(method mtd, std::string uri, web::json::value const & jvalue = web::json::value::null());
 
 };
-
 #endif // HANDLERTEST_H

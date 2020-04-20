@@ -3,7 +3,7 @@
 pplx::task<http_response> HandlerTest::make_task_request(
    method mtd,
    std::string uri,
-   json::value const & jvalue)
+   web::json::value const & jvalue)
 {
     uri_builder builder(U(uri));
    return (mtd == methods::GET || mtd == methods::HEAD) ?
@@ -13,7 +13,7 @@ pplx::task<http_response> HandlerTest::make_task_request(
 
 std::string HandlerTest::requestTask(method mtd,
                    std::string uri,
-                   json::value const & jvalue) {
+                   web::json::value const & jvalue) {
     pplx::task<string_t> requestTask = this->make_task_request(mtd, uri, jvalue)
             .then([=](http_response response) {
         std::cout<<"Response Code: " <<response.status_code()<<std::endl;

@@ -16,7 +16,8 @@ HEADERS += \
     ../model/modelclass.h \
     ../model/ModelException.h \
     handler.tpp \
-    util.h
+    util.h \
+    ../nlohmann/json.hpp
 
 
 macx: LIBS += -L$$PWD/../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/lib/ -lboost_system
