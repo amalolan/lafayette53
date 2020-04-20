@@ -12,15 +12,16 @@ Handler<T>::Handler(utility::string_t url): m_listener(url)
 
 
 template < class T >
-void Handler<T>::handle_error(pplx::task<void>& t)
+void Handler<T>::handle_error(http_request message, pplx::task<void>& t, std::string error)
 {
     try
     {
         t.get();
     }
-    catch(...)
+    catch(std::exception &e)
     {
-        // Ignore the error, Log it if a logger is available
+        message.reply(status_codes::InternalError, Util::getFailureJsonStr(error + std::string(e.what())));
+        ucout << e.what() << "\n";
     }
 }
 
@@ -35,55 +36,51 @@ void Handler<T>::handle_get(http_request message)
 
     ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
 
-    // URL: /
+    // URL: / or /home
     //check for frontend files.
     QDirIterator dirIt((std::string(CODE_BASE_DIRECTORY)+"frontend/").c_str(), QDirIterator::NoIteratorFlags);
-    if(message.relative_uri().to_string().compare("/") == 0) {
+    if(message.relative_uri() ==  "/" || (paths[0] == "home" && paths.size() == 1)) {
         returnFrontendFile(message);
         return;
     }
     while(dirIt.hasNext()){
         std::string s = "/" + dirIt.fileName().toStdString();
 
-        if(s.compare(message.relative_uri().to_string()) == 0) {
+        if(message.relative_uri().to_string() == s) {
             returnFrontendFile(message);
             return ;
         }
         dirIt.next();
     }
     //frontend check ends here
-    try {
-        //check for specific urls
-        // URL: /get-data/museum-list/
-        if (paths[0] == "get-data") {
-            if(paths[1] == "museum-list"){
-                returnMuseumList(message);
-                return;
-            }
-            // URL: /get-data/museum-list/id
-            else if(paths[1] == "museum" && paths.size() == 3){
-                ucout << "museum\n";
-                std::string musId = paths[2];
-                returnMuseumById(message,std::stoi(musId));
-            }
-            // URL: /get-data/user/id
-            else if(paths[1] == "user" && paths.size() == 3){
-                ucout << "user\n";
-                std::string usrId = paths[2];
-                returnUserById(message,std::stoi(usrId));
-            }
-        }
-        else {
-            ucout << "wildcard caught\n";
-            returnFrontendFile(message);
+    //check for specific urls
+    // URL: /get-data/museum-list/
+    if (paths[0] == "get-data") {
+        if(paths[1] == "museum-list"){
+            returnMuseumList(message);
             return;
         }
-        message.reply(status_codes::NotFound,U("Check the GET url and try again"));
-    } catch (std::exception &e) {
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr("GET ERROR " + std::string(e.what())));
-        ucout << e.what() << "\n";
+        // URL: /get-data/museum-list/id
+        else if(paths[1] == "museum" && paths.size() == 3){
+            ucout << "museum\n";
+            std::string musId = paths[2];
+            returnMuseumById(message,std::stoi(musId));
+        }
+        // URL: /get-data/user/id
+        else if(paths[1] == "user" && paths.size() == 3){
+            ucout << "user\n";
+            std::string usrId = paths[2];
+            returnUserById(message,std::stoi(usrId));
+        }
     }
-
+    else {
+//    else {
+//        ucout << "wildcard caught\n";
+//        returnFrontendFile(message);
+//        return;
+//    }
+        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the GET url and try again"));
+    }
     return;
 
 };
@@ -122,14 +119,8 @@ void Handler<T>::returnFrontendFile(http_request message){
                 ucout << e.what() << "\n";
             }
         });
-    })
-            .then([=](pplx::task<void> t)
-    {
-        try {
-            t.get();
-        } catch (std::exception &e) {
-            message.reply(status_codes::InternalError, Util::getFailureJsonStr("FRONTEND FILES ERROR: " + std::string(e.what())));
-        }
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Front end Files Error: ");
     });
     return;
 }
@@ -138,30 +129,27 @@ template < class T >
 void Handler<T>::returnMuseumList(http_request message){
 
     message.reply(status_codes::OK,T::getMuseumListJSON())
-            .then([=](pplx::task<void> t){
-
-            t.get();
-
+            .then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Return Museum List Error: ");
     });
     return;
 };
 
 template < class T >
 void Handler<T>::returnMuseumById(http_request message,int musId){
-
     message.reply(status_codes::OK,T::getMuseumInfoJSON(musId))
-            .then([=](pplx::task<void> t){
-            t.get();
-    });
+            .then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Return Museum by ID Error: ");
+    });;
     return;
 }
 
 template < class T >
 void Handler<T>::returnUserById(http_request message,int usrId){
     message.reply(status_codes::OK,T::getUserInfoJSON(usrId))
-            .then([=](pplx::task<void> t){
-            t.get();
-    });
+            .then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Return User by ID ERROR: ");
+    });;
     return;
 }
 
@@ -174,23 +162,19 @@ void Handler<T>::handle_post(http_request message)
     //ucout <<  message.to_string() << std::endl;
     // URL: /get-data/museum-list
     ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
-    try {
-        if(message.relative_uri().to_string() ==  "/get-data/museum-list"){
-            addMuseum(message);
-        }
-        // URL: /get-data/user
-        else if(message.relative_uri().to_string() == "/get-data/user"){
-            registerUser(message);
-        }
-        else {
-            message.extract_string(false).then([](utility::string_t s){
-                ucout << s << std::endl;
-            });
-            message.reply(status_codes::NotFound,U("check the POST url and try again"));
-        }
-    } catch(std::exception &e){
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr("POST ERROR " + std::string(e.what())));
-        ucout << e.what() << "\n";
+
+    if(message.relative_uri().to_string() ==  "/get-data/museum-list"){
+        addMuseum(message);
+    }
+    // URL: /get-data/user
+    else if(message.relative_uri().to_string() == "/get-data/user"){
+        registerUser(message);
+    }
+    else {
+        message.extract_string(false).then([](utility::string_t s){
+            ucout << s << std::endl;
+        });
+        message.reply(status_codes::NotFound,Util::getFailureJsonStr("check the POST url and try again"));
     }
     return;
 
@@ -199,53 +183,47 @@ void Handler<T>::handle_post(http_request message)
 template < class T >
 void Handler<T>::addMuseum(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        //ucout << s << std::endl;
         Museum *m = Util::parseMuseumJsonStr(s);
         std::string username = m->getUsername();
         std::string password = m->getUserPass();
-        //std::cout << password << '\n';
-
         std::string dataPass = T::getPasswordHash(username);
-        //ucout << dataPass << '\n';
-        //ucout << username << '\n';
         bool t =false;
         if (password == dataPass) {
             ucout << "password Correct\n";
             t = T::saveMuseumToDB(*m);
             if(t) {
                 ucout << "success\n";
-                message.reply(status_codes::OK, Util::getSuccessJsonStr("Museum created"));
                 delete m;
-                return;
+                return message.reply(status_codes::OK, Util::getSuccessJsonStr("Museum created"));
             } else {
                 ucout << "error\n";
-                message.reply(status_codes::Conflict,Util::getFailureJsonStr("Museum creation failed"));
                 delete m;
-                return;
+                return message.reply(status_codes::Conflict,Util::getFailureJsonStr("Museum creation failed"));
             }
         } else {
             ucout << "login info incorrect\n";
-            message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("password incorrect"));
             delete m;
+            return message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("login error"));
         }
-        return;
-
-    });
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Add Museum Error: ");
+    });;
 };
 
 
 template < class T>
 void Handler<T>::registerUser(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        ucout << s << std::endl;
         User *u = Util::parseUserJsonStr(s);
         if(T::saveUserToDB(*u)){
             ucout << "success add user\n";
-            message.reply(status_codes::OK, Util::getSuccessJsonStr("user registered"));
-        } else{
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("user registered"));
+        } else {
             ucout << "failed to add user\n";
-            message.reply(status_codes::Conflict, Util::getFailureJsonStr("user could not be registered"));
+            return message.reply(status_codes::Conflict, Util::getFailureJsonStr("user could not be registered"));
         }
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Register User Error: ");
     });
     return;
 };
@@ -260,20 +238,16 @@ void Handler<T>::handle_put(http_request message)
 {
     ucout << "PUT " << message.relative_uri().to_string() << "\n";
     auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
-    try {
-        if(paths[0] == "get-data" && paths[1] == "login" && paths.size() == 3){
-            validateLogin(message,paths[2]);
-        }
-        else if(paths[0] == "get-data" && paths[1] == "user" && paths.size() == 3){
-            getUserProfile(message,paths[2]);
-            return;
-        }
-        else {
-            message.reply(status_codes::NotFound,U("Check the url again"));
-        }
-    } catch (std::exception &e) {
-        ucout << e.what() << "\n";
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr("PUT ERROR " + std::string(e.what())));
+
+    if(paths[0] == "get-data" && paths[1] == "login" && paths.size() == 3){
+        validateLogin(message,paths[2]);
+    }
+    else if(paths[0] == "get-data" && paths[1] == "user" && paths.size() == 3){
+        getUserProfile(message,paths[2]);
+        return;
+    }
+    else {
+        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the PUT url again"));
     }
     return;
 };
@@ -290,8 +264,9 @@ void Handler<T>::validateLogin(http_request message,std::string username){
             ucout << "login failed\n";
             message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("login failed"));
         }
-
-    });
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Validate Login Error: ");
+    });;
     return;
 };
 
@@ -310,7 +285,9 @@ void Handler<T>::getUserProfile(http_request message,std::string username){
             ucout << "unauthorized\n";
             message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("login failed"));
         }
-    });
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Get User Profile Error: ");
+    });;
     return;
 }
 
@@ -321,8 +298,12 @@ template < class T >
 void Handler<T>::handle_delete(http_request message)
 {
     ucout <<  message.to_string() << std::endl;
-
-    std::string rep = U("WRITE YOUR DELETE OPERATION");
-    message.reply(status_codes::OK,rep);
+    message.reply(status_codes::NotFound, Util::getFailureJsonStr("No DELETE methods implemented"));
     return;
 };
+
+//
+// Helpers that use <T>
+//
+
+

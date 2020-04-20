@@ -76,15 +76,15 @@ private:
     void returnUserById(http_request message,int usrId);
 
     void handle_put(http_request message);
-    void checkLogin(http_request message,std::string username);
+    void validateLogin(http_request message,std::string username);
     void getUserProfile(http_request message,std::string username);
 
     void handle_post(http_request message);
     void addMuseum(http_request message);
-    void addUser(http_request message);
+    void registerUser(http_request message);
 
     void handle_delete(http_request message);
-    void handle_error(pplx::task<void>& t);
+    void handle_error( http_request message, pplx::task<void>& t, std::string error="ERROR");
     http_listener m_listener;
 };
 

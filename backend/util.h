@@ -1,9 +1,11 @@
 #ifndef UTIL_H
 #define UTIL_H
 #include "../model/modelclass.h"
-#include "../model/LafException.h"
+#include "../model/ModelException.h"
 #include "../nlohmann/json.hpp"
-#include <QJsonObject>
+//#include <cpprest/http_client.h>
+//#include <cpprest/filestream.h>
+//#include <cpprest/json.h>
 #include <iostream>
 
 #ifdef NDEBUG
@@ -63,13 +65,16 @@ public:
      * @return
      */
     static User* parseUserJsonStr(std::string jsonStr){
-        json obj = json::parse(jsonStr);
-        std::string keys[] = {"username", "email", "password"};
-        for (auto key : keys) {
-//            if (key == "email" && registered) continue;
-            assertMessage (obj.contains(key), "Invalid Json Schema");
-        }
-        return new User(obj["username"],obj["email"],obj["password"]);
+            json obj = json::parse(jsonStr);
+            std::string keys[] = {"username", "email", "password"};
+            for (auto key : keys) {
+//              if (key == "email" && registered) continue;
+              if (! obj.contains(key))
+                  throw ModelException("Invalid Json Schema");
+            }
+            return new User(obj["username"],obj["email"],obj["password"]);
+
+
     }
 
     /**
@@ -80,6 +85,7 @@ public:
      *   "password": string
      * }
      * @return true/false if login is successful or not
+     * TODO
      */
     static bool checkLogin(std::string userJsonStr){
         try{
@@ -93,6 +99,23 @@ public:
         }
         return false;
     }
+
+    /**
+     * @brief parsePassword
+     * @param jsonStr
+     * {
+     *   "username": string,
+     *   "email": string,
+     *   "password": string
+     * }
+     * @return string
+     */
+    static std::string parsePassword(std::string jsonStr){
+        json obj = json::parse(jsonStr);
+        assertMessage(obj.contains("password"), "Invalid Json Schema");
+        return obj["password"];
+    }
+
     /**
      * @brief successJSON generates success message as a json to send to the front end.
      * @param message success message
@@ -125,22 +148,6 @@ public:
             {"message", message}
         };
         return obj.dump();
-    }
-
-    /**
-     * @brief parsePassword
-     * @param jsonStr
-     * {
-     *   "username": string,
-     *   "email": string,
-     *   "password": string
-     * }
-     * @return string
-     */
-    static std::string parsePassword(std::string jsonStr){
-        json obj = json::parse(jsonStr);
-        assertMessage(obj.contains("password"), "Invalid Json Schema");
-        return obj["password"];
     }
 };
 
