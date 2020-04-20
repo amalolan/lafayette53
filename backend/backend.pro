@@ -11,6 +11,7 @@ QMAKE_CXXFLAGS += -std=gnu++11
 LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
 HEADERS += \
+    ModelClassExt.h \
     handler.h \
     ../model/modelclass.h \
     ../model/ModelException.h \

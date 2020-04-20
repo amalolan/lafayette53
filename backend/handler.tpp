@@ -79,7 +79,7 @@ void Handler<T>::handle_get(http_request message)
     }
     else {
         ucout << "wildcard caught\n";
-        returnFrontendFile(message);
+        returnWildCard(message);
 //        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the GET url and try again"));
     }
     return;
@@ -127,6 +127,28 @@ void Handler<T>::returnMuseumList(http_request message){
     message.reply(status_codes::OK,T::getMuseumListJSON())
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Return Museum List Error: ");
+    });
+    return;
+};
+
+template < class T >
+void Handler<T>::returnWildCard(http_request message)
+{
+    std::string mime = "text/html";
+
+    std::string base_path = (std::string(CODE_BASE_DIRECTORY) + "frontend/");
+
+    std::string path = base_path + "index.html";
+
+    concurrency::streams::fstream::open_istream(U(path),std::ios::in)
+            .then([=](concurrency::streams::istream is)
+    {
+        message.reply(status_codes::OK, is, U(mime))
+                .then([=] (pplx::task<void> t) {
+            this->handle_error(message, t, "Front end Files Error: ");
+        });
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Front end Files Error: ");
     });
     return;
 };
