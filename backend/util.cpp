@@ -1,6 +1,6 @@
 #include "util.h"
 
-util::util()
+Util::Util()
 {
 
 }

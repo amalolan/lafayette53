@@ -4,10 +4,10 @@
 #include "../model/LafException.h"
 #include <QJsonObject>
 #include <iostream>
-class util
+class Util
 {
 public:
-    util();
+    Util();
     static Museum* parseMuseumJSON(std::string json){
         QString s = QString::fromStdString(json);
 
@@ -98,6 +98,7 @@ public:
 
         return doc.toJson().toStdString();
     }
+
     static std::string parsePassword(std::string json){
         QString s = QString::fromStdString(json);
 

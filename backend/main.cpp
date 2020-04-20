@@ -2,14 +2,10 @@
 #include "../model/LafException.h"
 #include "handler.h"
 #include "../model/modelclass.h"
-//#include "../model/modelclass.cpp"
 using namespace web;
 using namespace http;
 using namespace utility;
 using namespace http::experimental::listener;
-
-
-
 
 Handler<ModelClass> *g_httpHandler;
 
