@@ -28,7 +28,6 @@ HEADERS += \
     ../../model/collection.h \
     ../../model/museum.h \
     ../../model/user.h \
-    ../../model/LafException.h \
     ../../model/ModelException.h \
     ../../nlohmann/json.hpp
 

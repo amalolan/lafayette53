@@ -7,7 +7,6 @@ Handler<T>::Handler(utility::string_t url): m_listener(url)
     m_listener.support(methods::PUT, std::bind(&Handler<T>::handle_put, this, std::placeholders::_1));
     m_listener.support(methods::POST, std::bind(&Handler<T>::handle_post, this, std::placeholders::_1));
     m_listener.support(methods::DEL, std::bind(&Handler<T>::handle_delete, this, std::placeholders::_1));
-
 }
 
 
@@ -17,6 +16,10 @@ void Handler<T>::handle_error(http_request message, pplx::task<void>& t, std::st
     try
     {
         t.get();
+    }
+    catch(ModelException &m) {
+        message.reply(status_codes::Unauthorized, Util::getFailureJsonStr(error + std::string(m.what())));
+        ucout << m.what() << "\n";
     }
     catch(std::exception &e)
     {
@@ -39,7 +42,8 @@ void Handler<T>::handle_get(http_request message)
     // URL: / or /home
     //check for frontend files.
     QDirIterator dirIt((std::string(CODE_BASE_DIRECTORY)+"frontend/").c_str(), QDirIterator::NoIteratorFlags);
-    if(message.relative_uri() ==  "/" || (paths[0] == "home" && paths.size() == 1)) {
+    // || (paths[0] == "home" && paths.size() == 1)
+    if(message.relative_uri() ==  "/" ) {
         returnFrontendFile(message);
         return;
     }
@@ -74,12 +78,9 @@ void Handler<T>::handle_get(http_request message)
         }
     }
     else {
-//    else {
-//        ucout << "wildcard caught\n";
-//        returnFrontendFile(message);
-//        return;
-//    }
-        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the GET url and try again"));
+        ucout << "wildcard caught\n";
+        returnFrontendFile(message);
+//        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the GET url and try again"));
     }
     return;
 
@@ -111,13 +112,8 @@ void Handler<T>::returnFrontendFile(http_request message){
             .then([=](concurrency::streams::istream is)
     {
         message.reply(status_codes::OK, is, U(mime))
-                .then([](pplx::task<void> t)
-        {
-            try{
-                t.get();
-            } catch(std::exception &e){
-                ucout << e.what() << "\n";
-            }
+                .then([=] (pplx::task<void> t) {
+            this->handle_error(message, t, "Front end Files Error: ");
         });
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Front end Files Error: ");
@@ -288,7 +284,7 @@ void Handler<T>::getUserProfile(http_request message,std::string username){
         }
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Get User Profile Error: ");
-    });;
+    });
     return;
 }
 
