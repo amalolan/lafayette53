@@ -78,12 +78,12 @@ private:
     void returnWildCard(http_request message);
 
     void handle_put(http_request message);
-    void validateLogin(http_request message,std::string username);
-    void getUserProfile(http_request message,std::string username);
+    void validateLogin(http_request message);
+    void getUserProfile(http_request message);
 
     void handle_post(http_request message);
     void addMuseum(http_request message);
-    void registerUser(http_request message);
+    void addUser(http_request message);
     void addCollection(http_request message);
 
     void handle_delete(http_request message);

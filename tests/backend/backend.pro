@@ -23,6 +23,7 @@ SOURCES += \
 HEADERS += \
     ../../backend/handler.h \
     ../../backend/util.h \
+    ../../backend/modelclassext.h \
     ../../model/modelclass.h \
     ../../model/artifact.h \
     ../../model/collection.h \

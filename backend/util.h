@@ -127,7 +127,7 @@ public:
      */
     static std::string getSuccessJsonStr(std::string message){
         json obj = {
-            {"success", "true"},
+            {"success", true},
             {"message", message}
         };
         return obj.dump();
@@ -144,7 +144,7 @@ public:
      */
     static std::string getFailureJsonStr(std::string message){
         json obj = {
-            {"success", "false"},
+            {"success", false},
             {"message", message}
         };
         return obj.dump();

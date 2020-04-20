@@ -4,18 +4,19 @@ QT += sql
 
 SOURCES += \
         main.cpp \
-        ../model/modelclass.cpp
+        ../model/modelclass.cpp \
+        modelclassext.cpp
 
 QMAKE_CXXFLAGS += -std=gnu++11
 
 LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
 HEADERS += \
-    ModelClassExt.h \
     handler.h \
     ../model/modelclass.h \
     ../model/ModelException.h \
     handler.tpp \
+    modelclassext.h \
     util.h \
     ../nlohmann/json.hpp
 
