@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <iostream>
 
 class Museum
 {
@@ -75,6 +76,15 @@ public:
         return this->museumID > -1;
     }
 
+    std::string getUsername()
+    {
+        return this->user.getName();
+    }
+
+    std::string getUserPass()
+    {
+        return this->user.getPassword();
+    }
     std::string getJSON()
     {
         QJsonObject properties;

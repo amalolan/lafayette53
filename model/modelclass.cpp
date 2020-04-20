@@ -73,7 +73,7 @@ std::string ModelClass::getMuseumListJSON(){
         object["name"] = query.value(2).toString();
         object["introduction"] = "This is "+ query.value(2).toString();
         object["description"] = query.value(3).toString();
-        object["museumID"] = query.value(0).toString().toInt();
+        object["id"] = query.value(0).toString().toInt();
         object["userID"] = query.value(1).toString().toInt();
         array.append(object);
     }
@@ -114,7 +114,7 @@ std::string ModelClass::getMuseumInfoJSON(int museumID){
     object["name"] = query.value(0).toString();
     object["introduction"] = "This is "+ query.value(0).toString();
     object["description"] = query.value(1).toString();
-    object["museumID"] = query.value(3).toString().toInt();
+    object["id"] = query.value(3).toString().toInt();
     object["userID"] = query.value(2).toString().toInt();
     QJsonDocument doc;
     doc.setObject(object);
