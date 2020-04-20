@@ -15,8 +15,6 @@ HEADERS += \
         utiltest.h
 
 SOURCES += \
-#    ../../backend/handler.cpp \
-    ../../backend/util.cpp \
     ../../model/modelclass.cpp \
     ../../model/artifact.cpp \
     ../../model/collection.cpp

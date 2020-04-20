@@ -19,7 +19,6 @@
 #endif
 
 using json = nlohmann::json;
-
 class Util
 {
 public:
@@ -67,6 +66,7 @@ public:
         json obj = json::parse(jsonStr);
         std::string keys[] = {"username", "email", "password"};
         for (auto key : keys) {
+//            if (key == "email" && registered) continue;
             assertMessage (obj.contains(key), "Invalid Json Schema");
         }
         return new User(obj["username"],obj["email"],obj["password"]);
@@ -74,17 +74,19 @@ public:
 
     /**
      * @brief checkLogin give {username="",password=""} object to check if the login is successful.
-     * @param userJSON {username="", password=""}
+     * @param user json object
+     *  {
+     *   "username": string,
+     *   "password": string
+     * }
      * @return true/false if login is successful or not
      */
-    static bool checkLogin(std::string userJSON){
+    static bool checkLogin(std::string userJsonStr){
         try{
-            User *u = parseUserJsonStr(userJSON);
+            User *u = parseUserJsonStr(userJsonStr);
             std::cout << u->getName() << " " << u->getPassword() << '\n';
-            //std::string password = parsePassword(userJSON);
-            //std::string dataPass = ModelClass::getPasswordHash();
-            //TODO check if passwords matches and return true
-        } catch(LafException &e){
+//            std::string dataPass = T::getPasswordHash(u->getName());
+        } catch(std::exception &e){
 
             std::cout << "user could not be found" << std::endl;
             return false;

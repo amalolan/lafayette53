@@ -4,8 +4,7 @@ QT += sql
 
 SOURCES += \
         main.cpp \
-        ../model/modelclass.cpp \
-        util.cpp
+        ../model/modelclass.cpp
 
 QMAKE_CXXFLAGS += -std=gnu++11
 

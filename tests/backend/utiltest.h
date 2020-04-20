@@ -1,6 +1,7 @@
 #ifndef UTILTEST_H
 #define UTILTEST_H
 #include "../../backend/util.h"
+#include "../../model/modelclass.h"
 #include "gtest/gtest.h"
 #include <../../nlohmann/json.hpp>
 
