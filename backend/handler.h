@@ -32,11 +32,13 @@
 #include "util.h"
 #include <exception>
 using namespace utility;                    // Common utilities like string conversions
-using namespace web;                        // Common features like URIs.
+//using namespace web; // Common features like URIs.
+//using http_request = web::http_request;
+//using http = web::http;
 using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
-using namespace http::experimental::listener;
+using namespace web::http::experimental::listener;
 template < class T >
 class Handler
 {
@@ -74,15 +76,15 @@ private:
     void returnUserById(http_request message,int usrId);
 
     void handle_put(http_request message);
-    void checkLogin(http_request message,std::string username);
+    void validateLogin(http_request message,std::string username);
     void getUserProfile(http_request message,std::string username);
 
     void handle_post(http_request message);
     void addMuseum(http_request message);
-    void addUser(http_request message);
+    void registerUser(http_request message);
 
     void handle_delete(http_request message);
-    void handle_error(pplx::task<void>& t);
+    void handle_error( http_request message, pplx::task<void>& t, std::string error="ERROR");
     http_listener m_listener;
 };
 
