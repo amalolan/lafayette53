@@ -101,25 +101,10 @@ TEST_F(GameTest, testingUserInput){
     User newUser("yevs", "yvs@lafayette.edu", "password");
     ModelClass::open();
     ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
-    ASSERT_TRUE(newUser.indb());
-    EXPECT_EQ(ModelClass::getPasswordHash(newUser.getName()), "password");
-    EXPECT_EQ(newUser.getEmail(), ModelClass::getUserObject("yevs").getEmail());
-    EXPECT_EQ(newUser.getPassword(), ModelClass::getUserObject("yevs").getPassword());
-    EXPECT_EQ(newUser.getUserID(), ModelClass::getUserObject("yevs").getUserID());
-    EXPECT_EQ(newUser.getJSON(), ModelClass::getUserObject("yevs").getJSON());
-    EXPECT_EQ(newUser.getName(), ModelClass::getUserObject("yevs").getName());
-
-    EXPECT_EQ(ModelClass::getPasswordHash(newUser.getName()), "password");
-    EXPECT_EQ(newUser.getEmail(), ModelClass::getUserObject(newUser.getUserID()).getEmail());
-    EXPECT_EQ(newUser.getPassword(), ModelClass::getUserObject(newUser.getUserID()).getPassword());
-    EXPECT_EQ(newUser.getUserID(), ModelClass::getUserObject(newUser.getUserID()).getUserID());
-    EXPECT_EQ(newUser.getJSON(), ModelClass::getUserObject(newUser.getUserID()).getJSON());
-    EXPECT_EQ(newUser.getName(), ModelClass::getUserObject(newUser.getUserID()).getName());
-
-    newUser.setEmail("yevenyos");
-    EXPECT_TRUE(ModelClass::updateUserInDB(newUser));
+    ASSERT_TRUE(newUser.indb());;
+    //ASSERT_TRUE(ModelClass::updateUserInDB(newUser));
     ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
-    ASSERT_TRUE(!newUser.indb());
+    ASSERT_TRUE(newUser.getUserID() == -1);
     ModelClass::close();
 }
 
@@ -131,36 +116,11 @@ TEST_F(GameTest, testingMuseumInput){
     Museum museum("aMuseum", "a sample museum", newUser);
     ASSERT_TRUE(ModelClass::saveMuseumToDB(museum));
     ASSERT_TRUE(museum.indb());
-    museum.setName("newName");
-    EXPECT_TRUE(ModelClass::updateMuseumInDB(museum));
-    museum.getUser().setPassword("able");
-    EXPECT_EQ(newUser.getPassword(), museum.getUser().getPassword());
     ASSERT_TRUE(ModelClass::removeMuseumFromDB(museum));
     ASSERT_TRUE(!museum.indb());
     ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
     ASSERT_TRUE(!newUser.indb());
     ModelClass::close();
-}
-
-TEST_F(GameTest, TestingModelClassMuseumAndUserReturns){
-    User newUser("sena", "s@lafayette.edu", "password");
-    ModelClass::open();
-    ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
-    Museum museum("aMuseum", "a sample museum", newUser);
-    ASSERT_TRUE(ModelClass::saveMuseumToDB(museum));
-    EXPECT_EQ(museum.getMuseumID(), ModelClass::getMuseumObject("aMuseum").getMuseumID());
-    EXPECT_EQ(museum.getName(), ModelClass::getMuseumObject("aMuseum").getName());
-    EXPECT_EQ(museum.getJSON(), ModelClass::getMuseumObject("aMuseum").getJSON());
-    EXPECT_EQ(museum.getDescription(), ModelClass::getMuseumObject("aMuseum").getDescription());
-    EXPECT_EQ(museum.getUser().getUserID(), ModelClass::getMuseumObject("aMuseum").getUser().getUserID());
-    EXPECT_EQ(museum.getUser().getName(), ModelClass::getMuseumObject("aMuseum").getUser().getName());
-    EXPECT_EQ(museum.getUser().getEmail(), ModelClass::getMuseumObject("aMuseum").getUser().getEmail());
-    EXPECT_EQ(museum.getUser().getPassword(), ModelClass::getMuseumObject("aMuseum").getUser().getPassword());
-    EXPECT_EQ(museum.getUser().getJSON(), ModelClass::getMuseumObject("aMuseum").getUser().getJSON());
-    ASSERT_TRUE(ModelClass::removeMuseumFromDB(museum));
-    ASSERT_TRUE(!museum.indb());
-    ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
-    ASSERT_TRUE(!newUser.indb());
 }
 
 

@@ -5,7 +5,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include <iostream>
 
 class Museum
 {
@@ -22,13 +21,6 @@ public:
         this->name = name;
         this->description = description;
         this->museumID = museumID;
-    }
-
-    Museum(const Museum &museum):user(museum.getUser())
-    {
-        this->name = museum.getName();
-        this->description = museum.getDescription();
-        this->museumID = museum.getMuseumID();
     }
 
     ~Museum()
@@ -51,22 +43,22 @@ public:
         this->museumID = id;
     }
 
-    std::string getName() const
+    std::string getName()
     {
         return this->name;
     }
 
-    std::string getDescription() const
+    std::string getDescription()
     {
         return this->description;
     }
 
-    User getUser() const
+    int getUserID()
     {
-        return this->user;
+        return this->user.getUserID();
     }
 
-    int getMuseumID() const
+    int getMuseumID()
     {
         return this->museumID;
     }
@@ -76,22 +68,17 @@ public:
         return this->museumID > -1;
     }
 
-    std::string getUsername()
-    {
-        return this->user.getName();
+    User getUser(){
+        return this->user;
     }
 
-    std::string getUserPass()
-    {
-        return this->user.getPassword();
-    }
     std::string getJSON()
     {
         QJsonObject properties;
         properties["name"] = QString::fromStdString(this->name);
         properties["introduction"] = QString::fromStdString("This is "+this->name);
         properties["description"] = QString::fromStdString(this->description);
-        properties["id"] = this->museumID;
+        properties["museumID"] = this->museumID;
         properties["userID"] = this->user.getUserID();
         QJsonDocument doc;
         doc.setObject(properties);

@@ -22,15 +22,13 @@ public:
         std::string intro = musObj["introduction"].toString().toStdString();
         std::string description = musObj["description"].toString().toStdString();
         std::string id = musObj["id"].toString().toStdString();
-
         QJsonObject userObj = jsObj["user"].toObject();
 
         std::string username = userObj["username"].toString().toStdString();
-        std::string email = userObj["email"].toString().toStdString();
         std::string password = userObj["password"].toString().toStdString();
+        std::string email = userObj["email"].toString().toStdString();
         //std::string id = ModelClass::
         //TODO add userID by getting user from the database.
-        //we have username and password object in password field right now.
         User u(username,email,password,-1);
         return new Museum(name,description,u);
     }
@@ -49,24 +47,15 @@ public:
         return new User(username,email,password);
     }
 
-    /**
-     * @brief checkLogin give {username="",password=""} object to check if the login is successful.
-     * @param userJSON {username="", password=""}
-     * @return true/false if login is successful or not
-     */
-    static bool checkLogin(std::string userJSON){
+    static bool checkLogin(User& u){
         try{
-            User *u = parseUserJSON(userJSON);
-            std::cout << u->getName() << " " << u->getPassword() << '\n';
-            //std::string password = parsePassword(userJSON);
-            //std::string dataPass = ModelClass::getPasswordHash();
+            std::string s = ModelClass::getPasswordHash(u.getName());
             //TODO check if passwords matches and return true
         } catch(LafException &e){
 
             std::cout << "user could not be found" << std::endl;
             return false;
         }
-        return false;
     }
     /**
      * @brief successJSON generates success message for the server
@@ -107,6 +96,7 @@ public:
 
         return jsobj["password"].toString().toStdString();
     }
+
 };
 
 #endif // UTILITY_H

@@ -1,12 +1,5 @@
 #ifndef HANDLER_H
 #define HANDLER_H
-#define HELPER_H
-#ifdef __APPLE__
-    #define CODE_BASE_DIRECTORY "../../../../../lafayette53/"
-#elif __linux
-    #define CODE_BASE_DIRECTORY "../../lafayette53/"
-#endif
-
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/http_listener.h>              // HTTP server
@@ -27,9 +20,8 @@
 #include "cpprest/containerstream.h"
 #include "cpprest/producerconsumerstream.h"
 #include <QDirIterator>
-//#include "../model/modelclass.h"
+#include "../model/modelclass.h"
 #include "../model/LafException.h"
-#include "../model/ModelException.h"
 #include "util.h"
 #include <exception>
 using namespace utility;                    // Common utilities like string conversions
@@ -38,7 +30,7 @@ using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 using namespace http::experimental::listener;
-template < class T >
+
 class Handler
 {
     public:
@@ -84,5 +76,5 @@ class Handler
         http_listener m_listener;
 };
 
-#include "handler.tpp"
+
 #endif // HANDLER_H

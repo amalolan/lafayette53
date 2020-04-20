@@ -1,28 +1,28 @@
 #include "handler.h"
-template < class T >
-Handler<T>::Handler()
+#include "helper.h"
+
+std::string getFrontendPath();
+
+Handler::Handler()
 {
 
 }
 
-template < class T >
-Handler<T>::Handler(utility::string_t url): m_listener(url)
+Handler::Handler(utility::string_t url):m_listener(url)
 {
-    m_listener.support(methods::GET, std::bind(&Handler<T>::handle_get, this, std::placeholders::_1));
-    m_listener.support(methods::PUT, std::bind(&Handler<T>::handle_put, this, std::placeholders::_1));
-    m_listener.support(methods::POST, std::bind(&Handler<T>::handle_post, this, std::placeholders::_1));
-    m_listener.support(methods::DEL, std::bind(&Handler<T>::handle_delete, this, std::placeholders::_1));
+    m_listener.support(methods::GET, std::bind(&Handler::handle_get, this, std::placeholders::_1));
+    m_listener.support(methods::PUT, std::bind(&Handler::handle_put, this, std::placeholders::_1));
+    m_listener.support(methods::POST, std::bind(&Handler::handle_post, this, std::placeholders::_1));
+    m_listener.support(methods::DEL, std::bind(&Handler::handle_delete, this, std::placeholders::_1));
 
 }
 
-template < class T >
-Handler<T>::~Handler()
+Handler::~Handler()
 {
 
 }
 
-template < class T >
-void Handler<T>::handle_error(pplx::task<void>& t)
+void Handler::handle_error(pplx::task<void>& t)
 {
     try
     {
@@ -38,15 +38,14 @@ void Handler<T>::handle_error(pplx::task<void>& t)
 //
 // Get Request
 //
-template < class T >
-void Handler<T>::handle_get(http_request message)
+void Handler::handle_get(http_request message)
 {
     auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
 
     ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
 
     //check for frontend files.
-    QDirIterator dirIt((std::string(CODE_BASE_DIRECTORY)+"frontend/").c_str(), QDirIterator::NoIteratorFlags);
+    QDirIterator dirIt(getFrontendPath().c_str(), QDirIterator::NoIteratorFlags);
     if(message.relative_uri().to_string().compare("/") == 0) {
         returnFrontendFile(message);
         return;
@@ -93,11 +92,10 @@ void Handler<T>::handle_get(http_request message)
 
 };
 
-template < class T >
-void Handler<T>::returnFrontendFile(http_request message){
+void Handler::returnFrontendFile(http_request message){
     std::string mime = "text/html";
 
-    std::string base_path = (std::string(CODE_BASE_DIRECTORY) + "frontend/");
+    std::string base_path = getFrontendPath();
     bool getIndex = false;
     if(message.relative_uri().to_string().find(".html") != std::string::npos){
         mime = "text/html";
@@ -136,13 +134,12 @@ void Handler<T>::returnFrontendFile(http_request message){
             message.reply(status_codes::InternalError);
         }
     });
-    return;
 }
 
-template < class T >
-void Handler<T>::returnMuseumList(http_request message){
 
-    message.reply(status_codes::OK,T::getMuseumListJSON())
+void Handler::returnMuseumList(http_request message){
+
+    message.reply(status_codes::OK,ModelClass::getMuseumListJSON())
             .then([=](pplx::task<void> t){
         try{
             t.get();
@@ -154,10 +151,9 @@ void Handler<T>::returnMuseumList(http_request message){
     return;
 };
 
-template < class T >
-void Handler<T>::returnMuseumById(http_request message,int musId){
+void Handler::returnMuseumById(http_request message,int musId){
 
-    message.reply(status_codes::OK,T::getMuseumInfoJSON(musId))
+    message.reply(status_codes::OK,ModelClass::getMuseumInfoJSON(musId))
             .then([=](pplx::task<void> t){
         try {
             t.get();
@@ -166,12 +162,10 @@ void Handler<T>::returnMuseumById(http_request message,int musId){
             message.reply(status_codes::InternalError, e.what());
         }
     });
-    return;
 }
 
-template < class T >
-void Handler<T>::returnUserById(http_request message,int usrId){
-    message.reply(status_codes::OK,T::getUserInfoJSON(usrId))
+void Handler::returnUserById(http_request message,int usrId){
+    message.reply(status_codes::OK,ModelClass::getUserInfoJSON(usrId))
             .then([=](pplx::task<void> t){
             try {
                 t.get();
@@ -180,14 +174,12 @@ void Handler<T>::returnUserById(http_request message,int usrId){
                 message.reply(status_codes::InternalError);
         }
     });
-    return;
 }
 
 //
 // A POST request
 //
-template < class T >
-void Handler<T>::handle_post(http_request message)
+void Handler::handle_post(http_request message)
 {
     //ucout <<  message.to_string() << std::endl;
     ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
@@ -206,24 +198,22 @@ void Handler<T>::handle_post(http_request message)
     return ;
 };
 
-template < class T >
-void Handler<T>::addMuseum(http_request message){
+void Handler::addMuseum(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         try {
             //ucout << s << std::endl;
             Museum *m = util::parseMuseumJSON(s);
-            std::string username = m->getUsername();
-            std::string password = m->getUserPass();
-            //std::cout << password << '\n';
+            User u = m->getUser();
+            std::string username = u.getName();
+            std::string password = u.getPassword();
 
-            std::string dataPass = T::getPasswordHash(username);
-            //ucout << dataPass << '\n';
-            //ucout << username << '\n';
+            std::string dataPass = ModelClass::getPasswordHash(username);
+
             bool t =false;
             if (password.compare(dataPass) == 0)
             {
                 ucout << "password Correct\n";
-                t = T::saveMuseumToDB(*m);
+                t = ModelClass::saveMuseumToDB(*m);
                 if(t) {
                     ucout << "success\n";
                     std::string reply = util::successJSON("Museum created");
@@ -254,17 +244,15 @@ void Handler<T>::addMuseum(http_request message){
         }
 
     });
-    return;
 };
 
 
-template < class T>
-void Handler<T>::addUser(http_request message){
+void Handler::addUser(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         try {
             ucout << s << std::endl;
             User *u = util::parseUserJSON(s);
-            if(T::saveUserToDB(*u)){
+            if(ModelClass::saveUserToDB(*u)){
                 ucout << "success add user\n";
                 std::string reply = util::successJSON("user registered");
                 message.reply(status_codes::OK, reply);
@@ -280,7 +268,6 @@ void Handler<T>::addUser(http_request message){
             message.reply(status_codes::InternalError, reply);
         }
     });
-    return;
 };
 
 
@@ -295,8 +282,7 @@ void Handler<T>::addUser(http_request message){
 //
 // A DELETE request
 //
-template < class T >
-void Handler<T>::handle_delete(http_request message)
+void Handler::handle_delete(http_request message)
 {
     ucout <<  message.to_string() << std::endl;
 
@@ -309,30 +295,30 @@ void Handler<T>::handle_delete(http_request message)
 //
 // A PUT request
 //
-template < class T >
-void Handler<T>::handle_put(http_request message)
+void Handler::handle_put(http_request message)
 {
-     ucout << "PUT " << message.relative_uri().to_string() << "\n";
+     ucout << message.relative_uri().to_string() << "\n";
      auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
      if(paths[0].compare("get-data") == 0 && paths[1].compare("login") == 0 && paths.size() == 3){
          checkLogin(message,paths[2]);
          return;
      }
      if(paths[0].compare("get-data") == 0 && paths[1].compare("user") == 0 && paths.size() == 3){
-         getUserProfile(message,paths[2]);
+         // getUserProfile(message);
          return;
      }
-
+     //ucout <<  message.to_string() << std::endl;
+     ucout << message.relative_uri().to_string() << "\n";
+     std::string rep = U("WRITE YOUR OWN PUT OPERATION");
      message.reply(status_codes::NotFound,U("Check the url again"));
      return;
 };
 
-template < class T >
-void Handler<T>::checkLogin(http_request message,std::string username){
+void Handler::checkLogin(http_request message,std::string username){
     message.extract_string(false).then([=](utility::string_t s){
         try{
             std::string password = util::parsePassword(s);
-            std::string dataPass = T::getPasswordHash(username);
+            std::string dataPass = ModelClass::getPasswordHash(username);
             if(password.compare(dataPass) == 0) {
                 ucout << "login successful\n";
                 std::string reply = util::successJSON("login successful");
@@ -348,34 +334,21 @@ void Handler<T>::checkLogin(http_request message,std::string username){
             message.reply(status_codes::InternalError, reply);
         }
     });
-    return;
+
 };
 
-template < class T >
-void Handler<T>::getUserProfile(http_request message,std::string username){
-    message.extract_string(false).then([=](utility::string_t s){
-        try{
-            std::string password = util::parsePassword(s);
-            std::string dataPass = T::getPasswordHash(username);
-            if(password.compare(dataPass) == 0){
-                ucout << "authorized\n";
-                User u = T::getUserObject(username);
-                std::string userJSON = u.getJSON();
-                ucout << userJSON << 'n';
-                message.reply(status_codes::OK, userJSON);
-            } else{
-                ucout << "unauthorized\n";
-                std::string reply = util::failureJSON("login failed");
-                message.reply(status_codes::Unauthorized, reply);
-            }
-        } catch(ModelException &e){
-            ucout << e.what() << "\n";
-            std::string reply = util::failureJSON(e.what());
-            message.reply(status_codes::InternalError, reply);
-        }
-    });
-    return;
-}
+//TODO getUserProfile by username;
+//void Handler::getUserProfile(http_request message,std::string username){
+//    message.extract_string(false).then([=](utility::string_t s){
+//        try{
+//            std::string password = util::parsePassword(s);
+//            std::string dataPass = ModelClass::getPasswordHash(username);
+//            if(password.compare(dataPass) == 0){
+//                //TODO userJSON(username)
+//            }
+//        }
+//    })
+//}
 
 
 

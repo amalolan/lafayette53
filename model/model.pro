@@ -9,7 +9,7 @@ SOURCES += \
         main.cpp
 
 HEADERS += \
-    ModelException.h \
+    LafException.h \
     artifact.h \
     collection.h \
     museum.h \
