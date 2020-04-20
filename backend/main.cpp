@@ -1,13 +1,13 @@
 #include <iostream>
 #include "../model/LafException.h"
 #include "handler.h"
-#include "../model/modelclass.h"
+#include "modelclassext.h"
 using namespace web;
 using namespace http;
 using namespace utility;
 using namespace http::experimental::listener;
 
-Handler<ModelClass> *g_httpHandler;
+Handler<ModelClassExt> *g_httpHandler;
 
 void on_initialize(const string_t& address)
 {
@@ -15,7 +15,7 @@ void on_initialize(const string_t& address)
     uri_builder uri(address);
 
     auto addr = uri.to_uri().to_string();
-    g_httpHandler = new Handler<ModelClass>(addr);
+    g_httpHandler = new Handler<ModelClassExt>(addr);
     g_httpHandler->open().wait();
 
     ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;

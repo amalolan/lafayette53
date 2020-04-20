@@ -7,7 +7,6 @@ Handler<T>::Handler(utility::string_t url): m_listener(url)
     m_listener.support(methods::PUT, std::bind(&Handler<T>::handle_put, this, std::placeholders::_1));
     m_listener.support(methods::POST, std::bind(&Handler<T>::handle_post, this, std::placeholders::_1));
     m_listener.support(methods::DEL, std::bind(&Handler<T>::handle_delete, this, std::placeholders::_1));
-
 }
 
 
@@ -17,6 +16,10 @@ void Handler<T>::handle_error(http_request message, pplx::task<void>& t, std::st
     try
     {
         t.get();
+    }
+    catch(ModelException &m) {
+        message.reply(status_codes::Unauthorized, Util::getFailureJsonStr(error + std::string(m.what())));
+        ucout << m.what() << "\n";
     }
     catch(std::exception &e)
     {
@@ -39,7 +42,8 @@ void Handler<T>::handle_get(http_request message)
     // URL: / or /home
     //check for frontend files.
     QDirIterator dirIt((std::string(CODE_BASE_DIRECTORY)+"frontend/").c_str(), QDirIterator::NoIteratorFlags);
-    if(message.relative_uri() ==  "/" || (paths[0] == "home" && paths.size() == 1)) {
+    // || (paths[0] == "home" && paths.size() == 1)
+    if(message.relative_uri() ==  "/" ) {
         returnFrontendFile(message);
         return;
     }
@@ -53,33 +57,35 @@ void Handler<T>::handle_get(http_request message)
         dirIt.next();
     }
     //frontend check ends here
+
     //check for specific urls
-    // URL: /get-data/museum-list/
-    if (paths[0] == "get-data") {
+    // URL: /request/museum-list/
+    if (paths[0] == "request") {
         if(paths[1] == "museum-list"){
             returnMuseumList(message);
-            return;
         }
-        // URL: /get-data/museum-list/id
+        // URL: /request/museum/[id]
         else if(paths[1] == "museum" && paths.size() == 3){
             ucout << "museum\n";
-            std::string musId = paths[2];
-            returnMuseumById(message,std::stoi(musId));
+            std::string museumID = paths[2];
+            returnMuseumById(message,std::stoi(museumID));
         }
-        // URL: /get-data/user/id
+        // URL: /request/collection/[collectionID]
+        else if(paths[1] == "collection" && paths.size() == 3) {
+            ucout<< "collection\n";
+            std::string collectionID = paths[2];
+            returnCollectionById(message, std::stoi(collectionID));
+        }
+        // URL: /request/user/[id]
         else if(paths[1] == "user" && paths.size() == 3){
             ucout << "user\n";
-            std::string usrId = paths[2];
-            returnUserById(message,std::stoi(usrId));
+            std::string userID = paths[2];
+            returnUserById(message, std::stoi(userID));
         }
     }
     else {
-//    else {
-//        ucout << "wildcard caught\n";
-//        returnFrontendFile(message);
-//        return;
-//    }
-        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the GET url and try again"));
+        ucout << "Wildcard caught in GET URL \n";
+        returnWildCard(message);
     }
     return;
 
@@ -108,22 +114,32 @@ void Handler<T>::returnFrontendFile(http_request message){
     }
 
     concurrency::streams::fstream::open_istream(U(path),std::ios::in)
-            .then([=](concurrency::streams::istream is)
-    {
-        message.reply(status_codes::OK, is, U(mime))
-                .then([](pplx::task<void> t)
-        {
-            try{
-                t.get();
-            } catch(std::exception &e){
-                ucout << e.what() << "\n";
-            }
-        });
+            .then([=](concurrency::streams::istream is) {
+        return message.reply(status_codes::OK, is, U(mime));
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Front end Files Error: ");
     });
     return;
 }
+
+template < class T >
+void Handler<T>::returnWildCard(http_request message)
+{
+    std::string mime = "text/html";
+
+    std::string base_path = (std::string(CODE_BASE_DIRECTORY) + "frontend/");
+
+    std::string path = base_path + "index.html";
+
+    concurrency::streams::fstream::open_istream(U(path),std::ios::in)
+            .then([=](concurrency::streams::istream is) {
+        return message.reply(status_codes::OK, is, U(mime));
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Front end Files Error: ");
+    });
+
+    return;
+};
 
 template < class T >
 void Handler<T>::returnMuseumList(http_request message){
@@ -136,8 +152,8 @@ void Handler<T>::returnMuseumList(http_request message){
 };
 
 template < class T >
-void Handler<T>::returnMuseumById(http_request message,int musId){
-    message.reply(status_codes::OK,T::getMuseumInfoJSON(musId))
+void Handler<T>::returnMuseumById(http_request message,int museumID){
+    message.reply(status_codes::OK,T::getMuseumInfoJSON(museumID))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Return Museum by ID Error: ");
     });;
@@ -145,8 +161,17 @@ void Handler<T>::returnMuseumById(http_request message,int musId){
 }
 
 template < class T >
-void Handler<T>::returnUserById(http_request message,int usrId){
-    message.reply(status_codes::OK,T::getUserInfoJSON(usrId))
+void Handler<T>::returnCollectionById(web::http::http_request message, int collectionID) {
+    message.reply(status_codes::OK,T::getCollectionInfoJSON(collectionID))
+            .then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Return Collection by ID Error: ");
+    });
+    return;
+}
+
+template < class T >
+void Handler<T>::returnUserById(http_request message,int userID){
+    message.reply(status_codes::OK,T::getUserInfoJSON(userID))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Return User by ID ERROR: ");
     });;
@@ -160,15 +185,28 @@ template < class T >
 void Handler<T>::handle_post(http_request message)
 {
     //ucout <<  message.to_string() << std::endl;
-    // URL: /get-data/museum-list
     ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
 
-    if(message.relative_uri().to_string() ==  "/get-data/museum-list"){
+    // URL: /login
+    if (message.relative_uri().to_string()  == "/request/login"){
+        validateLogin(message);
+    }
+    // URL: /request/add-museum
+    else if(message.relative_uri().to_string() ==  "/request/add-museum"){
         addMuseum(message);
     }
-    // URL: /get-data/user
-    else if(message.relative_uri().to_string() == "/get-data/user"){
-        registerUser(message);
+    // URL: /request/collection
+    else if(message.relative_uri().to_string() == "/request/add-collection") {
+        addCollection(message);
+    }
+    // URL: /request/user
+    else if(message.relative_uri().to_string() == "/request/register"){
+        addUser(message);
+    }
+    // URL: /request/user-profile
+    else if (message.relative_uri().to_string() == "/request/user-profile") {
+
+        getUserProfile(message);
     }
     else {
         message.extract_string(false).then([](utility::string_t s){
@@ -178,6 +216,26 @@ void Handler<T>::handle_post(http_request message)
     }
     return;
 
+};
+
+template < class T >
+void Handler<T>::validateLogin(http_request message){
+    message.extract_string(false).then([=](utility::string_t s){
+        json obj = json::parse(s);
+        std::string username  = obj["username"];
+        std::string password = obj["password"];
+        std::string dataPass = T::getPasswordHash(username);
+        if(password == dataPass) {
+            ucout << "login successful\n";
+            message.reply(status_codes::OK, Util::getSuccessJsonStr("login successful"));
+        } else{
+            ucout << "login failed\n";
+            message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("login failed"));
+        }
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Validate Login Error: ");
+    });;
+    return;
 };
 
 template < class T >
@@ -210,9 +268,13 @@ void Handler<T>::addMuseum(http_request message){
     });;
 };
 
+template < class T >
+void Handler<T>::addCollection(web::http::http_request message) {
+
+}
 
 template < class T>
-void Handler<T>::registerUser(http_request message){
+void Handler<T>::addUser(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         ucout << "User " << s;
         User *u = Util::parseUserJsonStr(s);
@@ -229,52 +291,12 @@ void Handler<T>::registerUser(http_request message){
     return;
 };
 
-
-
-//
-// A PUT request
-//
 template < class T >
-void Handler<T>::handle_put(http_request message)
-{
-    ucout << "PUT " << message.relative_uri().to_string() << "\n";
-    auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
-
-    if(paths[0] == "get-data" && paths[1] == "login" && paths.size() == 3){
-        validateLogin(message,paths[2]);
-    }
-    else if(paths[0] == "get-data" && paths[1] == "user" && paths.size() == 3){
-        getUserProfile(message,paths[2]);
-        return;
-    }
-    else {
-        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the PUT url again"));
-    }
-    return;
-};
-
-template < class T >
-void Handler<T>::validateLogin(http_request message,std::string username){
+void Handler<T>::getUserProfile(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        std::string password = Util::parsePassword(s);
-        std::string dataPass = T::getPasswordHash(username);
-        if(password == dataPass) {
-            ucout << "login successful\n";
-            message.reply(status_codes::OK, Util::getSuccessJsonStr("login successful"));
-        } else{
-            ucout << "login failed\n";
-            message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("login failed"));
-        }
-    }).then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Validate Login Error: ");
-    });;
-    return;
-};
-
-template < class T >
-void Handler<T>::getUserProfile(http_request message,std::string username){
-    message.extract_string(false).then([=](utility::string_t s){
-        std::string password = Util::parsePassword(s);
+        json obj = json::parse(s);
+        std::string username  = obj["username"];
+        std::string password = obj["password"];
         std::string dataPass = T::getPasswordHash(username);
         if(password == dataPass){
             ucout << "authorized\n";
@@ -288,9 +310,22 @@ void Handler<T>::getUserProfile(http_request message,std::string username){
         }
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Get User Profile Error: ");
-    });;
+    });
     return;
 }
+
+
+//
+// A PUT request
+//
+template < class T >
+void Handler<T>::handle_put(http_request message)
+{
+    ucout << "PUT " << message.relative_uri().to_string() << "\n";
+
+    message.reply(status_codes::NotFound,Util::getFailureJsonStr("No PUT methods implemented."));
+    return;
+};
 
 //
 // A DELETE request
