@@ -5,7 +5,7 @@ QT += sql
 SOURCES += \
         main.cpp \
         ../model/modelclass.cpp \
-        util.cpp
+        modelclassext.cpp
 
 QMAKE_CXXFLAGS += -std=gnu++11
 
@@ -16,7 +16,9 @@ HEADERS += \
     ../model/modelclass.h \
     ../model/ModelException.h \
     handler.tpp \
-    util.h
+    modelclassext.h \
+    util.h \
+    ../nlohmann/json.hpp
 
 
 macx: LIBS += -L$$PWD/../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/lib/ -lboost_system

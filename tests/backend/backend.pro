@@ -7,14 +7,14 @@ QMAKE_CXXFLAGS += -std=gnu++11
 
 SOURCES += \
         main.cpp \
-        handlertest.cpp
+        handlertest.cpp \
+        utiltest.cpp
 
 HEADERS += \
-        handlertest.h
+        handlertest.h \
+        utiltest.h
 
 SOURCES += \
-#    ../../backend/handler.cpp \
-    ../../backend/util.cpp \
     ../../model/modelclass.cpp \
     ../../model/artifact.cpp \
     ../../model/collection.cpp
@@ -23,13 +23,14 @@ SOURCES += \
 HEADERS += \
     ../../backend/handler.h \
     ../../backend/util.h \
+    ../../backend/modelclassext.h \
     ../../model/modelclass.h \
     ../../model/artifact.h \
     ../../model/collection.h \
     ../../model/museum.h \
     ../../model/user.h \
-    ../../model/LafException.h \
     ../../model/ModelException.h \
+    ../../nlohmann/json.hpp
 
 
 

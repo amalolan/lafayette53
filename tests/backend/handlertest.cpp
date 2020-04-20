@@ -3,17 +3,17 @@
 pplx::task<http_response> HandlerTest::make_task_request(
    method mtd,
    std::string uri,
-   json::value const & jvalue)
+   json const & jvalue)
 {
     uri_builder builder(U(uri));
    return (mtd == methods::GET || mtd == methods::HEAD) ?
       this->client.request(mtd, builder.to_string()) :
-      this->client.request(mtd, builder.to_string(), jvalue);
+      this->client.request(mtd, builder.to_string(), jvalue.dump());
 }
 
 std::string HandlerTest::requestTask(method mtd,
                    std::string uri,
-                   json::value const & jvalue) {
+                   json const & jvalue) {
     pplx::task<string_t> requestTask = this->make_task_request(mtd, uri, jvalue)
             .then([=](http_response response) {
         std::cout<<"Response Code: " <<response.status_code()<<std::endl;
@@ -49,4 +49,16 @@ TEST_F(HandlerTest, TEST_GET)  {
    std::string result = this->requestTask(methods::GET, "/get-data/museum-list");
    std::cout<<result;
    ASSERT_NE(result, "");
+}
+
+TEST_F(HandlerTest, TEST_registerUser) {
+//    std::cout<<jsonval.as_string();
+    json user =
+    {
+        {"username",  "malolan12345"},
+        {"password", "123"},
+        {"email",  "malo@gmail.com3243"}
+    };
+    std::string result = this->requestTask(methods::POST, "/get-data/user", user);
+    std::cout<<result;
 }

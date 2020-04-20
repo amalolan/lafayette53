@@ -6,7 +6,8 @@
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/json.h>
-
+#include "../nlohmann/json.hpp"
+using json = nlohmann::json;
 //using namespace utility;                    // Common utilities like string conversions
 //using namespace web;                        // Common features like URIs.
 //using namespace web::http;                  // Common HTTP functionality
@@ -39,9 +40,8 @@ protected:
     // before the destructor).
     }
 
-    pplx::task<http_response> make_task_request(method mtd, std::string uri, json::value const & jvalue);
-    std::string requestTask(method mtd, std::string uri, json::value const & jvalue = json::value::null());
+    pplx::task<http_response> make_task_request(method mtd, std::string uri, json const & jvalue);
+    std::string requestTask(method mtd, std::string uri, json const & jvalue = json());
 
 };
-
 #endif // HANDLERTEST_H
