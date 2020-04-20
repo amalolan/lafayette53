@@ -1,0 +1,3 @@
+[submodule "museum-wiki-frontend"]
+	path = museum-wiki-frontend
+	url = https://github.com/syccxcc/museum-wiki-frontend.git
