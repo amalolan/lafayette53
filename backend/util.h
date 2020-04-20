@@ -1,7 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 #include "../model/modelclass.h"
-#include "../model/ModelException.h"
+#include "backendexception.h"
 #include "../nlohmann/json.hpp"
 //#include <cpprest/http_client.h>
 //#include <cpprest/filestream.h>
@@ -70,7 +70,7 @@ public:
             for (auto key : keys) {
 //              if (key == "email" && registered) continue;
               if (! obj.contains(key))
-                  throw ModelException("Invalid Json Schema");
+                  throw BackendException("Invalid Json Schema");
             }
             return new User(obj["username"],obj["email"],obj["password"]);
 

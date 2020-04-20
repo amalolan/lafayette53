@@ -214,6 +214,7 @@ void Handler<T>::addMuseum(http_request message){
 template < class T>
 void Handler<T>::registerUser(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
+        ucout << "User " << s;
         User *u = Util::parseUserJsonStr(s);
         if(T::saveUserToDB(*u)){
             ucout << "success add user\n";
