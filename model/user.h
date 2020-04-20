@@ -4,7 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QByteArray>
-
+#include <iostream>
 class User
 {
 public:
@@ -24,26 +24,45 @@ public:
         this->password = password;
     }
 
+    User(const User &user)
+    {
+        this->userID = user.getUserID();
+        this->username = user.getName();
+        this->email = user.getEmail();
+        this->password = user.getPassword();
+
+    }
+
+    User& operator = (const User &user)
+    {
+        this->userID = user.getUserID();
+        this->username = user.getName();
+        this->email = user.getEmail();
+        this->password = user.getPassword();
+        return *this;
+    }
+
     ~User()
     {
 
     }
 
-    std::string getEmail()
+    std::string getEmail() const
     {
         return this->email;
     }
 
-    std::string getName()
+    std::string getName() const
     {
         return this->username;
     }
 
-    std::string getPassword(){
+    std::string getPassword() const
+    {
         return this->password;
     }
 
-    int getUserID()
+    int getUserID() const
     {
         return this->userID;
     }
@@ -56,6 +75,10 @@ public:
     void setUserID(int newID)
     {
         this->userID = newID;
+    }
+
+    void setPassword(std::string newPassword){
+        this->password = newPassword;
     }
 
     bool indb()
