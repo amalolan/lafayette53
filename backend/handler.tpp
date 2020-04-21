@@ -187,7 +187,7 @@ void Handler<T>::handle_post(http_request message)
     //ucout <<  message.to_string() << std::endl;
     ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
 
-    // URL: /login
+    // URL: /request/login
     if (message.relative_uri().to_string()  == "/request/login"){
         validateLogin(message);
     }

@@ -1,12 +1,13 @@
 #ifndef HANDLER_H
 #define HANDLER_H
 #define HELPER_H
-#ifdef __APPLE__
-#define CODE_BASE_DIRECTORY "../../../../../lafayette53/"
-#elif __linux
-#define CODE_BASE_DIRECTORY "../../lafayette53/"
+#ifndef CODE_BASE_DIRECTORY
+    #ifdef __APPLE__
+        #define CODE_BASE_DIRECTORY "../../../../../lafayette53/"
+    #elif __linux
+        #define CODE_BASE_DIRECTORY "../../lafayette53/"
+#endif // CODE_BASE_DIRECTORY
 #endif
-
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/http_listener.h>              // HTTP server
