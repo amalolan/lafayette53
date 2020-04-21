@@ -15,7 +15,3 @@ void ModelClassExt::saveCollectionToDB(Collection *c) {
 }
 
 
-
-json ModelClassExt::getMuseumAndCollectionInfoJSON(int museumID) {
-    return json();
-}

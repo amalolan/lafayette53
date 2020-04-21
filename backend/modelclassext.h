@@ -20,7 +20,7 @@ public:
                  {"name", "testMuseum"}
              }},
             {"collection",{
-                 {"id","1"},
+                 {"id",1},
                  {"description", "description"},
                  {"title", "Collection title"},
                  {"introduction", "introduction"}
@@ -28,7 +28,25 @@ public:
         };
         return colObj;
     };
-    static json getMuseumAndCollectionInfoJSON(int);
+    //This method should return museum with its own collection IDs
+    static json getCollectionListByMuseumID(int musID){
+        json colArray = json::array
+        ({
+            {
+                {"id",1},
+                {"description", "description for collection 1"},
+                {"title", "collection N1"},
+                {"introduction", "introduction for collection 1"}
+            },
+            {
+                {"id",2},
+                {"description", "description for collection 2"},
+                {"title", "collection N2"},
+                {"introduction", "introduction for collection 2"}
+            }
+        });
+        return colArray;
+    };
     //you already have string for following methods. just return json.
     static json getMuseumInfoJson(int musID){
         json musObj = {

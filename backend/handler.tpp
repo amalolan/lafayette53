@@ -68,7 +68,7 @@ void Handler<T>::handle_get(http_request message)
         else if(paths[1] == "museum" && paths.size() == 3){
             ucout << "museum\n";
             std::string museumID = paths[2];
-            returnMuseumAndCollectionsById(message,std::stoi(museumID));
+            returnMuseumById(message,std::stoi(museumID));
         }
         // URL: /request/collection/[collectionID]
         else if(paths[1] == "collection" && paths.size() == 3) {
@@ -153,18 +153,15 @@ void Handler<T>::returnMuseumList(http_request message){
 
 template < class T >
 void Handler<T>::returnMuseumById(http_request message,int museumID){
-    message.reply(status_codes::OK,T::getMuseumInfoJSON(museumID))
+    json musObj = json::parse(T::getMuseumInfoJSON(museumID));
+    //TODO Change ModelClassExt to T.
+    musObj["collections"] = ModelClassExt::getCollectionListByMuseumID(museumID);
+
+    std::string musObjString = musObj.dump(4);
+
+    message.reply(status_codes::OK,U(musObjString))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Museum could not be found.");
-    });
-    return;
-}
-
-template <class T>
-void Handler<T>::returnMuseumAndCollectionsById(http_request message, int museumID) {
-    message.reply(status_codes::OK,T::getMuseumAndCollectionInfoJSON(museumID).dump())
-            .then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Museum and collections could not be found.");
     });
     return;
 }
@@ -173,7 +170,7 @@ template < class T >
 void Handler<T>::returnCollectionById(web::http::http_request message, int collectionID) {
     //TODO change ModelClassExt to T
     json obj = ModelClassExt::getCollectionInfoJSON(2);
-    message.reply(status_codes::OK,ModelClassExt::getCollectionInfoJSON(collectionID).dump())
+    message.reply(status_codes::OK,ModelClassExt::getCollectionInfoJSON(collectionID).dump(4))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Collection could not be found.");
     });

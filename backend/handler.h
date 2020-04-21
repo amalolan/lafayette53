@@ -85,8 +85,7 @@ private:
     void handle_get(http_request);
     void returnFrontendFile(http_request);
     void returnMuseumList(http_request);
-    DEPRECATED void returnMuseumById(http_request,int);
-    void returnMuseumAndCollectionsById(http_request, int);
+    void returnMuseumById(http_request,int);
     void returnUserById(http_request,int);
     void returnCollectionById(http_request, int);
     void returnWildCard(http_request);
