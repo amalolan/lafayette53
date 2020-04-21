@@ -15,6 +15,7 @@ class Controller
 public:
     Handler<T> *g_httpHandler;
     Controller<T>(const string_t& address)  {
+        T::initdb(CODE_BASE_DIRECTORY);
         uri_builder uri(address);
         auto addr = uri.to_uri().to_string();
         this->g_httpHandler = new Handler<T>(addr);
@@ -44,7 +45,6 @@ public:
     }
 
     static int runServer(std::string portString="5300") {
-        T::initdb(CODE_BASE_DIRECTORY);
         Controller c(U("http://127.0.0.1:"+portString));
         std::string line;
         std::getline(std::cin, line);

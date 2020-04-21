@@ -17,7 +17,8 @@ HEADERS += \
 SOURCES += \
     ../../model/modelclass.cpp \
     ../../model/artifact.cpp \
-    ../../model/collection.cpp
+    ../../model/collection.cpp \
+    ../../backend/modelclassext.cpp
 
 
 HEADERS += \
