@@ -70,7 +70,7 @@ DEPENDPATH += $$PWD/../../../../../../../../../usr/local/Cellar/cpprestsdk/2.10.
 
 macx: LIBS += -L$$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/lib/ -lssl.1.0.0
 
-INCLUDEPATH += $$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/include
+INCLUDEPATH +=  $$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/include
 DEPENDPATH += $$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/include
 
 macx: LIBS += -L$$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/lib/ -lcrypto.1.0.0

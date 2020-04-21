@@ -88,11 +88,10 @@ public:
      * @return true/false if login is successful or not
      * TODO
      */
-    static bool checkLogin(std::string userJsonStr){
+     static  bool checkLogin(json userJSON) {
         try{
-            json obj = json::parse(userJsonStr);
-            std::string username  = obj["username"];
-            std::string password = obj["password"];
+            std::string username  = userJSON["username"];
+            std::string password = userJSON["password"];
 
             std::string dataPass = T::getPasswordHash(username);
 

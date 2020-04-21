@@ -224,7 +224,7 @@ template < class T >
 void Handler<T>::validateLogin(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
 
-        bool loginCheck = Util<T>::checkLogin(s);
+        bool loginCheck = Util<T>::checkLogin(json::parse(s));
 
         if(loginCheck) {
             ucout << "login successful\n";
@@ -246,7 +246,7 @@ void Handler<T>::addMuseum(http_request message){
         Museum *m = Util<T>::parseMuseumJsonStr(s);
 
         json musObj = json::parse(s);
-        std::string userObj = musObj["user"];
+        json userObj = musObj["user"];
         bool loginCheck = Util<T>::checkLogin(userObj);
 
         if (loginCheck) {
@@ -347,10 +347,9 @@ void Handler<T>::addUser(http_request message){
 template < class T >
 void Handler<T>::getUserProfile(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        bool loginCheck = Util<T>::checkLogin(s);
-
-        json userObj = json::parse(s);
-        std::string username = userObj["username"];
+        json userJSON = json::parse(s);
+        bool loginCheck = Util<T>::checkLogin(userJSON);
+        std::string username = userJSON["username"];
 
         if(loginCheck){
             ucout << "Authorized.\n";
