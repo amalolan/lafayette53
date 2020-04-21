@@ -2,11 +2,13 @@
 #define MUSEUM_H
 #include <string>
 #include "user.h"
+#include <../nlohmann/json.hpp>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <iostream>
 
+using json = nlohmann::json;
 class Museum
 {
 public:
@@ -96,6 +98,25 @@ public:
         QJsonDocument doc;
         doc.setObject(properties);
         return doc.toJson().toStdString();
+    }
+
+
+    /*
+     * json = { name:
+     *          introduction:
+     *          description:
+     *          id:
+     *          userID:
+     *        }
+     */
+    json getJson(){
+        json output;
+        output["name"] = this->name;
+        output["introduction"] = "This is "+this->name;
+        output["description"] = this->description;
+        output["id"] = this->museumID;
+        output["userID"] = this->user.getUserID();
+        return output;
     }
 private:
     std::string name;
