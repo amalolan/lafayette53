@@ -155,7 +155,7 @@ template < class T >
 void Handler<T>::returnMuseumById(http_request message,int museumID){
     json musObj = json::parse(T::getMuseumInfoJSON(museumID));
     //TODO Change ModelClassExt to T.
-    musObj["collections"] = ModelClassExt::getCollectionListByMuseumID(museumID);
+    musObj["collectionList"] = ModelClassExt::getCollectionListByMuseumID(museumID);
 
     std::string musObjString = musObj.dump(4);
 

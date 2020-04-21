@@ -22,7 +22,7 @@ public:
             {"collection",{
                  {"id",1},
                  {"description", "description"},
-                 {"title", "Collection title"},
+                 {"name", "Collection title"},
                  {"introduction", "introduction"}
              }}
         };
@@ -35,13 +35,13 @@ public:
             {
                 {"id",1},
                 {"description", "description for collection 1"},
-                {"title", "collection N1"},
+                {"name", "collection N1"},
                 {"introduction", "introduction for collection 1"}
             },
             {
                 {"id",2},
                 {"description", "description for collection 2"},
-                {"title", "collection N2"},
+                {"name", "collection N2"},
                 {"introduction", "introduction for collection 2"}
             }
         });
