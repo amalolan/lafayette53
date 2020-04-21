@@ -8,7 +8,7 @@ SOURCES += \
         modelclassext.cpp
 
 QMAKE_CXXFLAGS += -std=gnu++11
-
+QMAKE_CXXFLAGS_WARN_ON = -w
 LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
 HEADERS += \

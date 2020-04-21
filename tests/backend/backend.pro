@@ -4,6 +4,7 @@ CONFIG -= app_bundle
 #CONFIG -= qt
 QT += sql
 QMAKE_CXXFLAGS += -std=gnu++11
+QMAKE_CXXFLAGS_WARN_ON = -w
 
 SOURCES += \
         main.cpp \
