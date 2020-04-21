@@ -12,7 +12,10 @@ class ModelClassExt : public ModelClass
 public:
     static void initdb(std::string codeBaseDirectory);
     static void saveCollectionToDB(Collection *);
-    static json getCollectionInfoJSON(int);
-    static json getMuseumAndCollectionInfoJSON(int);
+    static json getCollectionInfoJSON(int collectionID);
+    static json getCollectionListByMuseumID(int museumID);
+    //you already have string for following methods. just return json.
+    static json getMuseumInfoJson(int museumID);
+    static json getUserInfoJson(std::string username);
 };
 #endif // MODELCLASSEXT_H

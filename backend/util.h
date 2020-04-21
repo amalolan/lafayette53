@@ -21,6 +21,7 @@
 #endif
 
 using json = nlohmann::json;
+template < class T >
 class Util
 {
 public:
@@ -87,14 +88,23 @@ public:
      * @return true/false if login is successful or not
      * TODO
      */
-    static bool checkLogin(std::string userJsonStr){
+     static  bool checkLogin(json userJSON) {
         try{
-            User *u = parseUserJsonStr(userJsonStr);
-            std::cout << u->getName() << " " << u->getPassword() << '\n';
-//            std::string dataPass = T::getPasswordHash(u->getName());
-        } catch(std::exception &e){
+            std::string username  = userJSON["username"];
+            std::string password = userJSON["password"];
 
-            std::cout << "user could not be found" << std::endl;
+            std::string dataPass = T::getPasswordHash(username);
+
+            if(password.compare(dataPass) == 0){
+                return true;
+            } else {
+                return false;
+            }
+        } catch(ModelException &me){
+            std:: cout << "ModelException: " << me.what() << '\n';
+            return false;
+        } catch(std::exception &e){
+            std::cout << "Exception: " << e.what() << std::endl;
             return false;
         }
         return false;
