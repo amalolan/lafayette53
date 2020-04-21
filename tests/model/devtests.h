@@ -7,7 +7,7 @@
 #endif
 #include "gtest/gtest.h"
 //#include "../../model/modelclass.h"
-#include  "../../backend/ModelClassExt.h"
+#include  "../../backend/modelclassext.h"
 
 
 class DevTests : public ::testing::Test {
