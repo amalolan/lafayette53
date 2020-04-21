@@ -51,7 +51,8 @@ INCLUDEPATH +=  ../../gtest                                   \
 
 #LIBS += -lgtest -L$$PWD/../../
 #LIBS += -lgtest -L$$PWD/../../
-
+#LIBS += -lgcov
+QMAKE_LFLAGS += -g -fprofile-arcs -ftest-coverage  -O0
 
 LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
