@@ -37,12 +37,15 @@
 #include "cpprest/containerstream.h"
 #include "cpprest/producerconsumerstream.h"
 #include <QDirIterator>
-#include "../model/ModelException.h"
-#include "modelclassext.h"
-//#include "../model/modelclass.h"
-#include "util.h"
 #include "../nlohmann/json.hpp"
 #include <exception>
+//#include "modelclassext.h"
+//#include "../model/modelclass.h"
+#include "util.h"
+#include "../model/ModelException.h"
+#include <../model/collection.h>
+#include <../model/user.h>
+#include <../model/museum.h>
 using namespace utility;                    // Common utilities like string conversions
 //using namespace web; // Common features like URIs.
 //using http_request = web::http_request;
@@ -86,7 +89,7 @@ private:
     void returnFrontendFile(http_request);
     void returnMuseumList(http_request);
     void returnMuseumById(http_request,int);
-    DEPRECATED void returnUserById(http_request,int);
+    //DEPRECATED void returnUserById(http_request,int);
     void returnCollectionById(http_request, int);
     void returnWildCard(http_request);
 
