@@ -1,4 +1,4 @@
-#include "ModelClassExt.h"
+#include "modelclassext.h"
 
 void ModelClassExt::initdb(std::string codeBaseDirectory){
     db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
