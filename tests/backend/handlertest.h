@@ -13,7 +13,7 @@
 #include <cpprest/filestream.h>
 #include <cpprest/json.h>
 #include "../nlohmann/json.hpp"
-#include "../../backend/ModelClassExt.h"
+#include "../../backend/modelclassext.h"
 #include "../../backend/controller.h"
 #include "../../backend/handler.h"
 

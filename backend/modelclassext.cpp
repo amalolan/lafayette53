@@ -1,4 +1,4 @@
-#include "ModelClassExt.h"
+#include "modelclassext.h"
 
 void ModelClassExt::initdb(std::string codeBaseDirectory){
     db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
@@ -14,11 +14,4 @@ void ModelClassExt::saveCollectionToDB(Collection *c) {
 
 }
 
-json ModelClassExt::getCollectionInfoJSON(int collectionID) {
-    return json();
-}
 
-
-json ModelClassExt::getMuseumAndCollectionInfoJSON(int museumID) {
-    return json();
-}

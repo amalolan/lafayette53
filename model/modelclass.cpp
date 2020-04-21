@@ -259,7 +259,7 @@ bool ModelClass::saveUserToDB(User & user){
     if (!done)
     {
         std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
-        throw ModelException("Saving museum failed. Reason: "+err);
+        throw ModelException("Saving user failed. Reason: "+err);
     }
     user.setUserID(nextUserIndex);
     query.finish();
