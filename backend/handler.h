@@ -38,8 +38,10 @@
 #include "cpprest/producerconsumerstream.h"
 #include <QDirIterator>
 #include "../model/ModelException.h"
+#include "modelclassext.h"
 //#include "../model/modelclass.h"
 #include "util.h"
+#include "../nlohmann/json.hpp"
 #include <exception>
 using namespace utility;                    // Common utilities like string conversions
 //using namespace web; // Common features like URIs.
@@ -49,6 +51,7 @@ using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 using namespace web::http::experimental::listener;
+using json = nlohmann::json;
 template < class T >
 class Handler
 {

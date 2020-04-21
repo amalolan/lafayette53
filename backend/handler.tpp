@@ -18,12 +18,12 @@ void Handler<T>::handle_error(http_request message, pplx::task<void>& t, std::st
         t.get();
     }
     catch(ModelException &m) {
-        message.reply(status_codes::Unauthorized, Util::getFailureJsonStr(error + std::string(m.what())));
+        message.reply(status_codes::Unauthorized, Util<T>::getFailureJsonStr(error /* std::string(m.what())*/));
         ucout << m.what() << "\n";
     }
     catch(std::exception &e)
     {
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr(error + std::string(e.what())));
+        message.reply(status_codes::InternalError, Util<T>::getFailureJsonStr(error /*+ std::string(e.what())*/));
         ucout << e.what() << "\n";
     }
 }
@@ -146,7 +146,7 @@ void Handler<T>::returnMuseumList(http_request message){
 
     message.reply(status_codes::OK,T::getMuseumListJSON())
             .then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Return Museum List Error: ");
+        this->handle_error(message, t, "Museum list could not be found.");
     });
     return;
 };
@@ -155,8 +155,8 @@ template < class T >
 void Handler<T>::returnMuseumById(http_request message,int museumID){
     message.reply(status_codes::OK,T::getMuseumInfoJSON(museumID))
             .then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Return Museum by ID Error: ");
-    });;
+        this->handle_error(message, t, "Museum could not be found.");
+    });
     return;
 }
 
@@ -164,16 +164,18 @@ template <class T>
 void Handler<T>::returnMuseumAndCollectionsById(http_request message, int museumID) {
     message.reply(status_codes::OK,T::getMuseumAndCollectionInfoJSON(museumID).dump())
             .then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Return Museum and Collections by ID Error: ");
+        this->handle_error(message, t, "Museum and collections could not be found.");
     });
     return;
 }
 
 template < class T >
 void Handler<T>::returnCollectionById(web::http::http_request message, int collectionID) {
-    message.reply(status_codes::OK,T::getCollectionInfoJSON(collectionID).dump())
+    //TODO change ModelClassExt to T
+    json obj = ModelClassExt::getCollectionInfoJSON(2);
+    message.reply(status_codes::OK,ModelClassExt::getCollectionInfoJSON(collectionID).dump())
             .then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Return Collection by ID Error: ");
+        this->handle_error(message, t, "Collection could not be found.");
     });
     return;
 }
@@ -182,7 +184,7 @@ template < class T >
 void Handler<T>::returnUserById(http_request message,int userID){
     message.reply(status_codes::OK,T::getUserInfoJSON(userID))
             .then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Return User by ID ERROR: ");
+        this->handle_error(message, t, "User could not be found.");
     });;
     return;
 }
@@ -204,7 +206,7 @@ void Handler<T>::handle_post(http_request message)
     else if(message.relative_uri().to_string() ==  "/request/add-museum"){
         addMuseum(message);
     }
-    // URL: /request/collection
+    // URL: /request/add-collection
     else if(message.relative_uri().to_string() == "/request/add-collection") {
         addCollection(message);
     }
@@ -214,14 +216,13 @@ void Handler<T>::handle_post(http_request message)
     }
     // URL: /request/user-profile
     else if (message.relative_uri().to_string() == "/request/user-profile") {
-
         getUserProfile(message);
     }
     else {
         message.extract_string(false).then([](utility::string_t s){
             ucout << s << std::endl;
         });
-        message.reply(status_codes::NotFound,Util::getFailureJsonStr("check the POST url and try again"));
+        message.reply(status_codes::NotFound,Util<T>::getFailureJsonStr("Check the url and try again."));
     }
     return;
 
@@ -230,19 +231,19 @@ void Handler<T>::handle_post(http_request message)
 template < class T >
 void Handler<T>::validateLogin(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        json obj = json::parse(s);
-        std::string username  = obj["username"];
-        std::string password = obj["password"];
-        std::string dataPass = T::getPasswordHash(username);
-        if(password == dataPass) {
+
+        bool loginCheck = Util<T>::checkLogin(s);
+
+        if(loginCheck) {
             ucout << "login successful\n";
-            message.reply(status_codes::OK, Util::getSuccessJsonStr("login successful"));
+            message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Login successful."));
         } else{
             ucout << "login failed\n";
-            message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("login failed"));
+            message.reply(status_codes::Unauthorized,
+                          Util<T>::getFailureJsonStr("Login failed. Check username/password and try again."));
         }
     }).then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Validate Login Error: ");
+        this->handle_error(message, t, "Login failed.");
     });;
     return;
 };
@@ -250,52 +251,103 @@ void Handler<T>::validateLogin(http_request message){
 template < class T >
 void Handler<T>::addMuseum(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        Museum *m = Util::parseMuseumJsonStr(s);
-        std::string username = m->getUsername();
-        std::string password = m->getUserPass();
-        std::string dataPass = T::getPasswordHash(username);
-        bool t =false;
-        if (password == dataPass) {
+        Museum *m = Util<T>::parseMuseumJsonStr(s);
+
+        json musObj = json::parse(s);
+        std::string userObj = musObj["user"];
+        bool loginCheck = Util<T>::checkLogin(userObj);
+
+        if (loginCheck) {
             ucout << "password Correct\n";
-            t = T::saveMuseumToDB(*m);
+            bool t = T::saveMuseumToDB(*m);
             if(t) {
                 ucout << "success\n";
                 delete m;
-                return message.reply(status_codes::OK, Util::getSuccessJsonStr("Museum created"));
+                return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Museum created."));
             } else {
                 ucout << "error\n";
                 delete m;
-                return message.reply(status_codes::Conflict,Util::getFailureJsonStr("Museum creation failed"));
+                return message.reply(status_codes::Conflict,Util<T>::getFailureJsonStr("Error creating museum."));
             }
         } else {
             ucout << "login info incorrect\n";
             delete m;
-            return message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("login error"));
+            return message.reply(status_codes::Unauthorized, Util<T>::getFailureJsonStr("Login error."));
         }
     }).then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Add Museum Error: ");
+        this->handle_error(message, t, "Error adding museum.");
     });;
 };
 
+/*
+{
+"museum": {"id": 1 },
+"collection": {"description": "museum Description", "title": "museum title", "introduction": "intro"},
+"user": {"username": "testUser", "password": "test"}
+}
+
+*/
 template < class T >
 void Handler<T>::addCollection(web::http::http_request message) {
+    message.extract_string(false).then([=](utility::string_t s){
+        //parses user and museum objects from stirng.
+        json colObj = json::parse(s);
+        json userObj = colObj["user"];
 
+
+        int musId = colObj["museum"]["id"];
+
+        //gets museum and user objects.
+        //TODO change ModelClassExt to T
+        json musObj = ModelClassExt::getMuseumInfoJson(musId);
+        //TODO change ModelClassExt to T
+        json user = ModelClassExt::getUserInfoJson(userObj["username"]);
+
+        bool loginCheck = false;
+        if(userObj["password"] == user["password"]){
+            loginCheck = true;
+        }
+
+        //std::string userjson = userObj;
+        //TODO bool loginCheck = Util<T>::checkLogin(userjson);
+        bool owner = false;
+
+        if(user["id"] == musObj["userID"]){
+            owner = true;
+        } else{
+            owner = false;
+        }
+
+        if(loginCheck){
+            if(owner){
+                ucout << "saved to database\n";
+            } else{
+                //TODO not owner add to request thing.
+            }
+        } else{
+            message.reply(status_codes::Unauthorized,U("Login failed. Login and try again."));
+        }
+
+    }).then([=](pplx::task<void> t){
+        this->handle_error(message, t, "Error adding collection.");
+    });
 }
 
 template < class T>
 void Handler<T>::addUser(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         ucout << "User " << s;
-        User *u = Util::parseUserJsonStr(s);
+        User *u = Util<T>::parseUserJsonStr(s);
         if(T::saveUserToDB(*u)){
             ucout << "success add user\n";
-            return message.reply(status_codes::OK, Util::getSuccessJsonStr("user registered"));
+            return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("User registered."));
         } else {
             ucout << "failed to add user\n";
-            return message.reply(status_codes::Conflict, Util::getFailureJsonStr("user could not be registered"));
+            return message.reply(status_codes::Conflict,
+                                 Util<T>::getFailureJsonStr("User could not be registered check username/email."));
         }
     }).then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Register User Error: ");
+        this->handle_error(message, t, "Error registering user check username/email.");
     });
     return;
 };
@@ -303,19 +355,19 @@ void Handler<T>::addUser(http_request message){
 template < class T >
 void Handler<T>::getUserProfile(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        json obj = json::parse(s);
-        std::string username  = obj["username"];
-        std::string password = obj["password"];
-        std::string dataPass = T::getPasswordHash(username);
-        if(password == dataPass){
-            ucout << "authorized\n";
+        bool loginCheck = Util<T>::checkLogin(s);
+
+        json userObj = json::parse(s);
+        std::string username = userObj["username"];
+
+        if(loginCheck){
+            ucout << "Authorized.\n";
             User u = T::getUserObject(username);
             std::string userJSON = u.getJSON();
-            ucout << userJSON << 'n';
             message.reply(status_codes::OK, userJSON);
         } else{
             ucout << "unauthorized\n";
-            message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("login failed"));
+            message.reply(status_codes::Unauthorized, Util<T>::getFailureJsonStr("Login failed."));
         }
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Get User Profile Error: ");
@@ -331,8 +383,12 @@ template < class T >
 void Handler<T>::handle_put(http_request message)
 {
     ucout << "PUT " << message.relative_uri().to_string() << "\n";
-
-    message.reply(status_codes::NotFound,Util::getFailureJsonStr("No PUT methods implemented."));
+    //TODO removed after frontend sends POST request
+    if (message.relative_uri().to_string() == "/request/user-profile") {
+            getUserProfile(message);
+            return;
+        }
+    message.reply(status_codes::NotFound,Util<T>::getFailureJsonStr("No PUT methods implemented."));
     return;
 };
 
@@ -343,7 +399,7 @@ template < class T >
 void Handler<T>::handle_delete(http_request message)
 {
     ucout <<  message.to_string() << std::endl;
-    message.reply(status_codes::NotFound, Util::getFailureJsonStr("No DELETE methods implemented"));
+    message.reply(status_codes::NotFound, Util<T>::getFailureJsonStr("No DELETE methods implemented"));
     return;
 };
 

@@ -6,14 +6,14 @@ TEST_F(UtilTest, TEST_successJSON) {
         {"success", true},
         {"message", message}
     };
-    ASSERT_EQ(json::parse(Util::getSuccessJsonStr(message)), j1);
+    ASSERT_EQ(json::parse(Util<ModelClass>::getSuccessJsonStr(message)), j1);
 
     message = "";
     json j2 = {
         {"success", true},
         {"message", message}
     };
-    ASSERT_EQ(json::parse(Util::getSuccessJsonStr(message)), j2);
+    ASSERT_EQ(json::parse(Util<ModelClass>::getSuccessJsonStr(message)), j2);
 }
 
 
@@ -23,12 +23,12 @@ TEST_F(UtilTest, TEST_failureJSON) {
         {"success", false},
         {"message", message}
     };
-    ASSERT_EQ(json::parse(Util::getFailureJsonStr(message)), j1);
+    ASSERT_EQ(json::parse(Util<ModelClass>::getFailureJsonStr(message)), j1);
 
     message = "";
     json j2 = {
         {"success", false},
         {"message", message}
     };
-    ASSERT_EQ(json::parse(Util::getFailureJsonStr(message)), j2);
+    ASSERT_EQ(json::parse(Util<ModelClass>::getFailureJsonStr(message)), j2);
 }
