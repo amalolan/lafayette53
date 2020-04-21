@@ -5,15 +5,17 @@
 #elif __linux
     #define CODE_BASE_DIRECTORY "/../lafayette53/"
 #endif
+#define BOOST_ASIO_HAS_STD_ATOMIC
+
 #include <iostream>
 #include "gtest/gtest.h"
-#include "../../backend/handler.h"
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/json.h>
 #include "../nlohmann/json.hpp"
 #include "../../backend/ModelClassExt.h"
 #include "../../backend/controller.h"
+#include "../../backend/handler.h"
 
 using json = nlohmann::json;
 //using namespace utility;                    // Common utilities like string conversions
@@ -32,9 +34,6 @@ protected:
 
     HandlerTest() : client(U("http://localhost:5300/")),
                     c(U("http://127.0.0.1:5300")){
-//        std::string line;
-//        std::getline(std::cin, line);
-//        Controller<ModelClassExt>::runServer();
     }
 
     virtual ~HandlerTest() {

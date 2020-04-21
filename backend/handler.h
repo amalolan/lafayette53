@@ -6,8 +6,17 @@
         #define CODE_BASE_DIRECTORY "../../../../../lafayette53/"
     #elif __linux
         #define CODE_BASE_DIRECTORY "../../lafayette53/"
-#endif // CODE_BASE_DIRECTORY
+    #endif
+#endif// CODE_BASE_DIRECTORY
+#if defined(__GNUC__) || defined(__clang__)
+    #define DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+    #define DEPRECATED __declspec(deprecated)
+#else
+    #pragma message("WARNING: You need to implement DEPRECATED for this compiler")
+    #define DEPRECATED
 #endif
+#define BOOST_ASIO_HAS_STD_ATOMIC
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/http_listener.h>              // HTTP server
@@ -53,7 +62,7 @@ public:
          * @brief Handler sets up the object adds support to GET,PUT,POST,DEL http requests.
          * @param url the url of the server
          */
-    Handler(utility::string_t url);
+    Handler(utility::string_t);
     /**
          * @brief ~Handler destructor.
          */
@@ -70,25 +79,26 @@ public:
 protected:
 
 private:
-    void handle_get(http_request message);
-    void returnFrontendFile(http_request message);
-    void returnMuseumList(http_request message);
-    void returnMuseumById(http_request message,int musId);
-    void returnUserById(http_request message,int usrId);
-    void returnCollectionById(http_request message, int colId);
-    void returnWildCard(http_request message);
+    void handle_get(http_request);
+    void returnFrontendFile(http_request);
+    void returnMuseumList(http_request);
+    DEPRECATED void returnMuseumById(http_request,int);
+    void returnMuseumAndCollectionsById(http_request, int);
+    void returnUserById(http_request,int);
+    void returnCollectionById(http_request, int);
+    void returnWildCard(http_request);
 
-    void handle_put(http_request message);
-    void validateLogin(http_request message);
-    void getUserProfile(http_request message);
+    void handle_put(http_request);
+    void validateLogin(http_request);
+    void getUserProfile(http_request);
 
-    void handle_post(http_request message);
-    void addMuseum(http_request message);
-    void addUser(http_request message);
-    void addCollection(http_request message);
+    void handle_post(http_request);
+    void addMuseum(http_request);
+    void addUser(http_request);
+    void addCollection(http_request);
 
-    void handle_delete(http_request message);
-    void handle_error( http_request message, pplx::task<void>& t, std::string error="ERROR");
+    void handle_delete(http_request);
+    void handle_error( http_request, pplx::task<void>& , std::string ="ERROR");
     http_listener m_listener;
 };
 

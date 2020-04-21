@@ -10,10 +10,15 @@ void ModelClassExt::initdb(std::string codeBaseDirectory){
     }
 }
 
-void ModelClassExt::saveCollectionToDB() {
+void ModelClassExt::saveCollectionToDB(Collection *c) {
 
 }
 
-std::string ModelClassExt::getCollectionInfoJSON(int collectionID) {
-    return "";
+json ModelClassExt::getCollectionInfoJSON(int collectionID) {
+    return json();
+}
+
+
+json ModelClassExt::getMuseumAndCollectionInfoJSON(int museumID) {
+    return json();
 }

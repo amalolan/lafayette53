@@ -1,8 +1,8 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 #include <iostream>
-#include "../model/LafException.h"
 #include "handler.h"
+#define BOOST_ASIO_HAS_STD_ATOMIC
 
 //using namespace web;
 using namespace web::http;

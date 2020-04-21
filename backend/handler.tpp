@@ -68,7 +68,7 @@ void Handler<T>::handle_get(http_request message)
         else if(paths[1] == "museum" && paths.size() == 3){
             ucout << "museum\n";
             std::string museumID = paths[2];
-            returnMuseumById(message,std::stoi(museumID));
+            returnMuseumAndCollectionsById(message,std::stoi(museumID));
         }
         // URL: /request/collection/[collectionID]
         else if(paths[1] == "collection" && paths.size() == 3) {
@@ -160,9 +160,18 @@ void Handler<T>::returnMuseumById(http_request message,int museumID){
     return;
 }
 
+template <class T>
+void Handler<T>::returnMuseumAndCollectionsById(http_request message, int museumID) {
+    message.reply(status_codes::OK,T::getMuseumAndCollectionInfoJSON(museumID).dump())
+            .then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Return Museum and Collections by ID Error: ");
+    });
+    return;
+}
+
 template < class T >
 void Handler<T>::returnCollectionById(web::http::http_request message, int collectionID) {
-    message.reply(status_codes::OK,T::getCollectionInfoJSON(collectionID))
+    message.reply(status_codes::OK,T::getCollectionInfoJSON(collectionID).dump())
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Return Collection by ID Error: ");
     });
