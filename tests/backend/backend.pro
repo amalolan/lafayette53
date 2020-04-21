@@ -24,6 +24,7 @@ HEADERS += \
     ../../backend/handler.h \
     ../../backend/util.h \
     ../../backend/modelclassext.h \
+    ../../backend/controller.h \
     ../../model/modelclass.h \
     ../../model/artifact.h \
     ../../model/collection.h \

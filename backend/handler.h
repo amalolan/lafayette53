@@ -6,7 +6,6 @@
 #elif __linux
 #define CODE_BASE_DIRECTORY "../../lafayette53/"
 #endif
-
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/http_listener.h>              // HTTP server

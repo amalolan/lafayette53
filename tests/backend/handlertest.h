@@ -7,6 +7,9 @@
 #include <cpprest/filestream.h>
 #include <cpprest/json.h>
 #include "../nlohmann/json.hpp"
+//#include "../../backend/ModelClassExt.h"
+//#include "../../backend/controller.h"
+
 using json = nlohmann::json;
 //using namespace utility;                    // Common utilities like string conversions
 //using namespace web;                        // Common features like URIs.
@@ -22,11 +25,11 @@ protected:
     http_client client;
 
     HandlerTest() : client(U("http://localhost:5300/")){
-
+//        Controller<ModelClassExt>::runServer();
     }
 
     virtual ~HandlerTest() {
-    // You can do clean-up work that doesn't throw exceptions here.
+
     }
 
 
