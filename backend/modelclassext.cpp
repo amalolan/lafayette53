@@ -10,7 +10,7 @@ void ModelClassExt::initdb(std::string codeBaseDirectory){
     }
 }
 
-void ModelClassExt::saveCollectionToDB() {
+void ModelClassExt::saveCollectionToDB(Collection *c) {
 
 }
 
