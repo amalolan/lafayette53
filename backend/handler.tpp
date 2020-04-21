@@ -39,7 +39,7 @@ void Handler<T>::handle_get(http_request message)
 
     ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
 
-    // URL: / or /home
+    // URL: /
     //check for frontend files.
     QDirIterator dirIt((std::string(CODE_BASE_DIRECTORY)+"frontend/").c_str(), QDirIterator::NoIteratorFlags);
     // || (paths[0] == "home" && paths.size() == 1)
@@ -153,13 +153,9 @@ void Handler<T>::returnMuseumList(http_request message){
 
 template < class T >
 void Handler<T>::returnMuseumById(http_request message,int museumID){
-    json musObj = json::parse(T::getMuseumInfoJSON(museumID));
-    //TODO Change ModelClassExt to T.
-    musObj["collections"] = ModelClassExt::getCollectionListByMuseumID(museumID);
-
-    std::string musObjString = musObj.dump(4);
-
-    message.reply(status_codes::OK,U(musObjString))
+    json museumJSON = json::parse(T::getMuseumInfoJSON(museumID));
+    museumJSON["collectionList"] = T::getCollectionListByMuseumID(museumID);
+    message.reply(status_codes::OK,U(museumJSON.dump(4)))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Museum could not be found.");
     });
@@ -168,9 +164,8 @@ void Handler<T>::returnMuseumById(http_request message,int museumID){
 
 template < class T >
 void Handler<T>::returnCollectionById(web::http::http_request message, int collectionID) {
-    //TODO change ModelClassExt to T
-    json obj = ModelClassExt::getCollectionInfoJSON(2);
-    message.reply(status_codes::OK,ModelClassExt::getCollectionInfoJSON(collectionID).dump(4))
+    json collectionJSON = T::getCollectionInfoJSON(collectionID);
+    message.reply(status_codes::OK, collectionJSON.dump(4))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Collection could not be found.");
     });
