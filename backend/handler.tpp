@@ -127,9 +127,7 @@ void Handler<T>::returnWildCard(http_request message)
 {
     std::string mime = "text/html";
 
-    std::string base_path = (std::string(CODE_BASE_DIRECTORY) + "frontend/");
-
-    std::string path = base_path + "index.html";
+    std::string path = std::string(CODE_BASE_DIRECTORY) + "frontend/index.html";
 
     concurrency::streams::fstream::open_istream(U(path),std::ios::in)
             .then([=](concurrency::streams::istream is) {
@@ -223,10 +221,7 @@ void Handler<T>::handle_post(http_request message)
 template < class T >
 void Handler<T>::validateLogin(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-
-        bool loginCheck = Util<T>::checkLogin(json::parse(s));
-
-        if(loginCheck) {
+        if(Util<T>::checkLogin(json::parse(s))) {
             ucout << "login successful\n";
             message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Login successful."));
         } else{
@@ -236,21 +231,17 @@ void Handler<T>::validateLogin(http_request message){
         }
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Login failed.");
-    });;
+    });
     return;
 };
 
 template < class T >
 void Handler<T>::addMuseum(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        Museum *m = Util<T>::parseMuseumJsonStr(s);
-
-        json musObj = json::parse(s);
-        json userObj = musObj["user"];
-        bool loginCheck = Util<T>::checkLogin(userObj);
-
-        if (loginCheck) {
+        json data = json::parse(s);
+        if (Util<T>::checkLogin(data["user"])) {
             ucout << "password Correct\n";
+            Museum *m = Util<T>::parseMuseumJsonStr(s);
             bool t = T::saveMuseumToDB(*m);
             if(t) {
                 ucout << "success\n";
@@ -263,12 +254,11 @@ void Handler<T>::addMuseum(http_request message){
             }
         } else {
             ucout << "login info incorrect\n";
-            delete m;
             return message.reply(status_codes::Unauthorized, Util<T>::getFailureJsonStr("Login error."));
         }
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Error adding museum.");
-    });;
+    });
 };
 
 /*
@@ -291,9 +281,9 @@ void Handler<T>::addCollection(web::http::http_request message) {
 
         //gets museum and user objects.
         //TODO change ModelClassExt to T
-        json musObj = ModelClassExt::getMuseumInfoJson(musId);
+        json musObj = T::getMuseumInfoJson(musId);
         //TODO change ModelClassExt to T
-        json user = ModelClassExt::getUserInfoJson(userObj["username"]);
+        json user = T::getUserInfoJson(userObj["username"]);
 
         bool loginCheck = false;
         if(userObj["password"] == user["password"]){
@@ -315,6 +305,7 @@ void Handler<T>::addCollection(web::http::http_request message) {
                 ucout << "saved to database\n";
             } else{
                 //TODO not owner add to request thing.
+
             }
         } else{
             message.reply(status_codes::Unauthorized,U("Login failed. Login and try again."));

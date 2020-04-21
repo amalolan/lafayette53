@@ -6,18 +6,19 @@
 //#include <cpprest/http_client.h>
 //#include <cpprest/filestream.h>
 //#include <cpprest/json.h>
+#include <vector>
 #include <iostream>
 
 #ifdef NDEBUG
 #define assert(condition, message) 0
 #else
 #define assertMessage(condition, message)\
-   (!(condition)) ?\
-      (std::cerr << "Assertion failed: (" << #condition << "), "\
-      << "function " << __FUNCTION__\
-      << ", file " << __FILE__\
-      << ", line " << __LINE__ << "."\
-      << std::endl << message << std::endl, abort(), 0) : 1
+    (!(condition)) ?\
+    (std::cerr << "Assertion failed: (" << #condition << "), "\
+    << "function " << __FUNCTION__\
+    << ", file " << __FILE__\
+    << ", line " << __LINE__ << "."\
+    << std::endl << message << std::endl, abort(), 0) : 1
 #endif
 
 using json = nlohmann::json;
@@ -26,6 +27,14 @@ class Util
 {
 public:
     Util();
+
+    static bool validateJSON(json jsonObj, std::vector<std::string> keys) {
+        for  (auto key : keys) {
+            if  (! jsonObj.contains(key))
+                return false;
+        }
+        return true;
+    }
 
     /**
      * @brief parseMuseumJSON Parses a json string and returns a museum object.
@@ -47,10 +56,10 @@ public:
     static Museum* parseMuseumJsonStr(std::string jsonStr){
         //TODO :add userID by getting user from the database. Should be  done in constructor of userID @Sena
         json obj = json::parse(jsonStr);
-//        std::string keys[] = {"username", "password", "name", "description"};
-//        for (auto key : keys) {
-//            assertMessage (obj.contains(key), "Invalid Json Schema");
-//        }
+        //        std::string keys[] = {"username", "password", "name", "description"};
+        //        for (auto key : keys) {
+        //            assertMessage (obj.contains(key), "Invalid Json Schema");
+        //        }
         User u(obj["user"]["username"], "", obj["user"]["password"]);
         return new Museum(obj["museum"]["name"], obj["museum"]["description"], u);
     }
@@ -66,16 +75,9 @@ public:
      * @return
      */
     static User* parseUserJsonStr(std::string jsonStr){
-            json obj = json::parse(jsonStr);
-            std::string keys[] = {"username", "email", "password"};
-            for (auto key : keys) {
-//              if (key == "email" && registered) continue;
-              if (! obj.contains(key))
-                  throw ModelException("Invalid Json Schema");
-            }
-            return new User(obj["username"],obj["email"],obj["password"]);
-
-
+        json obj = json::parse(jsonStr);
+        Util::validateJSON(obj, {"username", "email", "password"});
+        return new User(obj["username"],obj["email"],obj["password"]);
     }
 
     /**
@@ -88,18 +90,13 @@ public:
      * @return true/false if login is successful or not
      * TODO
      */
-     static  bool checkLogin(json userJSON) {
+    static  bool checkLogin(json userJSON) {
         try{
+            Util::validateJSON(userJSON, {"username", "password"});
             std::string username  = userJSON["username"];
             std::string password = userJSON["password"];
-
             std::string dataPass = T::getPasswordHash(username);
-
-            if(password.compare(dataPass) == 0){
-                return true;
-            } else {
-                return false;
-            }
+            return password == dataPass;
         } catch(ModelException &me){
             std:: cout << "ModelException: " << me.what() << '\n';
             return false;
@@ -107,7 +104,6 @@ public:
             std::cout << "Exception: " << e.what() << std::endl;
             return false;
         }
-        return false;
     }
 
     /**
