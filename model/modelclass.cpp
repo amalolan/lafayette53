@@ -104,6 +104,23 @@ std::string ModelClass::getMuseumInfoJSON(int museumID){
     return doc.toJson().toStdString();
 }
 
+json ModelClass::getMuseumInfoJson(int museumID){
+    QString id(QString::fromStdString(std::to_string(museumID)));
+    query.exec("SELECT name, description, userID, museumID FROM museum WHERE museumID = "+id+";");
+    query.next();
+    if (!query.isValid())
+    {
+        throw ModelException("MuseumID does not exist in database");
+    }
+    json output;
+    output["name"] = query.value(0).toString().toStdString();
+    output["introduction"] = "This is "+query.value(0).toString().toStdString();
+    output["description"] = query.value(1).toString().toStdString();
+    output["id"] = query.value(3).toString().toStdString();
+    output["userID"] = query.value(2).toString().toStdString();
+    return output;
+}
+
 Museum ModelClass::getMuseumObject(std::string museumName){
     QString name = QString::fromStdString(museumName);
     query.exec("SELECT museumID, userID, name, description FROM museum where name GLOB '"+name+"';");
@@ -240,6 +257,10 @@ std::string ModelClass::getUserInfoJSON(int userID){
     QJsonDocument doc;
     doc.setObject(object);
     return doc.toJson().toStdString();
+}
+
+json ModelClass::getUserInfoJson(std::string username){
+    return ModelClass::getUserObject(username).getJson();
 }
 
 std::string ModelClass::getPasswordHash(std::string username){

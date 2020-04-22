@@ -17,19 +17,23 @@ public:
     static bool open();
     static bool close();
     static bool status();
+
     static std::string getMuseumListJSON();
-    static std::string getUserInfoJSON(int userID);
     static std::string getMuseumInfoJSON(int museumID);
+    static Museum getMuseumObject(std::string museumName);
+    static json getMuseumInfoJson(int museumID);
     static bool saveMuseumToDB(Museum & museum);
     static bool removeMuseumFromDB(Museum & museum);
     static bool updateMuseumInDB(Museum & museum);
+
+    static User getUserObject(std::string username);
+    static User getUserObject(int userID);
+    static std::string getUserInfoJSON(int userID);
+    static json getUserInfoJson(std::string username);
     static std::string getPasswordHash(std::string username);
     static bool saveUserToDB(User & user);
     static bool removeUserFromDB(User & user);
     static bool updateUserInDB(User & user);
-    static User getUserObject(std::string username);
-    static Museum getMuseumObject(std::string museumName);
-    static User getUserObject(int userID);
 
 protected:
     static QSqlDatabase db;
