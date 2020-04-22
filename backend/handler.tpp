@@ -163,7 +163,7 @@ void Handler<T>::returnMuseumById(http_request message,int museumID){
         {"museum", T::getMuseumInfoJSON(museumID)},
         {"collectionList", T::getCollectionListByMuseumID(museumID)}
     };
-    ucout<<outputData.dump(4)<<std::endl;
+    //ucout<<outputData.dump(4)<<std::endl;
     message.reply(status_codes::OK,outputData.dump(4))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Museum could not be found.");
