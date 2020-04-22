@@ -48,19 +48,21 @@ void Handler<T>::handle_get(http_request message)
 
     // URL: /
     //check for frontend files.
-    QDirIterator dirIt((std::string(CODE_BASE_DIRECTORY)+"frontend/").c_str(), QDirIterator::NoIteratorFlags);
+    QDirIterator dirIt((std::string(CODE_BASE_DIRECTORY)+"/frontend/").c_str(), QDirIterator::NoIteratorFlags);
     // || (paths[0] == "home" && paths.size() == 1)
     if(message.relative_uri() ==  "/" ) {
         returnFrontendFile(message);
         return;
     }
-    while(dirIt.hasNext()){
+    //dirIt.hasNext() can not be written in while statement
+    //causes errors for the last file in the directory.
+    while(true){
         std::string s = "/" + dirIt.fileName().toStdString();
-
         if(message.relative_uri().to_string() == s) {
             returnFrontendFile(message);
             return ;
         }
+        if(!dirIt.hasNext()) break;
         dirIt.next();
     }
     //frontend check ends here
