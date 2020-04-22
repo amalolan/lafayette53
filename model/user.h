@@ -118,6 +118,10 @@ public:
         return output;
     }
 
+    bool empty(){
+        return username == "" && email == "" && password == "";
+    }
+
 private:
     int userID;
     std::string username;

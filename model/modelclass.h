@@ -2,6 +2,10 @@
 #define MODELCLASS_H
 #include "museum.h"
 #include "user.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include "ModelException.h"
 #include <QtSql>
 #include <QDebug>
 #include <QFileInfo>

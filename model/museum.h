@@ -53,6 +53,11 @@ public:
         this->museumID = id;
     }
 
+    void setUser(User user)
+    {
+        this->user = user;
+    }
+
     std::string getName() const
     {
         return this->name;
@@ -117,6 +122,10 @@ public:
         output["id"] = this->museumID;
         output["userID"] = this->user.getUserID();
         return output;
+    }
+
+    bool empty(){
+        return name == "" && description == "";
     }
 private:
     std::string name;
