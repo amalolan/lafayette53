@@ -5,7 +5,8 @@ QT += sql
 SOURCES += \
         main.cpp \
         ../model/modelclass.cpp \
-        modelclassext.cpp
+        modelclassext.cpp \
+        ../model/collection.cpp
 
 QMAKE_CXXFLAGS += -std=gnu++11
 QMAKE_CXXFLAGS_WARN_ON = -w
@@ -15,6 +16,9 @@ HEADERS += \
     controller.h \
     handler.h \
     ../model/modelclass.h \
+    ../model/collection.h \
+    ../model/user.h \
+    ../model/museum.h \
     ../model/ModelException.h \
     handler.tpp \
     modelclassext.h \

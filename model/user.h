@@ -5,6 +5,9 @@
 #include <QJsonObject>
 #include <QByteArray>
 #include <iostream>
+#include <../nlohmann/json.hpp>
+
+using json = nlohmann::json;
 class User
 {
 public:
@@ -96,6 +99,27 @@ public:
         QJsonDocument doc;
         doc.setObject(properties);
         return doc.toJson().toStdString();
+    }
+
+    /*
+     * json = { username:
+     *          email:
+     *          userID:
+     *          password:
+     *        }
+     *
+     */
+    json getJson(){
+        json output;
+        output["username"] = this->username;
+        output["email"] = this->email;
+        output["userID"] = this->userID;
+        output["password"] = this->password;
+        return output;
+    }
+
+    bool empty(){
+        return username == "" && email == "" && password == "";
     }
 
 private:

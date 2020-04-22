@@ -13,6 +13,7 @@ SOURCES += \
 
 HEADERS += \
         handlertest.h \
+        mockmodelclass.h \
         utiltest.h
 
 SOURCES += \
@@ -32,13 +33,13 @@ HEADERS += \
     ../../model/collection.h \
     ../../model/museum.h \
     ../../model/user.h \
-    ../../model/ModelException.h \
-    ../../nlohmann/json.hpp
+    ../../model/ModelException.h
 
 
 
 SOURCES += ../../gtest/googletest/src/gtest-all.cc \
-           ../../gtest/googlemock/src/gmock-all.cc
+           ../../gtest/googlemock/src/gmock-all.cc \
+           ../../nlohmann/json.hpp
 
 
 INCLUDEPATH +=  ../../gtest                                   \
