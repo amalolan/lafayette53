@@ -14,7 +14,8 @@ HEADERS += \
     collection.h \
     museum.h \
     modelclass.h \
-    user.h
+    user.h \
+    ../nlohmann/json.hpp
 
 LIBS += -pthread
 

@@ -1,5 +1,5 @@
-#include "gtest/gtest.h"
 #include "modelclass.h"
+#include "gtest/gtest.h"
 
 class GameTest : public ::testing::Test {
     protected:
@@ -38,89 +38,16 @@ TEST_F(GameTest, testingModelClassOpenClose){
 
 }
 
-TEST_F(GameTest, testingModelClassReadInfo){
-   ModelClass::initdb();
-   ModelClass::open();
-   QJsonObject object;
-   object["username"] = "Lekso_";
-   object["email"] = "borashvl@lafayette.edu";
-   QJsonDocument doc;
-   doc.setObject(object);
-   ASSERT_EQ(doc.toJson().toStdString(), ModelClass::getUserInfoJSON(0));
-
-   QJsonObject museumObj;
-   museumObj["name"] = "Lekso's Space";
-   museumObj["introduction"] = "This is Lekso's Space";
-   museumObj["description"] = "This is my space here!";
-   museumObj["museumID"] = 0;
-   museumObj["userID"] = 0;
-   QJsonDocument museumDoc;
-   museumDoc.setObject(museumObj);
-   ASSERT_EQ(museumDoc.toJson().toStdString(), ModelClass::getMuseumInfoJSON(0));
-
-   QJsonArray museumArray;
-   QJsonObject museum0;
-   QJsonObject museum1;
-   QJsonObject museum2;
-   QJsonObject museum3;
-   museum0["name"] = "Lekso's Space";
-   museum1["name"] = "Peter's Space";
-   museum2["name"] = "Sena's Space";
-   museum3["name"] = "Malo's Space";
-
-   museum0["introduction"] = "This is Lekso's Space";
-   museum1["introduction"] = "This is Peter's Space";
-   museum2["introduction"] = "This is Sena's Space";
-   museum3["introduction"] = "This is Malo's Space";
-
-   museum0["description"] = "This is my space here!";
-   museum1["description"] = "This is my space here!";
-   museum2["description"] = "This is my space here!";
-   museum3["description"] = "This is my space here!";
-
-   museum0["museumID"] = 0;
-   museum1["museumID"] = 1;
-   museum2["museumID"] = 2;
-   museum3["museumID"] = 3;
-
-   museum0["userID"] = 0;
-   museum1["userID"] = 1;
-   museum2["userID"] = 2;
-   museum3["userID"] = 3;
-   museumArray.append(museum0);
-   museumArray.append(museum1);
-   museumArray.append(museum2);
-   museumArray.append(museum3);
-   QJsonDocument museumListDoc;
-   museumListDoc.setArray(museumArray);
-   ASSERT_EQ(museumListDoc.toJson().toStdString(), ModelClass::getMuseumListJSON());
-   ModelClass::close();
-}
-
-TEST_F(GameTest, testingUserInput){
-    User newUser("yevs", "yvs@lafayette.edu", "password");
+TEST_F(GameTest, testingJSONUserMuseumModelClass){
     ModelClass::open();
+    User newUser("sena", "s@lafayette.edu", "password");
     ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
-    ASSERT_TRUE(newUser.indb());
-    EXPECT_EQ(ModelClass::getPasswordHash(newUser.getName()), "password");
-    EXPECT_EQ(newUser.getEmail(), ModelClass::getUserObject("yevs").getEmail());
-    EXPECT_EQ(newUser.getPassword(), ModelClass::getUserObject("yevs").getPassword());
-    EXPECT_EQ(newUser.getUserID(), ModelClass::getUserObject("yevs").getUserID());
-    EXPECT_EQ(newUser.getJSON(), ModelClass::getUserObject("yevs").getJSON());
-    EXPECT_EQ(newUser.getName(), ModelClass::getUserObject("yevs").getName());
-
-    EXPECT_EQ(ModelClass::getPasswordHash(newUser.getName()), "password");
-    EXPECT_EQ(newUser.getEmail(), ModelClass::getUserObject(newUser.getUserID()).getEmail());
-    EXPECT_EQ(newUser.getPassword(), ModelClass::getUserObject(newUser.getUserID()).getPassword());
-    EXPECT_EQ(newUser.getUserID(), ModelClass::getUserObject(newUser.getUserID()).getUserID());
-    EXPECT_EQ(newUser.getJSON(), ModelClass::getUserObject(newUser.getUserID()).getJSON());
-    EXPECT_EQ(newUser.getName(), ModelClass::getUserObject(newUser.getUserID()).getName());
-
-    newUser.setEmail("yevenyos");
-    EXPECT_TRUE(ModelClass::updateUserInDB(newUser));
+    EXPECT_EQ(newUser.getJson(), ModelClass::getUserInfoJson("sena"));
+    Museum museum("aMuseum", "aMuseum", newUser);
+    ASSERT_TRUE(ModelClass::saveMuseumToDB(museum));
+    EXPECT_EQ(museum.getJson(), ModelClass::getMuseumInfoJson(museum.getMuseumID()));
+    ASSERT_TRUE(ModelClass::removeMuseumFromDB(museum));
     ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
-    ASSERT_TRUE(!newUser.indb());
-    ModelClass::close();
 }
 
 TEST_F(GameTest, testingMuseumInput){
@@ -161,6 +88,38 @@ TEST_F(GameTest, TestingModelClassMuseumAndUserReturns){
     ASSERT_TRUE(!museum.indb());
     ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
     ASSERT_TRUE(!newUser.indb());
+}
+
+TEST_F(GameTest, TestingModelClassExceptions){
+    User newUser("sena", "s@lafayette.edu", "password");
+    ModelClass::open();
+    ASSERT_THROW(ModelClass::updateUserInDB(newUser), ModelException);
+    ASSERT_THROW(ModelClass::removeUserFromDB(newUser), ModelException);
+    ASSERT_THROW(ModelClass::getMuseumObject(""), ModelException);
+    ASSERT_THROW(ModelClass::getPasswordHash(""), ModelException);
+    ASSERT_THROW(ModelClass::getUserObject(""), ModelException);
+    ASSERT_THROW(ModelClass::getUserObject(-1), ModelException);
+
+    Museum museum("aMuseum", "a sample museum", newUser);
+    ASSERT_THROW(ModelClass::saveMuseumToDB(museum), ModelException);
+    ASSERT_THROW(ModelClass::updateMuseumInDB(museum), ModelException);
+    ASSERT_THROW(ModelClass::removeMuseumFromDB(museum), ModelException);
+
+    ASSERT_NO_THROW(ModelClass::saveUserToDB(newUser));
+    ASSERT_THROW(ModelClass::saveMuseumToDB(museum), ModelException);
+    museum.getUser().setUserID(0);
+    ASSERT_THROW(ModelClass::saveMuseumToDB(museum), ModelException);
+    museum.setUser(newUser); //Remember that museum objects have no connection with user objects.
+    //User object has to be reset to connect museum with User
+    ASSERT_NO_THROW(ModelClass::saveMuseumToDB(museum));
+    ASSERT_NO_THROW(ModelClass::updateUserInDB(newUser));
+    ASSERT_NO_THROW(ModelClass::removeMuseumFromDB(museum));
+    ASSERT_NO_THROW(ModelClass::removeUserFromDB(newUser));
+    Museum museum2("", "", newUser);
+    ASSERT_THROW(ModelClass::saveMuseumToDB(museum), ModelException);
+    User user2("","","");
+    ASSERT_THROW(ModelClass::saveUserToDB(user2), ModelException);
+    ModelClass::close();
 }
 
 
