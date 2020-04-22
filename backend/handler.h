@@ -85,6 +85,8 @@ public:
 protected:
 
 private:
+    http_listener m_listener;
+
     void handle_get(http_request);
     void returnFrontendFile(http_request);
     void returnMuseumList(http_request);
@@ -93,7 +95,6 @@ private:
     void returnCollectionById(http_request, int);
     void returnWildCard(http_request);
 
-    void handle_put(http_request);
     void validateLogin(http_request);
     void getUserProfile(http_request);
 
@@ -102,9 +103,9 @@ private:
     void addUser(http_request);
     void addCollection(http_request);
 
+    void handle_put(http_request);
     void handle_delete(http_request);
-    void handle_error( http_request, pplx::task<void>& , std::string ="ERROR");
-    http_listener m_listener;
+    void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
 };
 
 #include "handler.tpp"
