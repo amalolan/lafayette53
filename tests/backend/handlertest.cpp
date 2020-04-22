@@ -45,8 +45,8 @@ TEST_F(HandlerTest, TEST_GET)  {
 //    putvalue[L"password"] = json::value::string(L"iamgenius");
 
 
-//   std::string result = this->requestTask(methods::POST, "/get-data/user", putvalue);
-   std::string result = this->requestTask(methods::GET, "/get-data/museum-list");
+//   std::string result = this->requestTask(methods::POST, "/request/user", putvalue);
+   std::string result = this->requestTask(methods::GET, "/request/museum-list");
    std::cout<<result;
    ASSERT_NE(result, "");
 }
@@ -57,8 +57,8 @@ TEST_F(HandlerTest, TEST_registerUser) {
     {
         {"username",  "malolan12345"},
         {"password", "123"},
-        {"email",  "malo@gmail.com3243"}
+        {"email",  "malo@gmail.com324332"}
     };
-    std::string result = this->requestTask(methods::POST, "/get-data/user", user);
+    std::string result = this->requestTask(methods::POST, "/reqeust/user", user);
     std::cout<<result;
 }

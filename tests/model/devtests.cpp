@@ -2,24 +2,28 @@
 
 
 TEST_F(DevTests, testingModelClassOpenClose){
-    ModelClass::initdb();
-    ASSERT_TRUE(ModelClass::open());
-    ASSERT_TRUE(ModelClass::status());
-    ASSERT_TRUE(ModelClass::close());
-    ASSERT_FALSE(ModelClass::status());
+//    std::cout<<CODE_BASE_DIRECTORY<<std::endl;
+//    QDir dir;
+//    dir.cd("../../../");
+//    std::cout<<dir.absolutePath().toStdString()<<std::endl;
+    ModelClassExt::initdb(CODE_BASE_DIRECTORY);
+    ASSERT_TRUE(ModelClassExt::open());
+    ASSERT_TRUE(ModelClassExt::status());
+    ASSERT_TRUE(ModelClassExt::close());
+    ASSERT_FALSE(ModelClassExt::status());
 
 
 }
 
 TEST_F(DevTests, testingModelClassReadInfo){
-   ModelClass::initdb();
-   ModelClass::open();
+   ModelClassExt::initdb(CODE_BASE_DIRECTORY);
+   ModelClassExt::open();
    QJsonObject object;
    object["username"] = "Lekso_";
    object["email"] = "borashvl@lafayette.edu";
    QJsonDocument doc;
    doc.setObject(object);
-   ASSERT_EQ(doc.toJson().toStdString(), ModelClass::getUserInfoJSON(0));
+   ASSERT_EQ(doc.toJson().toStdString(), ModelClassExt::getUserInfoJSON(0));
 
    QJsonObject museumObj;
    museumObj["name"] = "Lekso's Space";
@@ -29,7 +33,7 @@ TEST_F(DevTests, testingModelClassReadInfo){
    museumObj["userID"] = 0;
    QJsonDocument museumDoc;
    museumDoc.setObject(museumObj);
-   ASSERT_EQ(museumDoc.toJson().toStdString(), ModelClass::getMuseumInfoJSON(0));
+   ASSERT_EQ(museumDoc.toJson().toStdString(), ModelClassExt::getMuseumInfoJSON(0));
 
    QJsonArray museumArray;
    QJsonObject museum0;
@@ -66,73 +70,73 @@ TEST_F(DevTests, testingModelClassReadInfo){
    museumArray.append(museum3);
    QJsonDocument museumListDoc;
    museumListDoc.setArray(museumArray);
-   ASSERT_EQ(museumListDoc.toJson().toStdString(), ModelClass::getMuseumListJSON());
-   ModelClass::close();
+   ASSERT_EQ(museumListDoc.toJson().toStdString(), ModelClassExt::getMuseumListJSON());
+   ModelClassExt::close();
 }
 
 TEST_F(DevTests, testingUserInput){
     User newUser("yevs", "yvs@lafayette.edu", "password");
-    ModelClass::open();
-    ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
+    ModelClassExt::open();
+    ASSERT_TRUE(ModelClassExt::saveUserToDB(newUser));
     ASSERT_TRUE(newUser.indb());
-    EXPECT_EQ(ModelClass::getPasswordHash(newUser.getName()), "password");
-    EXPECT_EQ(newUser.getEmail(), ModelClass::getUserObject("yevs").getEmail());
-    EXPECT_EQ(newUser.getPassword(), ModelClass::getUserObject("yevs").getPassword());
-    EXPECT_EQ(newUser.getUserID(), ModelClass::getUserObject("yevs").getUserID());
-    EXPECT_EQ(newUser.getJSON(), ModelClass::getUserObject("yevs").getJSON());
-    EXPECT_EQ(newUser.getName(), ModelClass::getUserObject("yevs").getName());
+    EXPECT_EQ(ModelClassExt::getPasswordHash(newUser.getName()), "password");
+    EXPECT_EQ(newUser.getEmail(), ModelClassExt::getUserObject("yevs").getEmail());
+    EXPECT_EQ(newUser.getPassword(), ModelClassExt::getUserObject("yevs").getPassword());
+    EXPECT_EQ(newUser.getUserID(), ModelClassExt::getUserObject("yevs").getUserID());
+    EXPECT_EQ(newUser.getJSON(), ModelClassExt::getUserObject("yevs").getJSON());
+    EXPECT_EQ(newUser.getName(), ModelClassExt::getUserObject("yevs").getName());
 
-    EXPECT_EQ(ModelClass::getPasswordHash(newUser.getName()), "password");
-    EXPECT_EQ(newUser.getEmail(), ModelClass::getUserObject(newUser.getUserID()).getEmail());
-    EXPECT_EQ(newUser.getPassword(), ModelClass::getUserObject(newUser.getUserID()).getPassword());
-    EXPECT_EQ(newUser.getUserID(), ModelClass::getUserObject(newUser.getUserID()).getUserID());
-    EXPECT_EQ(newUser.getJSON(), ModelClass::getUserObject(newUser.getUserID()).getJSON());
-    EXPECT_EQ(newUser.getName(), ModelClass::getUserObject(newUser.getUserID()).getName());
+    EXPECT_EQ(ModelClassExt::getPasswordHash(newUser.getName()), "password");
+    EXPECT_EQ(newUser.getEmail(), ModelClassExt::getUserObject(newUser.getUserID()).getEmail());
+    EXPECT_EQ(newUser.getPassword(), ModelClassExt::getUserObject(newUser.getUserID()).getPassword());
+    EXPECT_EQ(newUser.getUserID(), ModelClassExt::getUserObject(newUser.getUserID()).getUserID());
+    EXPECT_EQ(newUser.getJSON(), ModelClassExt::getUserObject(newUser.getUserID()).getJSON());
+    EXPECT_EQ(newUser.getName(), ModelClassExt::getUserObject(newUser.getUserID()).getName());
 
     newUser.setEmail("yevenyos");
-    EXPECT_TRUE(ModelClass::updateUserInDB(newUser));
-    ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
+    EXPECT_TRUE(ModelClassExt::updateUserInDB(newUser));
+    ASSERT_TRUE(ModelClassExt::removeUserFromDB(newUser));
     ASSERT_TRUE(!newUser.indb());
-    ModelClass::close();
+    ModelClassExt::close();
 }
 
 TEST_F(DevTests, testingMuseumInput){
     User newUser("sena", "s@lafayette.edu", "password");
-    ModelClass::open();
-    ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
+    ModelClassExt::open();
+    ASSERT_TRUE(ModelClassExt::saveUserToDB(newUser));
     ASSERT_TRUE(newUser.indb());
     Museum museum("aMuseum", "a sample museum", newUser);
-    ASSERT_TRUE(ModelClass::saveMuseumToDB(museum));
+    ASSERT_TRUE(ModelClassExt::saveMuseumToDB(museum));
     ASSERT_TRUE(museum.indb());
     museum.setName("newName");
-    EXPECT_TRUE(ModelClass::updateMuseumInDB(museum));
+    EXPECT_TRUE(ModelClassExt::updateMuseumInDB(museum));
     museum.getUser().setPassword("able");
     EXPECT_EQ(newUser.getPassword(), museum.getUser().getPassword());
-    ASSERT_TRUE(ModelClass::removeMuseumFromDB(museum));
+    ASSERT_TRUE(ModelClassExt::removeMuseumFromDB(museum));
     ASSERT_TRUE(!museum.indb());
-    ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
+    ASSERT_TRUE(ModelClassExt::removeUserFromDB(newUser));
     ASSERT_TRUE(!newUser.indb());
-    ModelClass::close();
+    ModelClassExt::close();
 }
 
 TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
     User newUser("sena", "s@lafayette.edu", "password");
-    ModelClass::open();
-    ASSERT_TRUE(ModelClass::saveUserToDB(newUser));
+    ModelClassExt::open();
+    ASSERT_TRUE(ModelClassExt::saveUserToDB(newUser));
     Museum museum("aMuseum", "a sample museum", newUser);
-    ASSERT_TRUE(ModelClass::saveMuseumToDB(museum));
-    EXPECT_EQ(museum.getMuseumID(), ModelClass::getMuseumObject("aMuseum").getMuseumID());
-    EXPECT_EQ(museum.getName(), ModelClass::getMuseumObject("aMuseum").getName());
-    EXPECT_EQ(museum.getJSON(), ModelClass::getMuseumObject("aMuseum").getJSON());
-    EXPECT_EQ(museum.getDescription(), ModelClass::getMuseumObject("aMuseum").getDescription());
-    EXPECT_EQ(museum.getUser().getUserID(), ModelClass::getMuseumObject("aMuseum").getUser().getUserID());
-    EXPECT_EQ(museum.getUser().getName(), ModelClass::getMuseumObject("aMuseum").getUser().getName());
-    EXPECT_EQ(museum.getUser().getEmail(), ModelClass::getMuseumObject("aMuseum").getUser().getEmail());
-    EXPECT_EQ(museum.getUser().getPassword(), ModelClass::getMuseumObject("aMuseum").getUser().getPassword());
-    EXPECT_EQ(museum.getUser().getJSON(), ModelClass::getMuseumObject("aMuseum").getUser().getJSON());
-    ASSERT_TRUE(ModelClass::removeMuseumFromDB(museum));
+    ASSERT_TRUE(ModelClassExt::saveMuseumToDB(museum));
+    EXPECT_EQ(museum.getMuseumID(), ModelClassExt::getMuseumObject("aMuseum").getMuseumID());
+    EXPECT_EQ(museum.getName(), ModelClassExt::getMuseumObject("aMuseum").getName());
+    EXPECT_EQ(museum.getJSON(), ModelClassExt::getMuseumObject("aMuseum").getJSON());
+    EXPECT_EQ(museum.getDescription(), ModelClassExt::getMuseumObject("aMuseum").getDescription());
+    EXPECT_EQ(museum.getUser().getUserID(), ModelClassExt::getMuseumObject("aMuseum").getUser().getUserID());
+    EXPECT_EQ(museum.getUser().getName(), ModelClassExt::getMuseumObject("aMuseum").getUser().getName());
+    EXPECT_EQ(museum.getUser().getEmail(), ModelClassExt::getMuseumObject("aMuseum").getUser().getEmail());
+    EXPECT_EQ(museum.getUser().getPassword(), ModelClassExt::getMuseumObject("aMuseum").getUser().getPassword());
+    EXPECT_EQ(museum.getUser().getJSON(), ModelClassExt::getMuseumObject("aMuseum").getUser().getJSON());
+    ASSERT_TRUE(ModelClassExt::removeMuseumFromDB(museum));
     ASSERT_TRUE(!museum.indb());
-    ASSERT_TRUE(ModelClass::removeUserFromDB(newUser));
+    ASSERT_TRUE(ModelClassExt::removeUserFromDB(newUser));
     ASSERT_TRUE(!newUser.indb());
 }
 

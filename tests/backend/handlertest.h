@@ -1,12 +1,22 @@
 #ifndef HANDLERTEST_H
 #define HANDLERTEST_H
+#ifdef __APPLE__
+    #define CODE_BASE_DIRECTORY "../../../lafayette53/"
+#elif __linux
+    #define CODE_BASE_DIRECTORY "/../lafayette53/"
+#endif
+#define BOOST_ASIO_HAS_STD_ATOMIC
+
 #include <iostream>
 #include "gtest/gtest.h"
-#include "../../backend/handler.h"
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/json.h>
 #include "../nlohmann/json.hpp"
+#include "../../backend/modelclassext.h"
+#include "../../backend/controller.h"
+#include "../../backend/handler.h"
+
 using json = nlohmann::json;
 //using namespace utility;                    // Common utilities like string conversions
 //using namespace web;                        // Common features like URIs.
@@ -20,13 +30,14 @@ using json = nlohmann::json;
 class HandlerTest : public ::testing::Test {
 protected:
     http_client client;
+    Controller<ModelClassExt> c;
 
-    HandlerTest() : client(U("http://localhost:5300/")){
-
+    HandlerTest() : client(U("http://localhost:5300/")),
+                    c(U("http://127.0.0.1:5300")){
     }
 
     virtual ~HandlerTest() {
-    // You can do clean-up work that doesn't throw exceptions here.
+        c.on_shutdown();
     }
 
 

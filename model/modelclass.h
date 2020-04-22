@@ -31,7 +31,7 @@ public:
     static Museum getMuseumObject(std::string museumName);
     static User getUserObject(int userID);
 
-private:
+protected:
     static QSqlDatabase db;
     static QSqlQuery query;
 };
