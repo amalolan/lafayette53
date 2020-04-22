@@ -238,7 +238,7 @@ void Handler<T>::handle_post(http_request message)
 template < class T >
 void Handler<T>::validateLogin(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        ucout  << s<<  std::endl;
+        //ucout  << s<<  std::endl;
         Util<T>::checkLogin(json::parse(s));
         ucout << "Login successful\n";
         return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Login successful."));
@@ -257,10 +257,9 @@ void Handler<T>::addMuseum(http_request message){
         Util<T>::checkLogin(data["user"]);
 
         User museumCreator =  T::getUserObject(std::string(data["user"]["username"]));
-        Museum *m = new Museum(data["museum"]["name"], data["museum"]["description"], museumCreator);
+        std::unique_ptr<Museum> m (new Museum(data["museum"]["name"], data["museum"]["description"], museumCreator));
         T::saveMuseumToDB(*m);
         ucout << "Success saving museum to DB\n";
-        delete m;
         return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Museum created."));
 
     }).then([=] (pplx::task<void> t) {
