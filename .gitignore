@@ -3,6 +3,7 @@
 gtest
 gtest.tar
 *.autosave
+*.db
 *.a
 *.core
 *.moc
