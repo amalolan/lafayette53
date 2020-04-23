@@ -302,7 +302,7 @@ void Handler<T>::addCollection(web::http::http_request message) {
                 user, museumJson["id"]);
 
         //TODO: this migh be a problem after website starts returning int instead of string.
-        int userID = std::stoi((std::string)museumJson["userID"]);
+        int userID = museumJson["userID"];
 
         bool isCuratorOfMuseum = (user.getUserID()  == userID);
 
@@ -317,6 +317,8 @@ void Handler<T>::addCollection(web::http::http_request message) {
             return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Collection added successfully."));
          } else{
             ucout << "not the owner\n";
+            return message.reply(status_codes::NotImplemented, Util<T>::getSuccessJsonStr("You are not the owner of the museum!"));
+
               //TODO not owner add to request thing.
          }
         return message.reply(status_codes::NotImplemented, Util<T>::getSuccessJsonStr("Collection Addition Not Implemented"));
