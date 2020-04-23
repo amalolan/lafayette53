@@ -61,6 +61,189 @@ bool ModelClass::status(){
     return db.isOpen();
 }
 
+json ModelClass::getCollectionInfoJSON(int collectionID){
+    QString id(QString::fromStdString(std::to_string(collectionID)));
+    query.exec("SELECT collectionID, museumID, name, description FROM collections WHERE collectionID = "+id+";");
+    query.next();
+    if (!query.isValid())
+    {
+        throw ModelException("No collection entity stored in database");
+    }
+    json output;
+    output["name"] = query.value(2).toString().toStdString();
+    output["description"] = query.value(3).toString().toStdString();
+    output["id"] = query.value(0).toInt();
+    output["intoduction"] = "This is "+query.value(2).toString().toStdString();
+    output["museum"] = ModelClass::getMuseumInfoJson(query.value(1).toInt());
+    query.finish();
+    return output;
+}
+
+json ModelClass::getCollectionListByMuseumID(int museumID){
+    QString id(QString::fromStdString(std::to_string(museumID)));
+    query.exec("SELECT collectionID, museumID, name, description FROM collections WHERE museumID = "+id+";");
+    query.next();
+    if (!query.isValid())
+    {
+        throw ModelException("No collection entity stored in database");
+    }
+    json list;
+    do
+    {
+        json entity;
+        entity["name"] = query.value(2).toString().toStdString();
+        entity["description"] = query.value(3).toString().toStdString();
+        entity["id"] = query.value(0).toInt();
+        entity["intoduction"] = "This is "+query.value(2).toString().toStdString();
+        list.emplace_back(entity);
+    }while(query.next());
+    query.finish();
+    json output;
+    output["collectionList"] = list;
+    output["museum"] = ModelClass::getMuseumInfoJson(museumID);
+    return output;
+}
+
+void ModelClass::saveCollectionToDB(Collection & collection){
+    if(collection.indb())
+    {
+        throw ModelException("Collection already exists in database");
+    }
+    else if (!collection.getMuseum().indb())
+    {
+        throw ModelException("Museum object of collection does not exist in database");
+    }
+    else if (!collection.getMuseum().getUser().indb())
+    {
+        throw ModelException("User object of Museum object of collection does not exist in database");
+    }
+    else
+    {
+        try
+        {
+            Museum museum = ModelClass::getMuseumObject(collection.getMuseum().getName());
+        } catch (ModelException e)
+        {
+            throw ModelException("Museum object of collection does not exist in database");
+        }
+
+        try
+        {
+            User user = ModelClass::getUserObject(collection.getMuseum().getUser().getName());
+        } catch (ModelException e)
+        {
+            throw ModelException("User object of Museum object of collection does not exist in database");
+        }
+    }
+
+    int seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    std::default_random_engine eng(seed);
+    int nextCollectionIndex = eng();
+    QString name = QString::fromStdString(collection.getName());
+    QString museumID(QString::fromStdString(std::to_string(collection.getMuseum().getMuseumID())));
+    QString id(QString::fromStdString(std::to_string(nextCollectionIndex)));
+    QString desc = QString::fromStdString(collection.getDescription());
+    query.prepare("INSERT INTO collections(museumID, collectionID, name, description)"
+                  " VALUES ("+museumID+", "+id+", '"+name+"', '"+desc+"')");
+
+    if(!query.exec())
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Saving collection failed. Reason: "+err);
+    }
+    collection.setID(nextCollectionIndex);
+    query.finish();
+}
+
+void ModelClass::updateCollectionInDB(Collection &collection){
+    if(!collection.indb())
+        {
+            throw ModelException("Collection not in database");
+        }
+        else if (!collection.getMuseum().indb())
+        {
+            throw ModelException("Museum object of collection does not exist in database");
+        }
+        else if (!collection.getMuseum().getUser().indb())
+        {
+            throw ModelException("User object of Museum object of collection does not exist in database");
+        }
+        else
+        {
+            try
+            {
+                Museum museum = ModelClass::getMuseumObject(collection.getMuseum().getName());
+            } catch (ModelException e)
+            {
+                throw ModelException("Museum object of collection does not exist in database");
+            }
+
+            try
+            {
+                User user = ModelClass::getUserObject(collection.getMuseum().getUser().getName());
+            } catch (ModelException e)
+            {
+                throw ModelException("User object of Museum object of collection does not exist in database");
+            }
+        }
+    QString name = QString::fromStdString(collection.getName());
+    QString id = QString::fromStdString(std::to_string(collection.getID()));
+    QString description = QString::fromStdString(collection.getDescription());
+    bool done = query.exec("UPDATE collections SET name = '"+name+"', description = '"+description+"' WHERE collectionID = "+id+";");
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Collection object failed to update in database. Reason: "+err);
+    }
+    query.finish();
+}
+
+void ModelClass::removeCollectionInDB(Collection &collection){
+    if(!collection.indb())
+    {
+        throw ModelException("Collection not in database");
+    }
+    else if (!collection.getMuseum().indb())
+    {
+        throw ModelException("Museum object of collection does not exist in database");
+    }
+    else if (!collection.getMuseum().getUser().indb())
+    {
+        throw ModelException("User object of Museum object of collection does not exist in database");
+    }
+    else
+    {
+        try
+        {
+            Museum museum = ModelClass::getMuseumObject(collection.getMuseum().getName());
+        } catch (ModelException e)
+        {
+            throw ModelException("Museum object of collection does not exist in database");
+        }
+
+        try
+        {
+            User user = ModelClass::getUserObject(collection.getMuseum().getUser().getName());
+        } catch (ModelException e)
+        {
+            throw ModelException("User object of Museum object of collection does not exist in database");
+        }
+    }
+
+    QString id(QString::fromStdString(std::to_string(collection.getID())));
+    query.exec("DELETE FROM collections WHERE collectionID = "+id+";");
+    bool done = query.numRowsAffected() == 1;
+    if (done)
+    {
+       collection.setID(-1);
+    }
+    else
+    {
+        throw ModelException("Collection object does not exist in database");
+    }
+    query.finish();
+}
+
 std::string ModelClass::getMuseumListJSON(){
     query.exec("SELECT museumID, userID, name, description FROM museum;");
     query.next();
@@ -206,8 +389,12 @@ bool ModelClass::removeMuseumFromDB(Museum & museum){
     {
        museum.setMuseumID(-1);
     }
+    else
+    {
+        throw ModelException("Museum object does not exist in database");
+    }
     query.finish();
-    return done;
+    return true;
 }
 
 bool ModelClass::updateMuseumInDB(Museum & museum){
