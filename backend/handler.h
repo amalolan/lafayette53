@@ -78,7 +78,7 @@ public:
          * @brief ~Handler destructor.
          */
     virtual ~Handler() {
-
+        delete this->model;
     }
     /**
          * @brief open opens the listener callback method.

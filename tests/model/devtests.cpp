@@ -9,7 +9,6 @@ TEST_F(DevTests, testingModelClassOpenClose){
     ASSERT_TRUE(this->model->close());
     ASSERT_FALSE(this->model->status());
 
-
 }
 
 TEST_F(DevTests, testingJSONUserMuseumModelClass){
@@ -26,7 +25,6 @@ TEST_F(DevTests, testingJSONUserMuseumModelClass){
 
 TEST_F(DevTests, testingMuseumInput){
     User newUser("sena", "s@lafayette.edu", "password");
-    this->model->open();
     EXPECT_NO_THROW(this->model->saveUserToDB(newUser));
     EXPECT_NO_THROW(newUser.indb());
     Museum museum("aMuseum", "a sample museum", newUser);
@@ -37,10 +35,9 @@ TEST_F(DevTests, testingMuseumInput){
     museum.getUser().setPassword("able");
     EXPECT_EQ(newUser.getPassword(), museum.getUser().getPassword());
     EXPECT_NO_THROW(this->model->removeMuseumFromDB(museum));
-    EXPECT_NO_THROW(!museum.indb());
+    EXPECT_TRUE(!museum.indb());
     EXPECT_NO_THROW(this->model->removeUserFromDB(newUser));
-    EXPECT_NO_THROW(!newUser.indb());
-    this->model->close();
+    EXPECT_TRUE(!newUser.indb());
 }
 
 TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
@@ -66,7 +63,6 @@ TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
 
 TEST_F(DevTests, TestingModelClassExceptions){
     User newUser("sena", "s@lafayette.edu", "password");
-    this->model->open();
     ASSERT_THROW(this->model->updateUserInDB(newUser), ModelException);
     ASSERT_THROW(this->model->removeUserFromDB(newUser), ModelException);
     ASSERT_THROW(this->model->getMuseumObject(""), ModelException);

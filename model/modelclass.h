@@ -45,7 +45,7 @@ public:
 
 protected:
     QSqlDatabase db;
-    QSqlQuery *query;
+    QSqlQuery query;
 };
 
 #endif // MODELCLASS_H
