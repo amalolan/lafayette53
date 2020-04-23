@@ -437,8 +437,6 @@ bool ModelClass::removeMuseumFromDB(Museum & museum){
     }
     query.finish();
     return done;
-    return true;
-
 }
 
 bool ModelClass::updateMuseumInDB(Museum & museum){

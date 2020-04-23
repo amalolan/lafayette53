@@ -285,7 +285,7 @@ void Handler<T>::addCollection(web::http::http_request message) {
 
         //parses user and museum objects from stirng.
         json data = json::parse(s);
-        //ucout << data.dump(3) << '\n';
+        ucout << data.dump(3) << '\n';
         // Validate JSON only works at a single level. This means we have to validate each
         // nested object individually.
         Util<T>::validateJSON(data, {"museum", "collection", "user"});
@@ -297,7 +297,7 @@ void Handler<T>::addCollection(web::http::http_request message) {
         //gets museum and user objects.
         //TODO web is sending string right now that needs to be fixed.
         json museumJson = T::getMuseumInfoJson(646814068);
-        ucout << museumJson.dump(3) << '\n';
+        //ucout << museumJson.dump(3) << '\n';
         User user = T::getUserObject(std::string(userJSON["username"]));
         Museum museum(museumJson["name"], museumJson["description"],
                 user, museumJson["id"]);
