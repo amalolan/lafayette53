@@ -6,8 +6,7 @@
 #define CODE_BASE_DIRECTORY "/../lafayette53/"
 #endif
 #include "gtest/gtest.h"
-//#include "../../model/modelclass.h"
-#include  "../../backend/modelclassext.h"
+#include "../../model/modelclass.h"
 
 
 class DevTests : public ::testing::Test {
@@ -15,7 +14,7 @@ class DevTests : public ::testing::Test {
     // You can remove any or all of the following functions if its body
     // is empty.
 
-    DevTests() {
+    DevTests() : model(new ModelClass(std::string(CODE_BASE_DIRECTORY) + "database/db.db")){
     // You can do set-up work for each test here.
     }
 
@@ -35,6 +34,8 @@ class DevTests : public ::testing::Test {
     // Code here will be called immediately after each test (right
     // before the destructor).
     }
+
+    ModelClass *model;
 };
 
 #endif // DEVTESTS_H
