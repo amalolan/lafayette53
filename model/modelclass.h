@@ -2,6 +2,7 @@
 #define MODELCLASS_H
 #include "museum.h"
 #include "user.h"
+#include "collection.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -17,6 +18,12 @@ public:
     static bool open();
     static bool close();
     static bool status();
+
+    static json getCollectionInfoJSON(int collectionID);
+    static json getCollectionListByMuseumID(int museumID);
+    static void saveCollectionToDB(Collection & collection);
+    static void updateCollectionInDB(Collection & collection);
+    static void removeCollectionInDB(Collection & collection);
 
     static std::string getMuseumListJSON();
     static std::string getMuseumInfoJSON(int museumID);
