@@ -165,7 +165,7 @@ void Handler<T>::returnMuseumList(http_request message){
 template < class T >
 void Handler<T>::returnMuseumById(http_request message,int museumID){
     json outputData = {
-        {"museum", T::getMuseumInfoJSON(museumID)},
+        {"museum", T::getMuseumInfoJson(museumID)},
         {"collectionList", T::getCollectionListByMuseumID(museumID)}
     };
     ucout << outputData.dump(3) << '\n';
