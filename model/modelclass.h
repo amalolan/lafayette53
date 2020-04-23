@@ -14,38 +14,38 @@
 class ModelClass
 {
 public:
-    static void initdb();
-    static void initdb(std::string codeBaseDirectory);
-    static bool open();
-    static bool close();
-    static bool status();
+    ModelClass(std::string);
+    virtual ~ModelClass();
+    virtual bool open();
+    virtual bool close();
+    virtual bool status();
 
-    static json getCollectionInfoJSON(int collectionID);
-    static json getCollectionListByMuseumID(int museumID);
-    static void saveCollectionToDB(Collection & collection);
-    static void updateCollectionInDB(Collection & collection);
-    static void removeCollectionInDB(Collection & collection);
+    virtual json getCollectionInfoJSON(int collectionID);
+    virtual json getCollectionListByMuseumID(int museumID);
+    virtual void saveCollectionToDB(Collection & collection);
+    virtual void updateCollectionInDB(Collection & collection);
+    virtual void removeCollectionInDB(Collection & collection);
 
-    static std::string getMuseumListJSON();
-    static std::string getMuseumInfoJSON(int museumID);
-    static Museum getMuseumObject(std::string museumName);
-    static json getMuseumInfoJson(int museumID);
-    static bool saveMuseumToDB(Museum & museum);
-    static bool removeMuseumFromDB(Museum & museum);
-    static bool updateMuseumInDB(Museum & museum);
+    virtual std::string getMuseumListJSON();
+    virtual std::string getMuseumInfoJSON(int museumID);
+    virtual Museum getMuseumObject(std::string museumName);
+    virtual json getMuseumInfoJson(int museumID);
+    virtual void saveMuseumToDB(Museum & museum);
+    virtual void removeMuseumFromDB(Museum & museum);
+    virtual void updateMuseumInDB(Museum & museum);
 
-    static User getUserObject(std::string username);
-    static User getUserObject(int userID);
-    static std::string getUserInfoJSON(int userID);
-    static json getUserInfoJson(std::string username);
-    static std::string getPasswordHash(std::string username);
-    static bool saveUserToDB(User & user);
-    static bool removeUserFromDB(User & user);
-    static bool updateUserInDB(User & user);
+    virtual User getUserObject(std::string username);
+    virtual User getUserObject(int userID);
+    virtual std::string getUserInfoJSON(int userID);
+    virtual json getUserInfoJson(std::string username);
+    virtual std::string getPasswordHash(std::string username);
+    virtual void saveUserToDB(User & user);
+    virtual void removeUserFromDB(User & user);
+    virtual void updateUserInDB(User & user);
 
 protected:
-    static QSqlDatabase db;
-    static QSqlQuery query;
+    QSqlDatabase db;
+    QSqlQuery *query;
 };
 
 #endif // MODELCLASS_H

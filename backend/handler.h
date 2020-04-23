@@ -39,13 +39,14 @@
 #include <QDirIterator>
 #include "../nlohmann/json.hpp"
 #include <exception>
-//#include "modelclassext.h"
+#include "modelclassext.h"
 //#include "../model/modelclass.h"
 #include "util.h"
 #include "../model/ModelException.h"
-#include <../model/collection.h>
-#include <../model/user.h>
-#include <../model/museum.h>
+#include "../model/collection.h"
+#include "../model/user.h"
+#include "../model/museum.h"
+
 using namespace utility;                    // Common utilities like string conversions
 //using namespace web; // Common features like URIs.
 //using http_request = web::http_request;
@@ -55,20 +56,24 @@ using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 using namespace web::http::experimental::listener;
 using json = nlohmann::json;
-template < class T >
+
+
 class Handler
 {
 public:
-    /**
-         * @brief Handler
-         */
-    Handler() {
-    }
+
     /**
          * @brief Handler sets up the object adds support to GET,PUT,POST,DEL http requests.
          * @param url the url of the server
          */
-    Handler(utility::string_t);
+    Handler(utility::string_t url, ModelClassExt *model) : m_listener(url), model(nullptr) {
+        this->model = model;
+        m_listener.support(methods::GET, std::bind(&Handler::handle_get, this, std::placeholders::_1));
+        m_listener.support(methods::PUT, std::bind(&Handler::handle_put, this, std::placeholders::_1));
+        m_listener.support(methods::POST, std::bind(&Handler::handle_post, this, std::placeholders::_1));
+        m_listener.support(methods::DEL, std::bind(&Handler::handle_delete, this, std::placeholders::_1));
+    }
+
     /**
          * @brief ~Handler destructor.
          */
@@ -82,10 +87,12 @@ public:
     pplx::task<void>open(){return m_listener.open();}
     pplx::task<void>close(){return m_listener.close();}
 
+
 protected:
 
 private:
     http_listener m_listener;
+    ModelClassExt* model;
 
     void handle_get(http_request);
     void returnFrontendFile(http_request);
@@ -108,5 +115,4 @@ private:
     void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
 };
 
-#include "handler.tpp"
 #endif // HANDLER_H

@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 #include "../model/ModelException.h"
+#include "modelclassext.h"
 #include "../nlohmann/json.hpp"
 #include <vector>
 #include <iostream>
@@ -29,7 +30,6 @@ public:
 };
 
 
-template < class T >
 class Util
 {
 public:
@@ -70,10 +70,10 @@ public:
      * }
      * TODO
      */
-    static void checkLogin(json userJSON) {
+    static void checkLogin(json userJSON, ModelClassExt *model) {
         Util::validateJSON(userJSON, {"username", "password"});
         std::string username  = userJSON["username"];
-        if (userJSON["password"] != T::getPasswordHash(username)) {
+        if (userJSON["password"] != model->getPasswordHash(username)) {
             throw LoginException();
         }
     }
