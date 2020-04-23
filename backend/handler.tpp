@@ -259,7 +259,7 @@ void Handler<T>::addMuseum(http_request message){
         Util<T>::validateJSON(data, {"museum", "user"});
         Util<T>::validateJSON(data["museum"], {"name", "description", "introduction"});
         Util<T>::checkLogin(data["user"]);
-
+        ucout << data.dump(3);
         User museumCreator =  T::getUserObject(std::string(data["user"]["username"]));
         std::unique_ptr<Museum> m (new Museum(data["museum"]["name"], data["museum"]["description"], museumCreator));
         T::saveMuseumToDB(*m);
@@ -295,8 +295,7 @@ void Handler<T>::addCollection(web::http::http_request message) {
         Util<T>::checkLogin(userJSON);
 
         //gets museum and user objects.
-        //TODO web is sending string right now that needs to be fixed.
-        json museumJson = T::getMuseumInfoJson(646814068);
+        json museumJson = T::getMuseumInfoJson(data["museum"]["id"]);
         //ucout << museumJson.dump(3) << '\n';
         User user = T::getUserObject(std::string(userJSON["username"]));
         Museum museum(museumJson["name"], museumJson["description"],
