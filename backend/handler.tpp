@@ -17,7 +17,9 @@ void Handler<T>::handle_error(http_request message, pplx::task<void>& t, std::st
         t.get();
     }
     catch(LoginException &l) {
+
         message.reply(status_codes::Unauthorized, error + "\n" +  Util<T>::getFailureJsonStr(l.what()));
+        ucout << l.what() << "\n";
     }
 
     catch(ModelException &m) {
@@ -26,6 +28,7 @@ void Handler<T>::handle_error(http_request message, pplx::task<void>& t, std::st
     }
     catch(json::exception &j) {
         message.reply(status_codes::InternalError, Util<T>::getFailureJsonStr(j.what()));
+        ucout << j.what() << '\n';
     }
 
     catch(std::exception &e)
@@ -165,8 +168,9 @@ void Handler<T>::returnMuseumById(http_request message,int museumID){
         {"museum", T::getMuseumInfoJSON(museumID)},
         {"collectionList", T::getCollectionListByMuseumID(museumID)}
     };
+    ucout << outputData.dump(3) << '\n';
     //ucout<<outputData.dump(4)<<std::endl;
-    message.reply(status_codes::OK,outputData.dump(4))
+    message.reply(status_codes::OK,outputData.dump(3))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Museum could not be found.");
     });
@@ -278,8 +282,10 @@ void Handler<T>::addMuseum(http_request message){
 template < class T >
 void Handler<T>::addCollection(web::http::http_request message) {
     message.extract_string(false).then([=](utility::string_t s){
+
         //parses user and museum objects from stirng.
         json data = json::parse(s);
+        //ucout << data.dump(3) << '\n';
         // Validate JSON only works at a single level. This means we have to validate each
         // nested object individually.
         Util<T>::validateJSON(data, {"museum", "collection", "user"});
@@ -289,17 +295,29 @@ void Handler<T>::addCollection(web::http::http_request message) {
         Util<T>::checkLogin(userJSON);
 
         //gets museum and user objects.
-        Museum museum = T::getMuseumObject(data["museum"]["id"]);
+        //TODO web is sending string right now that needs to be fixed.
+        json museumJson = T::getMuseumInfoJson(646814068);
+        ucout << museumJson.dump(3) << '\n';
         User user = T::getUserObject(std::string(userJSON["username"]));
+        Museum museum(museumJson["name"], museumJson["description"],
+                user, museumJson["id"]);
 
-        bool isCuratorOfMuseum = (user.getUserID()  == museum.getUser().getUserID());
+        //TODO: this migh be a problem after website starts returning int instead of string.
+        int userID = std::stoi((std::string)museumJson["userID"]);
+
+        bool isCuratorOfMuseum = (user.getUserID()  == userID);
 
         if(isCuratorOfMuseum){
-            ucout << "saved to database\n";
+
             // TODO: Send args to constructor once ready
-            Collection *collection = new Collection();
+            Collection *collection = new Collection(data["collection"]["name"],
+                    data["collection"]["description"],
+                    museum);
             T::saveCollectionToDB(*collection);
+            ucout << "saved to database\n";
+            return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Collection added successfully."));
          } else{
+            ucout << "not the owner\n";
               //TODO not owner add to request thing.
          }
         return message.reply(status_codes::NotImplemented, Util<T>::getSuccessJsonStr("Collection Addition Not Implemented"));

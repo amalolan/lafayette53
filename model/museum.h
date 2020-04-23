@@ -33,6 +33,15 @@ public:
         this->museumID = museum.getMuseumID();
     }
 
+    Museum& operator = (const Museum &museum)
+    {
+        this->user = museum.getUser();
+        this->name = museum.getName();
+        this->description = museum.getDescription();
+        this->museumID = museum.getMuseumID();
+        return *this;
+    }
+
     ~Museum()
     {
 

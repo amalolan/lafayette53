@@ -5,6 +5,6 @@
 
 int main(int argc, char *argv[])
 {
-    Controller<ModelClassExt>::runServer(argc, argv);
+    Controller<ModelClass>::runServer(argc, argv);
     return 0;
 }
