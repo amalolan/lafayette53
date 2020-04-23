@@ -20,6 +20,3 @@ QT += qml quick webengine
 qtHaveModule(widgets) {
     QT += widgets # QApplication is required to get native styling with QtQuickControls
 }
-
-#target.path = $$[QT_INSTALL_EXAMPLES]/webengine/quicknanobrowser
-#INSTALLS += target

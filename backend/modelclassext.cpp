@@ -10,18 +10,36 @@ void ModelClassExt::initdb(std::string codeBaseDirectory){
     }
 }
 
-void ModelClassExt::saveCollectionToDB(Collection *c) {
+void ModelClassExt::saveUserToDB(User &u) {
+    if (! ModelClass::saveUserToDB(u)) {
+        throw ModelException("Unable to save user to the database.");
+    }
+}
 
+void ModelClassExt::saveMuseumToDB(Museum &m) {
+    if (! ModelClass::saveMuseumToDB(m))  {
+        throw  ModelException("Unable to save musem to the database.");
+    }
+}
+
+//you already have string for following methods. just return json and rename.
+json ModelClassExt::getUserInfoJSON(std::string username){
+    json userJSON = {
+        {"username", username},
+        {"email", "am@gm1.com"},
+    };
+    return userJSON;
 }
 
 
-json ModelClassExt::getMuseumInfoJson(int museumID) {
+json ModelClassExt::getMuseumInfoJSON(int museumID) {
     json museumJSON = {
         {"id", museumID},
         {"name", "testMuseum"},
-        {"description", "testMuseum Description"},
-        {"userID", 2}
-
+        {"description", "testMuseum Description oh yeah"},
+        {"introduction", "introduction lekso is cool"},
+        {"userID", 2},
+        {"image", "https://i.picsum.photos/id/665/400/200.jpg"}
     };
     return museumJSON;
 };
@@ -29,11 +47,11 @@ json ModelClassExt::getMuseumInfoJson(int museumID) {
 json ModelClassExt::getCollectionInfoJSON(int collectionID){
     json collectionObj = {
         {"museum",{
-             {"id", collectionID},
+             {"id", 1},
              {"name", "testMuseum"}
          }},
         {"collection",{
-             {"id",1},
+             {"id", collectionID},
              {"description", "description"},
              {"name", "Collection title"},
              {"introduction", "introduction"}
@@ -41,6 +59,15 @@ json ModelClassExt::getCollectionInfoJSON(int collectionID){
     };
     return collectionObj;
 };
+
+/**
+ * @brief ModelClassExt::saveCollectionToDB Save c to the DB. Throw ModelException  if unable to do so.
+ * @param c The collection to be saved.
+ */
+void ModelClassExt::saveCollectionToDB(Collection &c) {
+
+}
+
 
 /**
  * @brief ModelClassExt::getCollectionListByMuseumID
@@ -67,10 +94,3 @@ json ModelClassExt::getCollectionListByMuseumID(int museumID){
     return colArray;
 }
 
-json ModelClassExt::getUserInfoJson(std::string username){
-    json userJSON = {
-        {"username", username},
-        {"email", "am@gm1.com"},
-    };
-    return userJSON;
-}
