@@ -15,6 +15,7 @@ class ModelClass
 {
 public:
     static void initdb();
+    static void initdb(std::string codeBaseDirectory);
     static bool open();
     static bool close();
     static bool status();

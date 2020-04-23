@@ -4,6 +4,7 @@ CONFIG += console c++11
 
 SOURCES += \
         artifact.cpp \
+        collection.cpp \
         modelclass.cpp \
         main.cpp
 
@@ -16,8 +17,7 @@ HEADERS += \
     user.h \
     ../nlohmann/json.hpp
 
-LIBS += -pthread \
-         -lsqlite3
+LIBS += -pthread
 
 SOURCES += ../gtest/googletest/src/gtest-all.cc
 

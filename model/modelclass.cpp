@@ -43,6 +43,42 @@ void ModelClass::initdb(){
     }
 }
 
+void ModelClass::initdb(std::string codeBaseDirectory){
+    /*
+     * Builds are different on different on Linux and Mac OS.
+     * Known support for Linux flavors: Ubuntu and Fedora.
+     */
+
+    db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
+    for (int i = 3; i > 0 && !db.open(); i--) {
+            qDebug("Try %d opening database failed.", i - 3);
+            qDebug("Error occurred opening the database.");
+            qDebug("Reason: %s.", qPrintable(db.lastError().text()));
+            qDebug("Trying again. Tries left : %d.", i);
+            db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
+        }
+
+    if(!db.open()){
+        qDebug("Model class build failed for Linux setup.");
+        qDebug("Checking if system is a Mac OS X build.");
+        db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
+        for (int i = 3; i > 0 && !db.open(); i--) {
+                qDebug("Try %d opening database failed", i - 3);
+                qDebug("Error occurred opening the database.");
+                qDebug("Reason: %s.", qPrintable(db.lastError().text()));
+                qDebug("Trying again. Tries left : %d.", i);
+                db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
+            }
+    }
+
+    if(!db.open()){
+        qDebug("Model class build failed for both builds.");
+        throw ModelException("Database failed to open.");
+    }else{
+        qDebug("Model class build successful.");
+    }
+}
+
 bool ModelClass::open(){
     if(!db.isOpen()){
         db.open();
@@ -70,10 +106,12 @@ json ModelClass::getCollectionInfoJSON(int collectionID){
         throw ModelException("No collection entity stored in database");
     }
     json output;
-    output["name"] = query.value(2).toString().toStdString();
-    output["description"] = query.value(3).toString().toStdString();
-    output["id"] = query.value(0).toInt();
-    output["intoduction"] = "This is "+query.value(2).toString().toStdString();
+    json collection;
+    collection["name"] = query.value(2).toString().toStdString();
+    collection["description"] = query.value(3).toString().toStdString();
+    collection["id"] = query.value(0).toInt();
+    collection["intoduction"] = "This is "+query.value(2).toString().toStdString();
+    output["collection"] = collection;
     output["museum"] = ModelClass::getMuseumInfoJson(query.value(1).toInt());
     query.finish();
     return output;
@@ -85,7 +123,9 @@ json ModelClass::getCollectionListByMuseumID(int museumID){
     query.next();
     if (!query.isValid())
     {
-        throw ModelException("No collection entity stored in database");
+        //no exception should be thrown. just returned empty list.
+        //throw ModelException("No collection entity stored in database");
+        return json::array();
     }
     json list;
     do
@@ -98,10 +138,12 @@ json ModelClass::getCollectionListByMuseumID(int museumID){
         list.emplace_back(entity);
     }while(query.next());
     query.finish();
-    json output;
-    output["collectionList"] = list;
-    output["museum"] = ModelClass::getMuseumInfoJson(museumID);
-    return output;
+//    json output;
+//    output["collectionList"] = list;
+
+    //we just need collection list not museum.
+    //output["museum"] = ModelClass::getMuseumInfoJson(museumID);
+    return list;
 }
 
 void ModelClass::saveCollectionToDB(Collection & collection){
@@ -299,7 +341,7 @@ json ModelClass::getMuseumInfoJson(int museumID){
     output["name"] = query.value(0).toString().toStdString();
     output["introduction"] = "This is "+query.value(0).toString().toStdString();
     output["description"] = query.value(1).toString().toStdString();
-    output["id"] = query.value(3).toString().toStdString();
+    output["id"] = query.value(3).toString().toInt();
     output["userID"] = query.value(2).toString().toStdString();
     return output;
 }
@@ -394,7 +436,7 @@ bool ModelClass::removeMuseumFromDB(Museum & museum){
         throw ModelException("Museum object does not exist in database");
     }
     query.finish();
-    return true;
+    return done;
 }
 
 bool ModelClass::updateMuseumInDB(Museum & museum){
