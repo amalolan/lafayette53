@@ -342,7 +342,7 @@ json ModelClass::getMuseumInfoJson(int museumID){
     output["introduction"] = "This is "+query.value(0).toString().toStdString();
     output["description"] = query.value(1).toString().toStdString();
     output["id"] = query.value(3).toString().toInt();
-    output["userID"] = query.value(2).toString().toStdString();
+    output["userID"] = query.value(2).toString().toInt();
     return output;
 }
 
