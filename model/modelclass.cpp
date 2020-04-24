@@ -2,6 +2,7 @@
 
 QSqlDatabase ModelClass:: db = QSqlDatabase::addDatabase("QSQLITE", "Connection");
 QSqlQuery ModelClass::query(db);
+
 void ModelClass::initdb(){
     /*
      * Builds are different on different on Linux and Mac OS.
