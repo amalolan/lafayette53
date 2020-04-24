@@ -3,6 +3,7 @@ CONFIG += console c++11
 QT += sql
 
 SOURCES += \
+        handler.cpp \
         main.cpp \
         ../model/modelclass.cpp \
         modelclassext.cpp \
@@ -20,7 +21,6 @@ HEADERS += \
     ../model/user.h \
     ../model/museum.h \
     ../model/ModelException.h \
-    handler.tpp \
     modelclassext.h \
     util.h \
     ../nlohmann/json.hpp
@@ -56,3 +56,4 @@ macx: LIBS += -L$$PWD/../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0
 
 INCLUDEPATH += $$PWD/../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
 DEPENDPATH += $$PWD/../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
+

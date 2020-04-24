@@ -101,36 +101,17 @@ public:
     {
         return this->user.getPassword();
     }
-    std::string getJSON()
+    json toJSON()
     {
-        QJsonObject properties;
-        properties["name"] = QString::fromStdString(this->name);
-        properties["introduction"] = QString::fromStdString("This is "+this->name);
-        properties["description"] = QString::fromStdString(this->description);
-        properties["id"] = this->museumID;
-        properties["userID"] = this->user.getUserID();
-        QJsonDocument doc;
-        doc.setObject(properties);
-        return doc.toJson().toStdString();
-    }
-
-
-    /*
-     * json = { name:
-     *          introduction:
-     *          description:
-     *          id:
-     *          userID:
-     *        }
-     */
-    json getJson(){
-        json output;
-        output["name"] = this->name;
-        output["introduction"] = "This is "+this->name;
-        output["description"] = this->description;
-        output["id"] = this->museumID;
-        output["userID"] = this->user.getUserID();
-        return output;
+        json museum = {
+            {"name", this->getName()},
+            {"introduction", "This is " + this->getName()},
+            {"description", this->getDescription()},
+            {"id", this->getMuseumID()},
+            {"userID", this->user.getUserID()},
+            {"image", ""}
+        };
+        return museum;
     }
 
     bool empty(){

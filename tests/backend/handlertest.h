@@ -30,10 +30,10 @@ using json = nlohmann::json;
 class HandlerTest : public ::testing::Test {
 protected:
     http_client client;
-    Controller<ModelClassExt> c;
+    Controller c;
 
     HandlerTest() : client(U("http://localhost:5300/")),
-                    c(U("http://127.0.0.1:5300")){
+                    c(U("http://127.0.0.1:5300"), new ModelClassExt(std::string(CODE_BASE_DIRECTORY) +  "database/db.db")){
     }
 
     virtual ~HandlerTest() {
