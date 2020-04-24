@@ -6,14 +6,15 @@ void Handler::handle_error(http_request message, pplx::task<void>& t, std::strin
         t.get();
     }
     catch(LoginException &l) {
+        ucout << l.what() << "\n";
 
         message.reply(status_codes::Unauthorized, error + "\n" +  Util::getFailureJsonStr(l.what()));
-        ucout << l.what() << "\n";
     }
 
     catch(ModelException &m) {
-        message.reply(status_codes::Conflict, Util::getFailureJsonStr(error /* + std::string(m.what())*/));
         ucout << m.what() << "\n";
+
+        message.reply(status_codes::Conflict, Util::getFailureJsonStr(error /* + std::string(m.what())*/));
     }
     catch(json::exception &j) {
         ucout << j.what() << '\n';
@@ -23,7 +24,7 @@ void Handler::handle_error(http_request message, pplx::task<void>& t, std::strin
     catch(std::exception &e)
     {
         ucout << e.what() << "\n";
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr(error/* + std::string(e.what())*/));
+        message.reply(status_codes::InternalError, Util::getFailureJsonStr(e.what()/* + std::string(e.what())*/));
     }
 }
 
@@ -143,8 +144,9 @@ void Handler::returnWildCard(http_request message)
 
 
 void Handler::returnMuseumList(http_request message){
-    json museumList = Util::arrayFromVector<Museum>(this->model->getMuseumList(),
-        {"id", "name", "description", "introduction", "userID", "image"});
+//    json museumList = Util::arrayFromVector<Museum>(this->model->getMuseumList(),
+//        {"id", "name", "description", "introduction", "userID", "image"});
+    json museumList = this->model->getMuseumListJSON();
     message.reply(status_codes::OK, museumList.dump(3))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Museum list could not be found.");
