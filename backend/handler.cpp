@@ -16,14 +16,14 @@ void Handler::handle_error(http_request message, pplx::task<void>& t, std::strin
         ucout << m.what() << "\n";
     }
     catch(json::exception &j) {
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr(j.what()));
         ucout << j.what() << '\n';
+        message.reply(status_codes::InternalError, Util::getFailureJsonStr(j.what()));
     }
 
     catch(std::exception &e)
     {
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr(error/* + std::string(e.what())*/));
         ucout << e.what() << "\n";
+        message.reply(status_codes::InternalError, Util::getFailureJsonStr(error/* + std::string(e.what())*/));
     }
 }
 
@@ -143,8 +143,9 @@ void Handler::returnWildCard(http_request message)
 
 
 void Handler::returnMuseumList(http_request message){
-
-    message.reply(status_codes::OK,this->model->getMuseumListJSON())
+    json museumList = Util::arrayFromVector<Museum>(this->model->getMuseumList(),
+        {"id", "name", "description", "introduction", "userID", "image"});
+    message.reply(status_codes::OK, museumList.dump(3))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Museum list could not be found.");
     });
@@ -153,10 +154,11 @@ void Handler::returnMuseumList(http_request message){
 
 
 void Handler::returnMuseumById(http_request message,int museumID){
-    json outputData = {
-        {"museum", this->model->getMuseumInfoJson(museumID)},
-        {"collectionList", this->model->getCollectionListByMuseumID(museumID)}
-    };
+    json outputData;
+    outputData["museum"] = Util::getObjectWithKeys<Museum>(this->model->getMuseumObject(museumID),
+        {"id", "name", "description", "introduction", "userID", "image"});
+    outputData["collectionList"] = Util::arrayFromVector<Collection>(this->model->getCollectionListByMuseumID(museumID),
+        {"id", "name", "description", "introduction", "image"});
     ucout << outputData.dump(3) << '\n';
     //ucout<<outputData.dump(4)<<std::endl;
     message.reply(status_codes::OK,outputData.dump(3))
@@ -168,7 +170,8 @@ void Handler::returnMuseumById(http_request message,int museumID){
 
 
 void Handler::returnCollectionById(web::http::http_request message, int collectionID) {
-    json collectionJSON = this->model->getCollectionInfoJSON(collectionID);
+    json collectionJSON = Util::getObjectWithKeys<Collection>(this->model->getCollectionObject(collectionID),
+    {"id", "name", "description", "introduction", "image"});
     message.reply(status_codes::OK, collectionJSON.dump(4))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Collection could not be found.");
@@ -281,28 +284,26 @@ void Handler::addCollection(web::http::http_request message) {
         Util::validateJSON(data["museum"], {"id"});
         Util::validateJSON(data["collection"], {"description", "name", "introduction"});
         json userJSON = data["user"];
-        Util::checkLogin(userJSON,  this->model);
+        User user = Util::checkLogin(userJSON, this->model);
 
         //gets museum and user objects.
-        json museumJson = this->model->getMuseumInfoJson(data["museum"]["id"]);
+        Museum museum = this->model->getMuseumObject((int) data["museum"]["id"]);
         //ucout << museumJson.dump(3) << '\n';
-        User user = this->model->getUserObject(std::string(userJSON["username"]));
-        Museum museum(museumJson["name"], museumJson["description"],
-                user, museumJson["id"]);
+
 
         //TODO: this migh be a problem after website starts returning int instead of string.
-        int userID = museumJson["userID"];
+        int curatorID = museum.getUser().getUserID();
 
-        bool isCuratorOfMuseum = (user.getUserID()  == userID);
+        bool isCuratorOfMuseum = (user.getUserID()  == curatorID);
 
         if(isCuratorOfMuseum){
-
             // TODO: Send args to constructor once ready
             Collection *collection = new Collection(data["collection"]["name"],
                     data["collection"]["description"],
                     museum);
             this->model->saveCollectionToDB(*collection);
             ucout << "saved to database\n";
+            delete collection;
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Collection added successfully."));
          } else{
             ucout << "not the owner\n";
@@ -324,6 +325,7 @@ void Handler::addUser(http_request message){
         Util::validateJSON(userJSON, {"username", "email", "password"});
         User *user = new User(userJSON["username"], userJSON["email"], userJSON["password"]);
         this->model->saveUserToDB(*user);
+        delete user;
         ucout << "success add user\n";
         return message.reply(status_codes::OK, Util::getSuccessJsonStr("User registered."));
     }).then([=] (pplx::task<void> t) {
@@ -340,7 +342,8 @@ void Handler::getUserProfile(http_request message){
         std::string username = userJSON["username"];
         ucout << "Authorized.\n";
         User u = this->model->getUserObject(username);
-        message.reply(status_codes::OK, u.getJSON());
+        message.reply(status_codes::OK, Util::getObjectWithKeys<User>(u,
+            {"username", "password", "email", "id"}).dump());
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Get User Profile Error.");
     });

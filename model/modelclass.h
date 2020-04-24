@@ -10,6 +10,7 @@
 #include <QtSql>
 #include <QDebug>
 #include <QFileInfo>
+#include <vector>
 
 class ModelClass
 {
@@ -20,25 +21,22 @@ public:
     virtual bool close();
     virtual bool status();
 
-    virtual json getCollectionInfoJSON(int collectionID);
-    virtual json getCollectionListByMuseumID(int museumID);
+    virtual Collection getCollectionObject(int collectionID);
+    virtual std::vector<Collection> getCollectionListByMuseumID(int museumID);
     virtual void saveCollectionToDB(Collection & collection);
     virtual void updateCollectionInDB(Collection & collection);
     virtual void removeCollectionInDB(Collection & collection);
 
-    virtual std::string getMuseumListJSON();
-    virtual std::string getMuseumInfoJSON(int museumID);
+    virtual std::vector<Museum> getMuseumList();
+
     virtual Museum getMuseumObject(std::string museumName);
-    virtual json getMuseumInfoJson(int museumID);
+    virtual Museum getMuseumObject(int museumID);
     virtual void saveMuseumToDB(Museum & museum);
     virtual void removeMuseumFromDB(Museum & museum);
     virtual void updateMuseumInDB(Museum & museum);
 
     virtual User getUserObject(std::string username);
     virtual User getUserObject(int userID);
-    virtual std::string getUserInfoJSON(int userID);
-    virtual json getUserInfoJson(std::string username);
-    virtual std::string getPasswordHash(std::string username);
     virtual void saveUserToDB(User & user);
     virtual void removeUserFromDB(User & user);
     virtual void updateUserInDB(User & user);

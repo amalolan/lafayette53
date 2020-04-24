@@ -37,6 +37,7 @@
 #include "cpprest/containerstream.h"
 #include "cpprest/producerconsumerstream.h"
 #include <QDirIterator>
+//#include <execinfo.h>
 #include "../nlohmann/json.hpp"
 #include <exception>
 #include "modelclassext.h"
