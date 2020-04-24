@@ -60,13 +60,15 @@ public:
         return this->id;
     }
 
-    json getJson()
+    json toJSON()
     {
-        json output;
-        output["name"] = this->name;
-        output["description"] = this->desc;
-        output["id"] = this->id;
-        output["intoduction"] = "This is "+this->name;
+        json output = {
+            {"name", this->getName()},
+            {"description", this->getDescription()},
+            {"id", this->getID()},
+            {"introduction", "This is " + this->getName()},
+            {"image", ""}
+        };
         return output;
     }
 
