@@ -1,5 +1,4 @@
 #include "modelclass.h"
-
 /**
  * @brief ModelClass::ModelClass Opens the database at databasePath, creates the query
  * @param databasePath
@@ -21,10 +20,12 @@ ModelClass::ModelClass(std::string databasePath) {
  */
 ModelClass::~ModelClass() {
     this->db.close();
-    this->db.~QSqlDatabase();
-    query.~QSqlQuery();
+    this->query.clear();
+    {
+        this->db = QSqlDatabase::database();
+        this->query = QSqlQuery(db);
+    }
     QSqlDatabase::removeDatabase("Connection");
-    std::cout<<"Removed connection"<<std::endl;
 }
 
 bool ModelClass::open(){
@@ -54,7 +55,6 @@ Collection ModelClass::getCollectionObject(int collectionID){
     {
         throw ModelException("No collection entity stored in database");
     }
-//    Collection c
     std::string name = query.value(2).toString().toStdString();
     std::string description = query.value(3).toString().toStdString();
     std::string intoduction = "This is "+query.value(2).toString().toStdString();
@@ -88,8 +88,41 @@ std::vector<Collection> ModelClass::getCollectionListByMuseumID(int museumID){
     return collectionList;
 }
 
+/**
+ * @brief ModelClass::getMuseumList
+ * @return
+ */
+std::vector<Museum> ModelClass::getMuseumList(){
+    query.exec("SELECT museumID, userID, name, description FROM museum;");
+    std::vector<Museum> museumList;
+    this->query.next();
+    if (!this->query.isValid())
+    {
+        throw ModelException("No museum entity stored in database");
+    }
+    if (!query.isValid())
+    {
+        throw ModelException("No museum entity stored in database");
+    }
+    do{
+        std::string name = query.value(2).toString().toStdString();
+        std::string introduction = "This is "+ query.value(2).toString().toStdString();
+        std::string description = query.value(3).toString().toStdString();
+        int id = query.value(0).toString().toInt();
+        int userID = query.value(1).toString().toInt();
+        std::cerr<<"Name of museum being pushed back " <<name<<std::endl;
+        User user("","","");
+        user.setUserID(userID);
+        museumList.push_back(Museum(name, description, user, id));
+    }while(query.next());
+    query.finish();
 
-// Let this be here until you fix the getMuseumList() function.
+    for (Museum museum : museumList)
+    {
+        museum.setUser(this->getUserObject(museum.getUser().getUserID()));
+    }
+    return museumList;
+}
 /**
  * @brief ModelClass::getMuseumListJSON Returns a list of museums in the database as a JSON ARRAY
  * Please remove this function once the erro with  getMuseumList() is fixed.
@@ -124,46 +157,6 @@ json ModelClass::getMuseumListJSON() {
     this->query.finish();
     return array;
 }
-
-/**
- * @brief ModelClass::getMuseumList
- * @return
- * NOTE: CRUCIAL: Calling DB again when  playing with the query will change the query.
- * MAKE A COPY OF THE QUERY IF YOU PLAN ON CALLING THE DATABASE AGAIN
- * TODO
- */
-std::vector<Museum> ModelClass::getMuseumList(){
-    query.exec("SELECT museumID, userID, name, description FROM museum;");
-    std::vector<Museum> museumList;
-    // TODO: COPY THE QUERY or FIX the issue
-    this->query.next();
-    if (!this->query.isValid())
-    {
-        throw ModelException("No museum entity stored in database");
-    }
-    if (!query.isValid())
-    {
-        throw ModelException("No museum entity stored in database");
-//        return museumList;
-    }
-    do{
-        std::string name = query.value(2).toString().toStdString();
-        std::string introduction = "This is "+ query.value(2).toString().toStdString();
-        std::string description = query.value(3).toString().toStdString();
-        int id = query.value(0).toString().toInt();
-        int userID = query.value(1).toString().toInt();
-        std::cerr<<"Name of museum being pushed back " <<name<<std::endl;
-        // this call to getUserObject() calls the database while already parsing the query
-        // and breaks the code.
-        // Even if we have a separate query object in each function, this error persists.
-        // The easiest fix is to allow Museum to be created  with user ID.
-        // Then have a function that fetches the User object for every museum.
-        museumList.push_back(Museum(name, description, this->getUserObject(userID), id));
-    }while(query.next());
-    query.finish();
-    return museumList;
-}
-
 
 void ModelClass::saveCollectionToDB(Collection & collection){
     if(collection.indb())

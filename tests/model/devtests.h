@@ -3,7 +3,7 @@
 #ifdef __APPLE__
 #define CODE_BASE_DIRECTORY "../../../lafayette53/"
 #elif __linux
-#define CODE_BASE_DIRECTORY "/../lafayette53/"
+#define CODE_BASE_DIRECTORY "../../../lafayette53/"
 #endif
 #include "gtest/gtest.h"
 #include "../../model/modelclass.h"
@@ -19,7 +19,8 @@ class DevTests : public ::testing::Test {
     }
 
     virtual ~DevTests() {
-    // You can do clean-up work that doesn't throw exceptions here.
+        delete this->model;
+        this->model = nullptr;
     }
 
     // If the constructor and destructor are not enough for setting up
@@ -31,10 +32,8 @@ class DevTests : public ::testing::Test {
     }
 
     virtual void TearDown() {
-        delete this->model;
     }
-
-    ModelClass *model;
+    ModelClass * model;
 };
 
 #endif // DEVTESTS_H
