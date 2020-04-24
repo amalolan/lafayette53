@@ -13,9 +13,13 @@ template <class T>
 class Controller
 {
 public:
-    Handler<T> *g_httpHandler;
-    Controller<T>(const string_t& address)  {
-        T::initdb(CODE_BASE_DIRECTORY);
+    Handler *g_httpHandler;
+    /**
+     * @brief Controller Setus up the server.
+     * @param address
+     * @param model
+     */
+    Controller(const string_t& address, ModelClassExt *model)  {
         uri_builder uri(address);
         auto addr = uri.to_uri().to_string();
         this->g_httpHandler = new Handler<T>(addr);
