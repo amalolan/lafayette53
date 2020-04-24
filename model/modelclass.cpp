@@ -1,82 +1,30 @@
 #include "modelclass.h"
 
-QSqlDatabase ModelClass:: db = QSqlDatabase::addDatabase("QSQLITE", "Connection");
-QSqlQuery ModelClass::query(db);
-void ModelClass::initdb(){
-    /*
-     * Builds are different on different on Linux and Mac OS.
-     * Known support for Linux flavors: Ubuntu and Fedora.
-     */
-
-    std::string linuxPath = "../../lafayette53/database/db.db";
-    QString qLinuxPath = QString::fromStdString(linuxPath);
-    std::string macPath = "../../../../../lafayette53/database/db.db";
-    QString qMacPath = QString::fromStdString(macPath);
-
-    db.setDatabaseName(qLinuxPath);
-    for (int i = 3; i > 0 && !db.open(); i--) {
-            qDebug("Try %d opening database failed.", i - 3);
-            qDebug("Error occurred opening the database.");
-            qDebug("Reason: %s.", qPrintable(db.lastError().text()));
-            qDebug("Trying again. Tries left : %d.", i);
-            db.setDatabaseName(qLinuxPath);
-        }
-
+/**
+ * @brief ModelClass::ModelClass Opens the database at databasePath, creates the query
+ * @param databasePath
+ */
+ModelClass::ModelClass(std::string databasePath) {
+    db = QSqlDatabase::addDatabase("QSQLITE", "Connection");
+    db.setDatabaseName(QString::fromStdString(databasePath));
     if(!db.open()){
-        qDebug("Model class build failed for Linux setup.");
-        qDebug("Checking if system is a Mac OS X build.");
-        db.setDatabaseName(qMacPath);
-        for (int i = 3; i > 0 && !db.open(); i--) {
-                qDebug("Try %d opening database failed", i - 3);
-                qDebug("Error occurred opening the database.");
-                qDebug("Reason: %s.", qPrintable(db.lastError().text()));
-                qDebug("Trying again. Tries left : %d.", i);
-                db.setDatabaseName(qMacPath);
-            }
-    }
-
-    if(!db.open()){
-        qDebug("Model class build failed for both builds.");
+        qDebug("Model class build failed for linux and macos builds.");
         throw ModelException("Database failed to open.");
     }else{
         qDebug("Model class build successful.");
     }
+    query = QSqlQuery(db);
 }
 
-void ModelClass::initdb(std::string codeBaseDirectory){
-    /*
-     * Builds are different on different on Linux and Mac OS.
-     * Known support for Linux flavors: Ubuntu and Fedora.
-     */
-
-    db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
-    for (int i = 3; i > 0 && !db.open(); i--) {
-            qDebug("Try %d opening database failed.", i - 3);
-            qDebug("Error occurred opening the database.");
-            qDebug("Reason: %s.", qPrintable(db.lastError().text()));
-            qDebug("Trying again. Tries left : %d.", i);
-            db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
-        }
-
-    if(!db.open()){
-        qDebug("Model class build failed for Linux setup.");
-        qDebug("Checking if system is a Mac OS X build.");
-        db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
-        for (int i = 3; i > 0 && !db.open(); i--) {
-                qDebug("Try %d opening database failed", i - 3);
-                qDebug("Error occurred opening the database.");
-                qDebug("Reason: %s.", qPrintable(db.lastError().text()));
-                qDebug("Trying again. Tries left : %d.", i);
-                db.setDatabaseName(QString::fromStdString(codeBaseDirectory + "database/db.db"));
-            }
-    }
-
-    if(!db.open()){
-        qDebug("Model class build failed for both builds.");
-        throw ModelException("Database failed to open.");
-    }else{
-        qDebug("Model class build successful.");
-    }
+/**
+ * @brief ModelClass::~ModelClass Closes and removes the database, and destructs the db and query.
+ */
+ModelClass::~ModelClass() {
+    this->db.close();
+    this->db.~QSqlDatabase();
+    query.~QSqlQuery();
+    QSqlDatabase::removeDatabase("Connection");
+    std::cout<<"Removed connection"<<std::endl;
 }
 
 bool ModelClass::open(){
@@ -93,11 +41,12 @@ bool ModelClass::close(){
     return !db.isOpen();
 }
 
+
 bool ModelClass::status(){
     return db.isOpen();
 }
 
-json ModelClass::getCollectionInfoJSON(int collectionID){
+Collection ModelClass::getCollectionObject(int collectionID){
     QString id(QString::fromStdString(std::to_string(collectionID)));
     query.exec("SELECT collectionID, museumID, name, description FROM collections WHERE collectionID = "+id+";");
     query.next();
@@ -105,19 +54,18 @@ json ModelClass::getCollectionInfoJSON(int collectionID){
     {
         throw ModelException("No collection entity stored in database");
     }
-    json output;
-    json collection;
-    collection["name"] = query.value(2).toString().toStdString();
-    collection["description"] = query.value(3).toString().toStdString();
-    collection["id"] = query.value(0).toInt();
-    collection["intoduction"] = "This is "+query.value(2).toString().toStdString();
-    output["collection"] = collection;
-    output["museum"] = ModelClass::getMuseumInfoJson(query.value(1).toInt());
+//    Collection c
+    std::string name = query.value(2).toString().toStdString();
+    std::string description = query.value(3).toString().toStdString();
+    std::string intoduction = "This is "+query.value(2).toString().toStdString();
+    Museum museum = this->getMuseumObject(query.value(1).toInt());
     query.finish();
-    return output;
+    return Collection(name, description, museum, collectionID);
 }
 
-json ModelClass::getCollectionListByMuseumID(int museumID){
+std::vector<Collection> ModelClass::getCollectionListByMuseumID(int museumID){
+    std::vector<Collection> collectionList;
+    Museum museum = this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
     query.exec("SELECT collectionID, museumID, name, description FROM collections WHERE museumID = "+id+";");
     query.next();
@@ -125,26 +73,97 @@ json ModelClass::getCollectionListByMuseumID(int museumID){
     {
         //no exception should be thrown. just returned empty list.
         //throw ModelException("No collection entity stored in database");
-        return json::array();
+        return collectionList;
     }
-    json list;
     do
     {
-        json entity;
-        entity["name"] = query.value(2).toString().toStdString();
-        entity["description"] = query.value(3).toString().toStdString();
-        entity["id"] = query.value(0).toInt();
-        entity["intoduction"] = "This is "+query.value(2).toString().toStdString();
-        list.emplace_back(entity);
+
+        std::string name = query.value(2).toString().toStdString();
+        std::string description = query.value(3).toString().toStdString();
+        int id = query.value(0).toInt();
+        std::string intoduction = "This is "+query.value(2).toString().toStdString();
+        collectionList.push_back(Collection(name, description, museum, id));
     }while(query.next());
     query.finish();
-//    json output;
-//    output["collectionList"] = list;
-
-    //we just need collection list not museum.
-    //output["museum"] = ModelClass::getMuseumInfoJson(museumID);
-    return list;
+    return collectionList;
 }
+
+
+// Let this be here until you fix the getMuseumList() function.
+/**
+ * @brief ModelClass::getMuseumListJSON Returns a list of museums in the database as a JSON ARRAY
+ * Please remove this function once the erro with  getMuseumList() is fixed.
+ * @return A JSON array of schema below
+ * [
+ *  {"name": string,
+ *   "introduction": string,
+ *   "description": string,
+ *   "id": int,
+ *   "userID": int
+ * },
+ * ....
+ * ]
+ */
+json ModelClass::getMuseumListJSON() {
+    query.exec("SELECT museumID, userID, name, description FROM museum;");
+    this->query.next();
+    if (!this->query.isValid())
+    {
+        throw ModelException("No museum entity stored in database");
+    }
+    json array = json::array();
+    do{
+        json object;
+        object["name"] = this->query.value(2).toString().toStdString();
+        object["introduction"] = "This is "+ this->query.value(2).toString().toStdString();
+        object["description"] = this->query.value(3).toString().toStdString();
+        object["id"] = this->query.value(0).toString().toInt();
+        object["userID"] = this->query.value(1).toString().toInt();
+        array.push_back(object);
+    }while(this->query.next());
+    this->query.finish();
+    return array;
+}
+
+/**
+ * @brief ModelClass::getMuseumList
+ * @return
+ * NOTE: CRUCIAL: Calling DB again when  playing with the query will change the query.
+ * MAKE A COPY OF THE QUERY IF YOU PLAN ON CALLING THE DATABASE AGAIN
+ * TODO
+ */
+std::vector<Museum> ModelClass::getMuseumList(){
+    query.exec("SELECT museumID, userID, name, description FROM museum;");
+    std::vector<Museum> museumList;
+    // TODO: COPY THE QUERY or FIX the issue
+    this->query.next();
+    if (!this->query.isValid())
+    {
+        throw ModelException("No museum entity stored in database");
+    }
+    if (!query.isValid())
+    {
+        throw ModelException("No museum entity stored in database");
+//        return museumList;
+    }
+    do{
+        std::string name = query.value(2).toString().toStdString();
+        std::string introduction = "This is "+ query.value(2).toString().toStdString();
+        std::string description = query.value(3).toString().toStdString();
+        int id = query.value(0).toString().toInt();
+        int userID = query.value(1).toString().toInt();
+        std::cerr<<"Name of museum being pushed back " <<name<<std::endl;
+        // this call to getUserObject() calls the database while already parsing the query
+        // and breaks the code.
+        // Even if we have a separate query object in each function, this error persists.
+        // The easiest fix is to allow Museum to be created  with user ID.
+        // Then have a function that fetches the User object for every museum.
+        museumList.push_back(Museum(name, description, this->getUserObject(userID), id));
+    }while(query.next());
+    query.finish();
+    return museumList;
+}
+
 
 void ModelClass::saveCollectionToDB(Collection & collection){
     if(collection.indb())
@@ -163,7 +182,7 @@ void ModelClass::saveCollectionToDB(Collection & collection){
     {
         try
         {
-            Museum museum = ModelClass::getMuseumObject(collection.getMuseum().getName());
+            Museum museum = this->getMuseumObject(collection.getMuseum().getName());
         } catch (ModelException e)
         {
             throw ModelException("Museum object of collection does not exist in database");
@@ -171,7 +190,7 @@ void ModelClass::saveCollectionToDB(Collection & collection){
 
         try
         {
-            User user = ModelClass::getUserObject(collection.getMuseum().getUser().getName());
+            User user = this->getUserObject(collection.getMuseum().getUser().getName());
         } catch (ModelException e)
         {
             throw ModelException("User object of Museum object of collection does not exist in database");
@@ -195,6 +214,7 @@ void ModelClass::saveCollectionToDB(Collection & collection){
     }
     collection.setID(nextCollectionIndex);
     query.finish();
+    std::cout<<"Saved collection at  ID "<<nextCollectionIndex;
 }
 
 void ModelClass::updateCollectionInDB(Collection &collection){
@@ -214,7 +234,7 @@ void ModelClass::updateCollectionInDB(Collection &collection){
         {
             try
             {
-                Museum museum = ModelClass::getMuseumObject(collection.getMuseum().getName());
+                Museum museum = this->getMuseumObject(collection.getMuseum().getName());
             } catch (ModelException e)
             {
                 throw ModelException("Museum object of collection does not exist in database");
@@ -222,7 +242,7 @@ void ModelClass::updateCollectionInDB(Collection &collection){
 
             try
             {
-                User user = ModelClass::getUserObject(collection.getMuseum().getUser().getName());
+                User user = this->getUserObject(collection.getMuseum().getUser().getName());
             } catch (ModelException e)
             {
                 throw ModelException("User object of Museum object of collection does not exist in database");
@@ -257,7 +277,7 @@ void ModelClass::removeCollectionInDB(Collection &collection){
     {
         try
         {
-            Museum museum = ModelClass::getMuseumObject(collection.getMuseum().getName());
+            Museum museum = this->getMuseumObject(collection.getMuseum().getName());
         } catch (ModelException e)
         {
             throw ModelException("Museum object of collection does not exist in database");
@@ -265,7 +285,7 @@ void ModelClass::removeCollectionInDB(Collection &collection){
 
         try
         {
-            User user = ModelClass::getUserObject(collection.getMuseum().getUser().getName());
+            User user = this->getUserObject(collection.getMuseum().getUser().getName());
         } catch (ModelException e)
         {
             throw ModelException("User object of Museum object of collection does not exist in database");
@@ -286,30 +306,7 @@ void ModelClass::removeCollectionInDB(Collection &collection){
     query.finish();
 }
 
-std::string ModelClass::getMuseumListJSON(){
-    query.exec("SELECT museumID, userID, name, description FROM museum;");
-    query.next();
-    if (!query.isValid())
-    {
-        throw ModelException("No museum entity stored in database");
-    }
-    QJsonArray array;
-    do{
-        QJsonObject object;
-        object["name"] = query.value(2).toString();
-        object["introduction"] = "This is "+ query.value(2).toString();
-        object["description"] = query.value(3).toString();
-        object["id"] = query.value(0).toString().toInt();
-        object["userID"] = query.value(1).toString().toInt();
-        array.append(object);
-    }while(query.next());
-    QJsonDocument doc;
-    doc.setArray(array);
-    query.finish();
-    return doc.toJson().toStdString();
-}
-
-std::string ModelClass::getMuseumInfoJSON(int museumID){
+Museum ModelClass::getMuseumObject(int museumID){
     QString id(QString::fromStdString(std::to_string(museumID)));
     query.exec("SELECT name, description, userID, museumID FROM museum WHERE museumID = "+id+";");
     query.next();
@@ -318,32 +315,13 @@ std::string ModelClass::getMuseumInfoJSON(int museumID){
         throw ModelException("MuseumID does not exist in database");
     }
     QJsonObject object;
-    object["name"] = query.value(0).toString();
-    object["introduction"] = "This is "+ query.value(0).toString();
-    object["description"] = query.value(1).toString();
-    object["id"] = query.value(3).toString().toInt();
-    object["userID"] = query.value(2).toString().toInt();
-    QJsonDocument doc;
-    doc.setObject(object);
+    std::string name = query.value(0).toString().toStdString();
+    std::string introduction = "This is "+ query.value(0).toString().toStdString();
+    std::string description = query.value(1).toString().toStdString();
+    int userID = query.value(2).toString().toInt();
     query.finish();
-    return doc.toJson().toStdString();
-}
-
-json ModelClass::getMuseumInfoJson(int museumID){
-    QString id(QString::fromStdString(std::to_string(museumID)));
-    query.exec("SELECT name, description, userID, museumID FROM museum WHERE museumID = "+id+";");
-    query.next();
-    if (!query.isValid())
-    {
-        throw ModelException("MuseumID does not exist in database");
-    }
-    json output;
-    output["name"] = query.value(0).toString().toStdString();
-    output["introduction"] = "This is "+query.value(0).toString().toStdString();
-    output["description"] = query.value(1).toString().toStdString();
-    output["id"] = query.value(3).toString().toInt();
-    output["userID"] = query.value(2).toString().toStdString();
-    return output;
+    User curator = this->getUserObject(userID);
+    return Museum(name, description, curator, museumID);
 }
 
 Museum ModelClass::getMuseumObject(std::string museumName){
@@ -359,11 +337,11 @@ Museum ModelClass::getMuseumObject(std::string museumName){
     std::string _museumName = query.value(2).toString().toStdString();
     std::string description = query.value(3).toString().toStdString();
     query.finish();
-    User user(ModelClass::getUserObject(userID));
+    User user(this->getUserObject(userID));
     return Museum(_museumName, description, user, museumID);
 }
 
-bool ModelClass::saveMuseumToDB(Museum & museum){
+void ModelClass::saveMuseumToDB(Museum & museum){
     if (museum.indb())
     {
         throw ModelException("Museum object already in database");
@@ -376,7 +354,7 @@ bool ModelClass::saveMuseumToDB(Museum & museum){
     {
         try
         {
-            User user = ModelClass::getUserObject(museum.getUser().getName());
+            User user = this->getUserObject(museum.getUser().getName());
         } catch (ModelException e)
         {
             throw ModelException("User object of Museum object does not exist in database");
@@ -400,10 +378,10 @@ bool ModelClass::saveMuseumToDB(Museum & museum){
     }
     museum.setMuseumID(nextMuseumIndex);
     query.finish();
-    return true;
+    std::cout<<"Saved Museum at  ID "<<nextMuseumIndex;
 }
 
-bool ModelClass::removeMuseumFromDB(Museum & museum){
+void ModelClass::removeMuseumFromDB(Museum & museum){
     if (!museum.indb())
     {
         throw ModelException("Museum object not stored in database");
@@ -416,7 +394,7 @@ bool ModelClass::removeMuseumFromDB(Museum & museum){
     {
         try
         {
-            User user = ModelClass::getUserObject(museum.getUser().getName());
+            User user = this->getUserObject(museum.getUser().getName());
         } catch (ModelException e)
         {
             throw ModelException("User object of Museum object does not exist in database");
@@ -436,10 +414,9 @@ bool ModelClass::removeMuseumFromDB(Museum & museum){
         throw ModelException("Museum object does not exist in database");
     }
     query.finish();
-    return done;
 }
 
-bool ModelClass::updateMuseumInDB(Museum & museum){
+void ModelClass::updateMuseumInDB(Museum & museum){
     if (!museum.indb())
     {
         throw ModelException("Museum object not stored in database");
@@ -452,7 +429,7 @@ bool ModelClass::updateMuseumInDB(Museum & museum){
     {
         try
         {
-            User user = ModelClass::getUserObject(museum.getUser().getName());
+            User user = this->getUserObject(museum.getUser().getName());
         } catch (ModelException e)
         {
             throw ModelException("User object of Museum object does not exist in database");
@@ -469,40 +446,6 @@ bool ModelClass::updateMuseumInDB(Museum & museum){
         throw ModelException("Museum object failed to update in database. Reason: "+err);
     }
     query.finish();
-    return done;
-}
-
-std::string ModelClass::getUserInfoJSON(int userID){
-    QString id(QString::fromStdString(std::to_string(userID)));
-    query.exec("SELECT username, email FROM public WHERE userID = "+id+";");
-    query.next();
-    if (!query.isValid())
-    {
-        throw ModelException("UserID does not exist in database");
-    }
-    QJsonObject object;
-    object["username"] = query.value(0).toString();
-    object["email"] = query.value(1).toString();
-    QJsonDocument doc;
-    doc.setObject(object);
-    return doc.toJson().toStdString();
-}
-
-json ModelClass::getUserInfoJson(std::string username){
-    return ModelClass::getUserObject(username).getJson();
-}
-
-std::string ModelClass::getPasswordHash(std::string username){
-    QString name = QString::fromStdString(username);
-    query.exec("SELECT password FROM public where username GLOB '"+name+"';");
-    query.next();
-    if (!query.isValid())
-    {
-        throw ModelException("Username does not exist in database");
-    }
-    std::string output = query.value(0).toString().toStdString();
-    query.finish();
-    return output;
 }
 
 User ModelClass::getUserObject(std::string username){
@@ -535,9 +478,10 @@ User ModelClass::getUserObject(int userID){
     return User(uname, email, password, userID);
 }
 
-bool ModelClass::saveUserToDB(User & user){
+void ModelClass::saveUserToDB(User & user){
     if (user.indb())
     {
+        std::cout<<"In db";
         throw ModelException("User object already in database");
     }
     else if (user.empty())
@@ -561,10 +505,9 @@ bool ModelClass::saveUserToDB(User & user){
     }
     user.setUserID(nextUserIndex);
     query.finish();
-    return true;
 }
 
-bool ModelClass::removeUserFromDB(User & user){
+void ModelClass::removeUserFromDB(User & user){
     if (!user.indb())
     {
         throw ModelException("User object does not exist in database");
@@ -578,13 +521,13 @@ bool ModelClass::removeUserFromDB(User & user){
     }
     else
     {
+        std::cout<<"Help";
         throw ModelException("User object does not exist in database");
     }
     query.finish();
-    return done;
 }
 
-bool ModelClass::updateUserInDB(User & user){
+void ModelClass::updateUserInDB(User & user){
     if (!user.indb())
     {
         throw ModelException("User object does not exist in database");
@@ -604,5 +547,4 @@ bool ModelClass::updateUserInDB(User & user){
         throw ModelException("User object could not be updated. Reason: "+err);
     }
     query.finish();
-    return done;
 }

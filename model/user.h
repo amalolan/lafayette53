@@ -89,17 +89,6 @@ public:
         return this->userID > -1;
     }
 
-    std::string getJSON()
-    {
-        QJsonObject properties;
-        properties["username"] = QString::fromStdString(this->username);
-        properties["email"] = QString::fromStdString(this->email);
-        properties["userID"] = this->userID;
-        properties["password"] = QString::fromStdString(this->password);
-        QJsonDocument doc;
-        doc.setObject(properties);
-        return doc.toJson().toStdString();
-    }
 
     /*
      * json = { username:
@@ -109,12 +98,13 @@ public:
      *        }
      *
      */
-    json getJson(){
-        json output;
-        output["username"] = this->username;
-        output["email"] = this->email;
-        output["userID"] = this->userID;
-        output["password"] = this->password;
+    json toJSON(){
+        json output  =  {
+            {"username", this->getName()},
+            {"email", this->getEmail()},
+            {"userID", this->getUserID()},
+            {"passowrd", this->getPassword()}
+        };
         return output;
     }
 

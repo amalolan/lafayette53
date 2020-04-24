@@ -20,7 +20,8 @@ SOURCES += \
     ../../model/modelclass.cpp \
     ../../model/artifact.cpp \
     ../../model/collection.cpp \
-    ../../backend/modelclassext.cpp
+    ../../backend/modelclassext.cpp \
+    ../../backend/handler.cpp
 
 
 HEADERS += \

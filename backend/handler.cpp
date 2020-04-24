@@ -1,40 +1,30 @@
 #include "handler.h"
 
-template < class T >
-Handler<T>::Handler(utility::string_t url): m_listener(url)
-{
-    m_listener.support(methods::GET, std::bind(&Handler<T>::handle_get, this, std::placeholders::_1));
-    m_listener.support(methods::PUT, std::bind(&Handler<T>::handle_put, this, std::placeholders::_1));
-    m_listener.support(methods::POST, std::bind(&Handler<T>::handle_post, this, std::placeholders::_1));
-    m_listener.support(methods::DEL, std::bind(&Handler<T>::handle_delete, this, std::placeholders::_1));
-}
-
-
-template < class T >
-void Handler<T>::handle_error(http_request message, pplx::task<void>& t, std::string error)
+void Handler::handle_error(http_request message, pplx::task<void>& t, std::string error)
 {
     try {
         t.get();
     }
     catch(LoginException &l) {
-
-        message.reply(status_codes::Unauthorized, error + "\n" +  Util<T>::getFailureJsonStr(l.what()));
         ucout << l.what() << "\n";
+
+        message.reply(status_codes::Unauthorized, error + "\n" +  Util::getFailureJsonStr(l.what()));
     }
 
     catch(ModelException &m) {
-        message.reply(status_codes::Conflict, Util<T>::getFailureJsonStr(error /* + std::string(m.what())*/));
         ucout << m.what() << "\n";
+
+        message.reply(status_codes::Conflict, Util::getFailureJsonStr(error /* + std::string(m.what())*/));
     }
     catch(json::exception &j) {
-        message.reply(status_codes::InternalError, Util<T>::getFailureJsonStr(j.what()));
         ucout << j.what() << '\n';
+        message.reply(status_codes::InternalError, Util::getFailureJsonStr(j.what()));
     }
 
     catch(std::exception &e)
     {
-        message.reply(status_codes::InternalError, Util<T>::getFailureJsonStr(error/* + std::string(e.what())*/));
         ucout << e.what() << "\n";
+        message.reply(status_codes::InternalError, Util::getFailureJsonStr(e.what()/* + std::string(e.what())*/));
     }
 }
 
@@ -42,8 +32,8 @@ void Handler<T>::handle_error(http_request message, pplx::task<void>& t, std::st
 //
 // Get Request
 //
-template < class T >
-void Handler<T>::handle_get(http_request message)
+
+void Handler::handle_get(http_request message)
 {
     auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
 
@@ -104,8 +94,8 @@ void Handler<T>::handle_get(http_request message)
 
 };
 
-template < class T >
-void Handler<T>::returnFrontendFile(http_request message){
+
+void Handler::returnFrontendFile(http_request message){
     std::string mime = "text/html";
 
     std::string base_path = (std::string(CODE_BASE_DIRECTORY) + "frontend/");
@@ -135,8 +125,8 @@ void Handler<T>::returnFrontendFile(http_request message){
     return;
 }
 
-template < class T >
-void Handler<T>::returnWildCard(http_request message)
+
+void Handler::returnWildCard(http_request message)
 {
     std::string mime = "text/html";
 
@@ -152,22 +142,25 @@ void Handler<T>::returnWildCard(http_request message)
     return;
 };
 
-template < class T >
-void Handler<T>::returnMuseumList(http_request message){
 
-    message.reply(status_codes::OK,T::getMuseumListJSON())
+void Handler::returnMuseumList(http_request message){
+//    json museumList = Util::arrayFromVector<Museum>(this->model->getMuseumList(),
+//        {"id", "name", "description", "introduction", "userID", "image"});
+    json museumList = this->model->getMuseumListJSON();
+    message.reply(status_codes::OK, museumList.dump(3))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Museum list could not be found.");
     });
     return;
 };
 
-template < class T >
-void Handler<T>::returnMuseumById(http_request message,int museumID){
-    json outputData = {
-        {"museum", T::getMuseumInfoJson(museumID)},
-        {"collectionList", T::getCollectionListByMuseumID(museumID)}
-    };
+
+void Handler::returnMuseumById(http_request message,int museumID){
+    json outputData;
+    outputData["museum"] = Util::getObjectWithKeys<Museum>(this->model->getMuseumObject(museumID),
+        {"id", "name", "description", "introduction", "userID", "image"});
+    outputData["collectionList"] = Util::arrayFromVector<Collection>(this->model->getCollectionListByMuseumID(museumID),
+        {"id", "name", "description", "introduction", "image"});
     ucout << outputData.dump(3) << '\n';
     //ucout<<outputData.dump(4)<<std::endl;
     message.reply(status_codes::OK,outputData.dump(3))
@@ -177,9 +170,10 @@ void Handler<T>::returnMuseumById(http_request message,int museumID){
     return;
 }
 
-template < class T >
-void Handler<T>::returnCollectionById(web::http::http_request message, int collectionID) {
-    json collectionJSON = T::getCollectionInfoJSON(collectionID);
+
+void Handler::returnCollectionById(web::http::http_request message, int collectionID) {
+    json collectionJSON = Util::getObjectWithKeys<Collection>(this->model->getCollectionObject(collectionID),
+    {"id", "name", "description", "introduction", "image"});
     message.reply(status_codes::OK, collectionJSON.dump(4))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Collection could not be found.");
@@ -188,9 +182,9 @@ void Handler<T>::returnCollectionById(web::http::http_request message, int colle
 }
 
 // DEPRECATED
-//template < class T >
-//void Handler<T>::returnUserById(http_request message,int userID){
-//    message.reply(status_codes::Gone,T::getUserInfoJSON(userID).dump(4))
+//
+//void Handler::returnUserById(http_request message,int userID){
+//    message.reply(status_codes::Gone,this->model->getUserInfoJSON(userID).dump(4))
 //            .then([=] (pplx::task<void> t) {
 //        this->handle_error(message, t, "User could not be found.");
 //    });;
@@ -200,8 +194,8 @@ void Handler<T>::returnCollectionById(web::http::http_request message, int colle
 //
 // A POST request
 //
-template < class T >
-void Handler<T>::handle_post(http_request message)
+
+void Handler::handle_post(http_request message)
 {
     //ucout <<  message.to_string() << std::endl;
     ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
@@ -233,38 +227,38 @@ void Handler<T>::handle_post(http_request message)
         message.extract_string(false).then([](utility::string_t s){
             ucout << s << std::endl;
         });
-        message.reply(status_codes::NotFound,Util<T>::getFailureJsonStr("Check the url and try again."));
+        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
     }
     return;
 
 };
 
-template < class T >
-void Handler<T>::validateLogin(http_request message){
+
+void Handler::validateLogin(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         //ucout  << s<<  std::endl;
-        Util<T>::checkLogin(json::parse(s));
+        Util::checkLogin(json::parse(s),  this->model);
         ucout << "Login successful\n";
-        return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Login successful."));
+        return message.reply(status_codes::OK, Util::getSuccessJsonStr("Login successful."));
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Login failed.");
     });
     return;
 };
 
-template < class T >
-void Handler<T>::addMuseum(http_request message){
+
+void Handler::addMuseum(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
-        Util<T>::validateJSON(data, {"museum", "user"});
-        Util<T>::validateJSON(data["museum"], {"name", "description", "introduction"});
-        Util<T>::checkLogin(data["user"]);
-
-        User museumCreator =  T::getUserObject(std::string(data["user"]["username"]));
+        Util::validateJSON(data, {"museum", "user"});
+        Util::validateJSON(data["museum"], {"name", "description", "introduction"});
+        Util::checkLogin(data["user"],  this->model);
+        ucout << data.dump(3);
+        User museumCreator =  this->model->getUserObject(std::string(data["user"]["username"]));
         std::unique_ptr<Museum> m (new Museum(data["museum"]["name"], data["museum"]["description"], museumCreator));
-        T::saveMuseumToDB(*m);
+        this->model->saveMuseumToDB(*m);
         ucout << "Success saving museum to DB\n";
-        return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Museum created."));
+        return message.reply(status_codes::OK, Util::getSuccessJsonStr("Museum created."));
 
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Error creating museum.");
@@ -279,8 +273,8 @@ void Handler<T>::addMuseum(http_request message){
 }
 
 */
-template < class T >
-void Handler<T>::addCollection(web::http::http_request message) {
+
+void Handler::addCollection(web::http::http_request message) {
     message.extract_string(false).then([=](utility::string_t s){
 
         //parses user and museum objects from stirng.
@@ -288,39 +282,38 @@ void Handler<T>::addCollection(web::http::http_request message) {
         ucout << data.dump(3) << '\n';
         // Validate JSON only works at a single level. This means we have to validate each
         // nested object individually.
-        Util<T>::validateJSON(data, {"museum", "collection", "user"});
-        Util<T>::validateJSON(data["museum"], {"id"});
-        Util<T>::validateJSON(data["collection"], {"description", "name", "introduction"});
+        Util::validateJSON(data, {"museum", "collection", "user"});
+        Util::validateJSON(data["museum"], {"id"});
+        Util::validateJSON(data["collection"], {"description", "name", "introduction"});
         json userJSON = data["user"];
-        Util<T>::checkLogin(userJSON);
+        User user = Util::checkLogin(userJSON, this->model);
 
         //gets museum and user objects.
-        //TODO web is sending string right now that needs to be fixed.
-        json museumJson = T::getMuseumInfoJson(646814068);
+        Museum museum = this->model->getMuseumObject((int) data["museum"]["id"]);
         //ucout << museumJson.dump(3) << '\n';
-        User user = T::getUserObject(std::string(userJSON["username"]));
-        Museum museum(museumJson["name"], museumJson["description"],
-                user, museumJson["id"]);
+
 
         //TODO: this migh be a problem after website starts returning int instead of string.
-        int userID = std::stoi((std::string)museumJson["userID"]);
+        int curatorID = museum.getUser().getUserID();
 
-        bool isCuratorOfMuseum = (user.getUserID()  == userID);
+        bool isCuratorOfMuseum = (user.getUserID()  == curatorID);
 
         if(isCuratorOfMuseum){
-
             // TODO: Send args to constructor once ready
             Collection *collection = new Collection(data["collection"]["name"],
                     data["collection"]["description"],
                     museum);
-            T::saveCollectionToDB(*collection);
+            this->model->saveCollectionToDB(*collection);
             ucout << "saved to database\n";
-            return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("Collection added successfully."));
+            delete collection;
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Collection added successfully."));
          } else{
             ucout << "not the owner\n";
+            return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("You are not the owner of the museum!"));
+
               //TODO not owner add to request thing.
          }
-        return message.reply(status_codes::NotImplemented, Util<T>::getSuccessJsonStr("Collection Addition Not Implemented"));
+        return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Collection Addition Not Implemented"));
 
 
     }).then([=](pplx::task<void> t){
@@ -328,30 +321,31 @@ void Handler<T>::addCollection(web::http::http_request message) {
     });
 }
 
-template < class T>
-void Handler<T>::addUser(http_request message){
+void Handler::addUser(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         json userJSON = json::parse(s);
-        Util<T>::validateJSON(userJSON, {"username", "email", "password"});
+        Util::validateJSON(userJSON, {"username", "email", "password"});
         User *user = new User(userJSON["username"], userJSON["email"], userJSON["password"]);
-        T::saveUserToDB(*user);
+        this->model->saveUserToDB(*user);
+        delete user;
         ucout << "success add user\n";
-        return message.reply(status_codes::OK, Util<T>::getSuccessJsonStr("User registered."));
+        return message.reply(status_codes::OK, Util::getSuccessJsonStr("User registered."));
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "User could not be registered. There might already exist an account with the same username/email.");
     });
     return;
 };
 
-template < class T >
-void Handler<T>::getUserProfile(http_request message){
+
+void Handler::getUserProfile(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         json userJSON = json::parse(s);
-        Util<T>::checkLogin(userJSON);
+        Util::checkLogin(userJSON,  this->model);
         std::string username = userJSON["username"];
         ucout << "Authorized.\n";
-        User u = T::getUserObject(username);
-        message.reply(status_codes::OK, u.getJSON());
+        User u = this->model->getUserObject(username);
+        message.reply(status_codes::OK, Util::getObjectWithKeys<User>(u,
+            {"username", "password", "email", "id"}).dump());
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Get User Profile Error.");
     });
@@ -362,8 +356,8 @@ void Handler<T>::getUserProfile(http_request message){
 //
 // A PUT request
 //
-template < class T >
-void Handler<T>::handle_put(http_request message)
+
+void Handler::handle_put(http_request message)
 {
     ucout << "PUT " << message.relative_uri().to_string() << "\n";
     //TODO removed after frontend sends POST request
@@ -371,18 +365,18 @@ void Handler<T>::handle_put(http_request message)
         getUserProfile(message);
         return;
     }
-    message.reply(status_codes::NotFound,Util<T>::getFailureJsonStr("No PUT methods implemented."));
+    message.reply(status_codes::NotFound,Util::getFailureJsonStr("No PUT methods implemented."));
     return;
 };
 
 //
 // A DELETE request
 //
-template < class T >
-void Handler<T>::handle_delete(http_request message)
+
+void Handler::handle_delete(http_request message)
 {
     ucout <<  message.to_string() << std::endl;
-    message.reply(status_codes::NotFound, Util<T>::getFailureJsonStr("No DELETE methods implemented"));
+    message.reply(status_codes::NotFound, Util::getFailureJsonStr("No DELETE methods implemented"));
     return;
 };
 
