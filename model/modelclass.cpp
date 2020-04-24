@@ -1,5 +1,9 @@
 #include "modelclass.h"
 
+/**
+ * @brief ModelClass::ModelClass Opens the database at databasePath, creates the query
+ * @param databasePath
+ */
 ModelClass::ModelClass(std::string databasePath) {
     db = QSqlDatabase::addDatabase("QSQLITE", "Connection");
     db.setDatabaseName(QString::fromStdString(databasePath));
@@ -12,7 +16,9 @@ ModelClass::ModelClass(std::string databasePath) {
     query = QSqlQuery(db);
 }
 
-
+/**
+ * @brief ModelClass::~ModelClass Closes and removes the database, and destructs the db and query.
+ */
 ModelClass::~ModelClass() {
     this->db.close();
     this->db.~QSqlDatabase();
@@ -84,6 +90,20 @@ std::vector<Collection> ModelClass::getCollectionListByMuseumID(int museumID){
 
 
 // Let this be here until you fix the getMuseumList() function.
+/**
+ * @brief ModelClass::getMuseumListJSON Returns a list of museums in the database as a JSON ARRAY
+ * Please remove this function once the erro with  getMuseumList() is fixed.
+ * @return A JSON array of schema below
+ * [
+ *  {"name": string,
+ *   "introduction": string,
+ *   "description": string,
+ *   "id": int,
+ *   "userID": int
+ * },
+ * ....
+ * ]
+ */
 json ModelClass::getMuseumListJSON() {
     query.exec("SELECT museumID, userID, name, description FROM museum;");
     this->query.next();
@@ -115,54 +135,33 @@ json ModelClass::getMuseumListJSON() {
 std::vector<Museum> ModelClass::getMuseumList(){
     query.exec("SELECT museumID, userID, name, description FROM museum;");
     std::vector<Museum> museumList;
+    // TODO: COPY THE QUERY or FIX the issue
     this->query.next();
     if (!this->query.isValid())
     {
         throw ModelException("No museum entity stored in database");
     }
-    json array = json::array();
-    do{
-        json object;
-        object["name"] = this->query.value(2).toString().toStdString();
-        object["introduction"] = "This is "+ this->query.value(2).toString().toStdString();
-        object["description"] = this->query.value(3).toString().toStdString();
-        object["id"] = this->query.value(0).toString().toInt();
-        object["userID"] = this->query.value(1).toString().toInt();
-        array.push_back(object);
-    }while(this->query.next());
-    this->query.finish();
-//    qDebug("reached here");
-    for (json object : array) {
-//        std::cerr<<object.dump(3)<<std::endl;
-        museumList.push_back(Museum(
-                                object["name"],
-                                object["description"],
-                                this->getUserObject((int)object["userID"]),
-                                object["id"])
-                );
+    if (!query.isValid())
+    {
+        throw ModelException("No museum entity stored in database");
+//        return museumList;
     }
+    do{
+        std::string name = query.value(2).toString().toStdString();
+        std::string introduction = "This is "+ query.value(2).toString().toStdString();
+        std::string description = query.value(3).toString().toStdString();
+        int id = query.value(0).toString().toInt();
+        int userID = query.value(1).toString().toInt();
+        std::cerr<<"Name of museum being pushed back " <<name<<std::endl;
+        // this call to getUserObject() calls the database while already parsing the query
+        // and breaks the code.
+        // Even if we have a separate query object in each function, this error persists.
+        // The easiest fix is to allow Museum to be created  with user ID.
+        // Then have a function that fetches the User object for every museum.
+        museumList.push_back(Museum(name, description, this->getUserObject(userID), id));
+    }while(query.next());
+    query.finish();
     return museumList;
-
-    // TODO: COPY THE QUERY
-    // i couldn't figure it out so I'm using a hack
-//    if (!query.isValid())
-//    {
-//        //no exception should be thrown. just returned empty list.
-//        throw ModelException("No museum entity stored in database");
-////        return museumList;
-//    }
-//    do{
-//        std::string name = query.value(2).toString().toStdString();
-//        std::string introduction = "This is "+ query.value(2).toString().toStdString();
-//        std::string description = query.value(3).toString().toStdString();
-//        int id = query.value(0).toString().toInt();
-//        int userID = query.value(1).toString().toInt();
-//        std::cerr<<"Name of museum being pushed back " <<name<<std::endl;
-//    // this call to getUserObject() calls the database and breaks the code.
-//        museumList.push_back(Museum(name, description, this->getUserObject(userID), id));
-//    }while(query.next());
-//    query.finish();
-//    return museumList;
 }
 
 
