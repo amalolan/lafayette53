@@ -126,13 +126,10 @@ public:
 
     template<typename T>
     static json arrayFromVector(std::vector<T> list, std::vector<std::string> keys) {
-        std::cerr<< "reached here "<<std::endl;
         json array = json::array();
         for (T t: list) {
-            std::cout<<t.toJSON().dump(4);
             array.push_back(Util::getObjectWithKeys<T>(t, keys));
         }
-        std::cerr<<array.dump(2);
         return array;
     }
 };
