@@ -28,6 +28,7 @@ public:
     virtual void removeCollectionInDB(Collection & collection);
 
     virtual std::vector<Museum> getMuseumList();
+    virtual json getMuseumListJSON();
 
     virtual Museum getMuseumObject(std::string museumName);
     virtual Museum getMuseumObject(int museumID);

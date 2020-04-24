@@ -83,6 +83,28 @@ std::vector<Collection> ModelClass::getCollectionListByMuseumID(int museumID){
 }
 
 
+// Let this be here until you fix the getMuseumList() function.
+json ModelClass::getMuseumListJSON() {
+    query.exec("SELECT museumID, userID, name, description FROM museum;");
+    this->query.next();
+    if (!this->query.isValid())
+    {
+        throw ModelException("No museum entity stored in database");
+    }
+    json array = json::array();
+    do{
+        json object;
+        object["name"] = this->query.value(2).toString().toStdString();
+        object["introduction"] = "This is "+ this->query.value(2).toString().toStdString();
+        object["description"] = this->query.value(3).toString().toStdString();
+        object["id"] = this->query.value(0).toString().toInt();
+        object["userID"] = this->query.value(1).toString().toInt();
+        array.push_back(object);
+    }while(this->query.next());
+    this->query.finish();
+    return array;
+}
+
 /**
  * @brief ModelClass::getMuseumList
  * @return
