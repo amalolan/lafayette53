@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 #include "../model/ModelException.h"
+#include "modelclassext.h"
 #include "../nlohmann/json.hpp"
 #include <vector>
 #include <iostream>
@@ -29,7 +30,6 @@ public:
 };
 
 
-template < class T >
 class Util
 {
 public:
@@ -70,12 +70,14 @@ public:
      * }
      * TODO
      */
-    static void checkLogin(json userJSON) {
+    static User checkLogin(json userJSON, ModelClassExt *model) {
         Util::validateJSON(userJSON, {"username", "password"});
         std::string username  = userJSON["username"];
-        if (userJSON["password"] != T::getPasswordHash(username)) {
+        User user = model->getUserObject(username);
+        if (userJSON["password"] != user.getPassword()) {
             throw LoginException();
         }
+        return user;
     }
 
     /**
@@ -110,6 +112,25 @@ public:
             {"message", message}
         };
         return obj.dump();
+    }
+
+    template<typename T>
+    static json getObjectWithKeys(T t, std::vector<std::string> keys) {
+        json tJSON = t.toJSON();
+        json object;
+        for (std::string key : keys) {
+            object[key] = tJSON[key];
+        }
+        return object;
+    }
+
+    template<typename T>
+    static json arrayFromVector(std::vector<T> list, std::vector<std::string> keys) {
+        json array = json::array();
+        for (T t: list) {
+            array.push_back(Util::getObjectWithKeys<T>(t, keys));
+        }
+        return array;
     }
 };
 
