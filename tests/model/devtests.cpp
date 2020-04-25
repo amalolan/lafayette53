@@ -10,11 +10,13 @@ TEST_F(DevTests, testingModelClassOpenClose){
 TEST_F(DevTests, testingJSONUserMuseumModelClass){
     this->model->open();
     User newUser("sena", "s@lafayette.edu", "password");
-    this->model->saveUserToDB(newUser);
+    EXPECT_NO_THROW(this->model->saveUserToDB(newUser));
     Museum museum("aMuseum", "aMuseum", newUser);
     EXPECT_NO_THROW(this->model->saveMuseumToDB(museum));
+    EXPECT_NO_THROW(this->model->getCollectionListByMuseumID(museum.getMuseumID()));
     EXPECT_NO_THROW(this->model->removeMuseumFromDB(museum));
     EXPECT_NO_THROW(this->model->removeUserFromDB(newUser));
+    this->model->getMuseumList();
 }
 
 TEST_F(DevTests, testingMuseumInput){

@@ -1,21 +1,24 @@
 #ifndef MODELCLASS_H
 #define MODELCLASS_H
-#include "museum.h"
-#include "user.h"
-#include "collection.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "ModelException.h"
+#include <fstream>
+#include <sqlite3.h>
 #include <QtSql>
 #include <QDebug>
 #include <QFileInfo>
 #include <vector>
+#include "museum.h"
+#include "user.h"
+#include "collection.h"
+#include "ModelException.h"
 
 class ModelClass
 {
 public:
-    ModelClass(std::string);
+    virtual ModelClass& operator=(const ModelClass&) = delete;
+
     virtual ~ModelClass();
     virtual bool open();
     virtual bool close();
@@ -42,9 +45,21 @@ public:
     virtual void removeUserFromDB(User & user);
     virtual void updateUserInDB(User & user);
 
+    static ModelClass* getInstance(std::string);
+    static void initdb(std::string, bool);
+
 protected:
+    ModelClass(std::string);
+    ModelClass(const ModelClass&) = delete;
     QSqlDatabase db;
     QSqlQuery query;
+
+private:
+    static bool instanceFlag;
+    static bool test;
+    static bool pro;
+    static std::string path;
+    static ModelClass * single;
 };
 
 #endif // MODELCLASS_H

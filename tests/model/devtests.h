@@ -20,7 +20,6 @@ class DevTests : public ::testing::Test {
 
     virtual ~DevTests() {
         delete this->model;
-        this->model = nullptr;
     }
 
     // If the constructor and destructor are not enough for setting up
@@ -28,10 +27,12 @@ class DevTests : public ::testing::Test {
 
     virtual void SetUp() {
         if (this->model == nullptr)
-            this->model =  new ModelClass(std::string(CODE_BASE_DIRECTORY) + "database/db.db");
+            this->model =  ModelClass::getInstance(std::string(CODE_BASE_DIRECTORY) + "database/db.db");
     }
 
     virtual void TearDown() {
+        delete this->model;
+        this->model = nullptr;
     }
     ModelClass * model;
 };

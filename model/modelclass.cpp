@@ -1,4 +1,25 @@
 #include "modelclass.h"
+
+bool ModelClass::instanceFlag = false;
+
+bool ModelClass::test = false;
+
+bool ModelClass::pro = true;
+
+std::string ModelClass::path = "";
+
+ModelClass * ModelClass::single = nullptr;
+
+ModelClass* ModelClass::getInstance(std::string databasePath){
+    if (!ModelClass::instanceFlag)
+    {
+        ModelClass::single = new ModelClass(databasePath);
+        ModelClass::instanceFlag = true;
+    }
+    return ModelClass::single;
+}
+
+
 /**
  * @brief ModelClass::ModelClass Opens the database at databasePath, creates the query
  * @param databasePath
@@ -26,6 +47,7 @@ ModelClass::~ModelClass() {
         this->query = QSqlQuery(db);
     }
     QSqlDatabase::removeDatabase("Connection");
+    ModelClass::instanceFlag = false;
 }
 
 bool ModelClass::open(){
@@ -110,7 +132,6 @@ std::vector<Museum> ModelClass::getMuseumList(){
         std::string description = query.value(3).toString().toStdString();
         int id = query.value(0).toString().toInt();
         int userID = query.value(1).toString().toInt();
-        std::cerr<<"Name of museum being pushed back " <<name<<std::endl;
         User user("","","");
         user.setUserID(userID);
         museumList.push_back(Museum(name, description, user, id));
@@ -207,7 +228,6 @@ void ModelClass::saveCollectionToDB(Collection & collection){
     }
     collection.setID(nextCollectionIndex);
     query.finish();
-    std::cout<<"Saved collection at  ID "<<nextCollectionIndex;
 }
 
 void ModelClass::updateCollectionInDB(Collection &collection){
@@ -371,7 +391,6 @@ void ModelClass::saveMuseumToDB(Museum & museum){
     }
     museum.setMuseumID(nextMuseumIndex);
     query.finish();
-    std::cout<<"Saved Museum at  ID "<<nextMuseumIndex;
 }
 
 void ModelClass::removeMuseumFromDB(Museum & museum){
@@ -462,7 +481,7 @@ User ModelClass::getUserObject(int userID){
     query.next();
     if (!query.isValid())
     {
-        throw ModelException("Username does not exist in database");
+        throw ModelException("User ID does not exist in database");
     }
     std::string uname = query.value(0).toString().toStdString();
     std::string email = query.value(1).toString().toStdString();
@@ -474,7 +493,6 @@ User ModelClass::getUserObject(int userID){
 void ModelClass::saveUserToDB(User & user){
     if (user.indb())
     {
-        std::cout<<"In db";
         throw ModelException("User object already in database");
     }
     else if (user.empty())
@@ -514,7 +532,6 @@ void ModelClass::removeUserFromDB(User & user){
     }
     else
     {
-        std::cout<<"Help";
         throw ModelException("User object does not exist in database");
     }
     query.finish();
