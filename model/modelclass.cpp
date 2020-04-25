@@ -315,6 +315,7 @@ Museum ModelClass::getMuseumObject(int museumID){
     query.finish();
     User curator = this->getUserObject(userID);
     return Museum(name, description, curator, museumID);
+
 }
 
 Museum ModelClass::getMuseumObject(std::string museumName){

@@ -172,9 +172,19 @@ void Handler::returnMuseumById(http_request message,int museumID){
 
 
 void Handler::returnCollectionById(web::http::http_request message, int collectionID) {
-    json collectionJSON = Util::getObjectWithKeys<Collection>(this->model->getCollectionObject(collectionID),
+    Collection col = this->model->getCollectionObject(collectionID);
+
+    json collectionJSON = Util::getObjectWithKeys<Collection>(col,
     {"id", "name", "description", "introduction", "image"});
-    message.reply(status_codes::OK, collectionJSON.dump(4))
+
+    json museumJSON = Util::getObjectWithKeys<Museum>(col.getMuseum(),{"id","name"});
+
+    json output = {
+        {"collection", collectionJSON},
+        {"museum", museumJSON}
+    };
+
+    message.reply(status_codes::OK, output.dump(4))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Collection could not be found.");
     });
