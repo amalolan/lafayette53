@@ -179,6 +179,7 @@ void Handler::returnMuseumById(http_request message,int museumID){
         {"id", "name", "description", "introduction", "userID", "image"});
     outputData["collectionList"] = Util::arrayFromVector<Collection>(this->model->getCollectionListByMuseumID(museumID),
         {"id", "name", "description", "introduction", "image"});
+    //TODO: outputData["artifactList"] =
     ucout << outputData.dump(3) << '\n';
     //ucout<<outputData.dump(4)<<std::endl;
     message.reply(status_codes::OK,outputData.dump(3))
@@ -388,7 +389,24 @@ void Handler::addArtifact(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
        json data = json::parse(s);
        ucout << data.dump(4);
+       //validate JSON
+       Util::validateJSON(data, {"collection", "artifact", "user", "museum"});
+       Util::validateJSON(data["user"], {"username", "password"});
+       Util::validateJSON(data["artifact"], {"name", "description", "image"});
+       //retrieve data from database. Check login info.
+       User u = Util::checkLogin(data["user"], this->model);
+       Museum m = this->model->getMuseumObject((int)data["museum"]);
 
+       bool isCuratorOfMuseum = (m.getUser().getUserID() == u.getUserID());
+       if(isCuratorOfMuseum)
+       {
+           //saveArtifact to database.
+           ucout << "authorized.\n";
+       } else
+       {
+           //save to edit list.
+           ucout << "not authorized\n";
+       }
        return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Artifact Addition not implemente."));
 
     }).then([=](pplx::task<void> t){
