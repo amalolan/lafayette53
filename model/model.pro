@@ -17,5 +17,3 @@ HEADERS += \
     user.h \
     ../nlohmann/json.hpp
 
-LIBS += -pthread
-

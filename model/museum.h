@@ -19,10 +19,19 @@ public:
         this->museumID = -1;
     }
 
-    Museum(std::string name, std::string description, User user, int museumID):user(user)
+    Museum(std::string name, std::string description, std::string intro, User user):user(user)
     {
         this->name = name;
         this->description = description;
+        this->intro = intro;
+        this->museumID = -1;
+    }
+
+    Museum(std::string name, std::string description, std::string intro, User user, int museumID):user(user)
+    {
+        this->name = name;
+        this->description = description;
+        this->intro = intro;
         this->museumID = museumID;
     }
 
@@ -31,6 +40,7 @@ public:
         this->name = museum.getName();
         this->description = museum.getDescription();
         this->museumID = museum.getMuseumID();
+        this->intro = museum.getIntro();
     }
 
     Museum& operator = (const Museum &museum)
@@ -39,6 +49,7 @@ public:
         this->name = museum.getName();
         this->description = museum.getDescription();
         this->museumID = museum.getMuseumID();
+        this->intro = museum.getIntro();
         return *this;
     }
 
@@ -55,6 +66,11 @@ public:
     void setDescription(std::string desc)
     {
         this->description = desc;
+    }
+
+    void setIntro(std::string intro)
+    {
+        this->intro = intro;
     }
 
     void setMuseumID(int id)
@@ -75,6 +91,11 @@ public:
     std::string getDescription() const
     {
         return this->description;
+    }
+
+    std::string getIntro() const
+    {
+        return this->intro;
     }
 
     User getUser() const
@@ -105,7 +126,7 @@ public:
     {
         json museum = {
             {"name", this->getName()},
-            {"introduction", "This is " + this->getName()},
+            {"introduction", this->getIntro()},
             {"description", this->getDescription()},
             {"id", this->getMuseumID()},
             {"userID", this->user.getUserID()},
@@ -115,11 +136,12 @@ public:
     }
 
     bool empty(){
-        return name == "" && description == "";
+        return name == "" && description == "" && intro == "";
     }
 private:
     std::string name;
     std::string description;
+    std::string intro;
     int museumID;
     User user;
 };

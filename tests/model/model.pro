@@ -30,7 +30,7 @@ HEADERS += \
     ../../model/ModelException.h \
     ../../backend/modelclassext.h\
 
-
+LIBS += -pthread
 
 SOURCES += ../../gtest/googletest/src/gtest-all.cc \
            ../../gtest/googlemock/src/gmock-all.cc

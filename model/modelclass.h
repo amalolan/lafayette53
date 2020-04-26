@@ -12,6 +12,7 @@
 #include "museum.h"
 #include "user.h"
 #include "collection.h"
+#include "artifact.h"
 #include "ModelException.h"
 
 class ModelClass
@@ -23,6 +24,18 @@ public:
     virtual bool open();
     virtual bool close();
     virtual bool status();
+    virtual void createTables();
+
+    virtual Artifact getArtifact(int artifactID);
+    virtual void saveArtifactToDB(Artifact &);
+    virtual void updateArtifactInDB(Artifact &);
+    virtual void removeArtifactInDB(Artifact &);
+    virtual std::vector<Artifact> getArtifactsByMuseum(int museumID);
+
+    virtual std::vector<Collection> getCollectionsByArtifact(int artifactID);
+    virtual std::vector<Artifact> getArtifactsByCollection(int collectionID);
+    virtual void addArtifactCollection(Collection collection, Artifact artifact);
+    virtual void addArtifactCollection(Artifact artifact, Collection collection);
 
     virtual Collection getCollectionObject(int collectionID);
     virtual std::vector<Collection> getCollectionListByMuseumID(int museumID);
@@ -45,21 +58,28 @@ public:
     virtual void removeUserFromDB(User & user);
     virtual void updateUserInDB(User & user);
 
-    static ModelClass* getInstance(std::string);
-    static void initdb(std::string, bool);
+    static ModelClass* getInstance(bool kind);
+    static void initdb(std::string);
+    static const bool test;
+    static const bool pro;
 
 protected:
     ModelClass(std::string);
+    ModelClass(std::string, bool);
     ModelClass(const ModelClass&) = delete;
+    virtual void artifactCheck(Artifact &);
+    virtual void collectionCheck(Collection &);
     QSqlDatabase db;
     QSqlQuery query;
 
 private:
-    static bool instanceFlag;
-    static bool test;
-    static bool pro;
+    bool kind;
+    static void setup();
+    static bool instanceFlagTest;
+    static bool instanceFlagPro;
     static std::string path;
-    static ModelClass * single;
+    static ModelClass * singlePro;
+    static ModelClass * singleTest;
 };
 
 #endif // MODELCLASS_H
