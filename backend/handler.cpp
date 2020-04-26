@@ -284,7 +284,7 @@ void Handler::handle_post(http_request message)
         // URL: /request/add-artifact
         else if (paths[1] == "add-artifact")
         {
-            //addArtifact(message);
+            addArtifact(message);
             return;
         }
     }
@@ -372,11 +372,11 @@ void Handler::addCollection(web::http::http_request message) {
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Collection added successfully."));
          } else{
             ucout << "not the owner\n";
-            return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("You are not the owner of the museum!"));
+            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You are not the owner of the museum!"));
 
               //TODO not owner add to request thing.
          }
-        return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Collection Addition Not Implemented"));
+        //return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Collection Addition Not Implemented"));
 
 
     }).then([=](pplx::task<void> t){
@@ -384,6 +384,18 @@ void Handler::addCollection(web::http::http_request message) {
     });
 }
 
+void Handler::addArtifact(http_request message){
+    message.extract_string(false).then([=](utility::string_t s){
+       json data = json::parse(s);
+       ucout << data.dump(4);
+
+       return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Artifact Addition not implemente."));
+
+    }).then([=](pplx::task<void> t){
+        this->handle_error(message, t, "Artifact addition not implemented.");
+    });
+
+}
 void Handler::addUser(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         json userJSON = json::parse(s);
