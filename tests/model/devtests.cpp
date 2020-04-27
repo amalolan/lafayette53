@@ -47,9 +47,15 @@ TEST_F(DevTests, testingMuseumInput){
     Museum museum1("aMuseum", "aMuseum", newUser);
     Museum museum2("aSecondMuseum", "description", "intro", newUser);
     Museum museum3("aMuseum", "aMuseum", newUser);
+    Museum museum4("", "aMuseum", newUser);
     EXPECT_NO_THROW(this->model->saveMuseumToDB(museum1));
     EXPECT_NO_THROW(this->model->saveMuseumToDB(museum2));
     EXPECT_THROW(this->model->saveMuseumToDB(museum3), ModelException);
+    EXPECT_THROW(this->model->saveMuseumToDB(museum4), ModelException);
+    EXPECT_THROW(this->model->updateMuseumInDB(museum3), ModelException);
+    EXPECT_THROW(this->model->updateMuseumInDB(museum4), ModelException);
+    EXPECT_THROW(this->model->removeMuseumFromDB(museum3), ModelException);
+    EXPECT_THROW(this->model->removeMuseumFromDB(museum4), ModelException);
     EXPECT_NO_THROW(this->model->getMuseumList());
     EXPECT_NO_THROW(this->model->removeMuseumFromDB(museum1));
     EXPECT_NO_THROW(this->model->removeUserFromDB(newUser));
@@ -61,7 +67,7 @@ TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
     User newUser("sena", "s@lafayette.edu", "password");
     this->model->open();
     EXPECT_NO_THROW(this->model->saveUserToDB(newUser));
-    Museum museum("aMuseum", "a sample museum", newUser);
+    Museum museum("aMuseum", "a sample museum", "intro", "photo", newUser);
     EXPECT_NO_THROW(this->model->saveMuseumToDB(museum));
     EXPECT_EQ(museum.getMuseumID(), this->model->getMuseumObject("aMuseum").getMuseumID());
     EXPECT_EQ(museum.getName(), this->model->getMuseumObject("aMuseum").getName());
@@ -73,6 +79,49 @@ TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
     EXPECT_EQ(museum.getUser().getEmail(), this->model->getMuseumObject("aMuseum").getUser().getEmail());
     EXPECT_EQ(museum.getUser().getPassword(), this->model->getMuseumObject("aMuseum").getUser().getPassword());
     EXPECT_EQ(museum.getUser().toJSON(), this->model->getMuseumObject("aMuseum").getUser().toJSON());
+
+    EXPECT_EQ(museum.getMuseumID(), this->model->getMuseumObject(museum.getMuseumID()).getMuseumID());
+    EXPECT_EQ(museum.getName(), this->model->getMuseumObject(museum.getMuseumID()).getName());
+    EXPECT_EQ(museum.getDescription(), this->model->getMuseumObject(museum.getMuseumID()).getDescription());
+    EXPECT_EQ(museum.getPhoto(), this->model->getMuseumObject(museum.getMuseumID()).getPhoto());
+    EXPECT_EQ(museum.getIntro(), this->model->getMuseumObject(museum.getMuseumID()).getIntro());
+    EXPECT_EQ(museum.getUser().getUserID(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getUserID());
+    EXPECT_EQ(museum.getUser().getName(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getName());
+    EXPECT_EQ(museum.getUser().getEmail(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getEmail());
+    EXPECT_EQ(museum.getUser().getPassword(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getPassword());
+    EXPECT_EQ(museum.getUser().toJSON(), this->model->getMuseumObject(museum.getMuseumID()).getUser().toJSON());
+
+    museum.setPhoto("newPhoto");
+    museum.setDescription("newDesc");
+    museum.setIntro("newIntro");
+    museum.setName("newMuseum");
+    newUser.setEmail("newEmail");
+    newUser.setPassword("newEmail");
+    ASSERT_NO_THROW(this->model->updateUserInDB(newUser));
+    museum.setUser(newUser);
+    ASSERT_NO_THROW(this->model->updateMuseumInDB(museum));
+    EXPECT_EQ(museum.getMuseumID(), this->model->getMuseumObject(museum.getName()).getMuseumID());
+    EXPECT_EQ(museum.getName(), this->model->getMuseumObject(museum.getName()).getName());
+    EXPECT_EQ(museum.getDescription(), this->model->getMuseumObject(museum.getName()).getDescription());
+    EXPECT_EQ(museum.getPhoto(), this->model->getMuseumObject(museum.getName()).getPhoto());
+    EXPECT_EQ(museum.getIntro(), this->model->getMuseumObject(museum.getName()).getIntro());
+    EXPECT_EQ(museum.getUser().getUserID(), this->model->getMuseumObject(museum.getName()).getUser().getUserID());
+    EXPECT_EQ(museum.getUser().getName(), this->model->getMuseumObject(museum.getName()).getUser().getName());
+    EXPECT_EQ(museum.getUser().getEmail(), this->model->getMuseumObject(museum.getName()).getUser().getEmail());
+    EXPECT_EQ(museum.getUser().getPassword(), this->model->getMuseumObject(museum.getName()).getUser().getPassword());
+    EXPECT_EQ(museum.getUser().toJSON(), this->model->getMuseumObject(museum.getName()).getUser().toJSON());
+
+    EXPECT_EQ(museum.getMuseumID(), this->model->getMuseumObject(museum.getMuseumID()).getMuseumID());
+    EXPECT_EQ(museum.getName(), this->model->getMuseumObject(museum.getMuseumID()).getName());
+    EXPECT_EQ(museum.getDescription(), this->model->getMuseumObject(museum.getMuseumID()).getDescription());
+    EXPECT_EQ(museum.getPhoto(), this->model->getMuseumObject(museum.getMuseumID()).getPhoto());
+    EXPECT_EQ(museum.getIntro(), this->model->getMuseumObject(museum.getMuseumID()).getIntro());
+    EXPECT_EQ(museum.getUser().getUserID(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getUserID());
+    EXPECT_EQ(museum.getUser().getName(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getName());
+    EXPECT_EQ(museum.getUser().getEmail(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getEmail());
+    EXPECT_EQ(museum.getUser().getPassword(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getPassword());
+    EXPECT_EQ(museum.getUser().toJSON(), this->model->getMuseumObject(museum.getMuseumID()).getUser().toJSON());
+
     EXPECT_NO_THROW(this->model->removeMuseumFromDB(museum));
     ASSERT_TRUE(!museum.indb());
     EXPECT_NO_THROW(this->model->removeUserFromDB(newUser));
@@ -118,6 +167,9 @@ TEST_F(DevTests, TestingArtifactInput){
     ASSERT_NO_THROW(this->model->saveArtifactToDB(artifact));
     EXPECT_TRUE(artifact.indb());
     artifact.setPhoto("newPhoto");
+    artifact.setName("newName");
+    artifact.setDescription("newDesc");
+    artifact.setIntro("newIntro");
     ASSERT_NO_THROW(this->model->updateArtifactInDB(artifact));
     EXPECT_EQ(artifact.getID(), this->model->getArtifact(artifact.getID()).getID());
     EXPECT_EQ(artifact.getName(), this->model->getArtifact(artifact.getID()).getName());
@@ -138,6 +190,9 @@ TEST_F(DevTests, TestingCollectionInput){
     ASSERT_NO_THROW(this->model->saveCollectionToDB(collection));
     EXPECT_TRUE(collection.indb());
     collection.setPhoto("newPhoto");
+    collection.setName("newName");
+    collection.setDescription("newDesc");
+    collection.setIntro("newIntro");
     ASSERT_NO_THROW(this->model->updateCollectionInDB(collection));
     EXPECT_EQ(collection.getID(), this->model->getCollectionObject(collection.getID()).getID());
     EXPECT_EQ(collection.getName(), this->model->getCollectionObject(collection.getID()).getName());
