@@ -20,7 +20,7 @@ void ModelClass::initdb(std::string databasePath){
 }
 
 void ModelClass::setup(){
-    std::vector<std::string> array = {"/database/testdb.db", "/database/db.db"};
+    std::vector<std::string> array = {"database/testdb.db", "database/db.db"};
     for (std::string item : array)
     {
         std::string currPath = ModelClass::path + item;
@@ -34,6 +34,7 @@ void ModelClass::setup(){
         {
             std::cout << "Database at " + currPath + " already exists." << std::endl;
         }
+        file.close();
     }
 }
 
@@ -42,7 +43,7 @@ ModelClass* ModelClass::getInstance(bool kind){
     {
         if (!ModelClass::instanceFlagPro)
         {
-            ModelClass::singlePro = new ModelClass(ModelClass::path + "/database/db.db", ModelClass::pro);
+            ModelClass::singlePro = new ModelClass(ModelClass::path + "database/db.db", ModelClass::pro);
             ModelClass::instanceFlagPro = true;
         }
         return ModelClass::singlePro;
@@ -51,7 +52,7 @@ ModelClass* ModelClass::getInstance(bool kind){
     {
         if(!ModelClass::instanceFlagTest)
         {
-            ModelClass::singleTest = new ModelClass(ModelClass::path + "/database/testdb.db", ModelClass::test);
+            ModelClass::singleTest = new ModelClass(ModelClass::path + "database/testdb.db", ModelClass::test);
             ModelClass::instanceFlagTest = true;
         }
         return ModelClass::singleTest;
@@ -749,6 +750,8 @@ void ModelClass::saveMuseumToDB(Museum & museum){
     QString museumID(QString::fromStdString(std::to_string(nextMuseumIndex)));
     QString userID(QString::fromStdString(std::to_string(museum.getUser().getUserID())));
     QString desc = QString::fromStdString(museum.getDescription());
+//    std::cout << "name: " << name.toStdString() << "\nmuseumID: " << museumID.toStdString() <<
+//               "\nuserID: " << userID.toStdString() << "\ndesc: " << desc.toStdString() << std::endl;
     query.prepare("INSERT INTO museum(museumID, userID, name, description)"
                   " VALUES ("+museumID+", "+userID+", '"+name+"', '"+desc+"')");
 

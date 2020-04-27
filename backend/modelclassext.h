@@ -20,13 +20,5 @@ public:
 
     }
 
-    Artifact getArtifact(int artifactID)
-    {
-        return Artifact("Artifact N1", "The best Artifact", "nothing special", artifactID);
-    }
-    //TODO
-    std::vector<Collection> getCollectionsByArtifact(int artifactID){
-        return std::vector<Collection>();
-    }
 };
 #endif // MODELCLASSEXT_H

@@ -179,6 +179,8 @@ void Handler::returnMuseumById(http_request message,int museumID){
         {"id", "name", "description", "introduction", "userID", "image"});
     outputData["collectionList"] = Util::arrayFromVector<Collection>(this->model->getCollectionListByMuseumID(museumID),
         {"id", "name", "description", "introduction", "image"});
+    outputData["artifactList"] = Util::arrayFromVector<Artifact>(this->model->getArtifactsByMuseum(museumID),
+        {"id", "name", "description", "introduction", "image"});
     //TODO: outputData["artifactList"] =
     ucout << outputData.dump(3) << '\n';
     //ucout<<outputData.dump(4)<<std::endl;
@@ -203,6 +205,9 @@ void Handler::returnCollectionById(http_request message, int collectionID) {
         {"collection", collectionJSON},
         {"museum", museumJSON}
     };
+    output["artifactList"] = Util::arrayFromVector<Artifact>(this->model->getArtifactsByCollection(collectionID),
+        {"id", "name", "description", "introduction", "image"});
+
     message.reply(status_codes::OK, output.dump(4))
             .then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Collection could not be found.");
@@ -219,8 +224,9 @@ void Handler::returnArtifactById(http_request message, int artifactID) {
     std::vector<Collection> collections = this->model->getCollectionsByArtifact(artifactID);
     json collectionListJSON = Util::arrayFromVector<Collection>(collections,{"id"});
 
+    json museumJSON = Util::getObjectWithKeys<Museum>(art.getMuseum(), {"id"});
     json output = {
-        {"museum", art.getMuseumID()},
+        {"museum", art.getMuseum().getMuseumID()},
         {"artifact", artifactJSON},
         {"collectionList", collectionListJSON}
     };
@@ -389,23 +395,31 @@ void Handler::addCollection(web::http::http_request message) {
 void Handler::addArtifact(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
        json data = json::parse(s);
-       ucout << data.dump(4);
+       ucout << data.dump(4) << std::endl;
        //validate JSON
        Util::validateJSON(data, {"collection", "artifact", "user", "museum"});
        Util::validateJSON(data["user"], {"username", "password"});
-       Util::validateJSON(data["artifact"], {"name", "description", "image"});
+       Util::validateJSON(data["artifact"], {"name", "description", "image", "collectionList","introduction"});
+       json collectionList = data["collection"];
        //retrieve data from database. Check login info.
        User u = Util::checkLogin(data["user"], this->model);
        Museum m = this->model->getMuseumObject((int)data["museum"]);
 
+       Artifact art(data["artifact"]["name"],data["artifact"]["description"],data["artifact"]["introduction"],m);
        bool isCuratorOfMuseum = (m.getUser().getUserID() == u.getUserID());
        if(isCuratorOfMuseum)
        {
-           //saveArtifact to database.
-           ucout << "authorized.\n";
+           this->model->saveArtifactToDB(art);
+           for(auto& item : collectionList.items())
+           {
+               Collection col = this->model->getCollectionObject(item.value());
+               this->model->addArtifactCollection(art,col);
+           }
+           ucout << "Artifact Saved to database.";
+           return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact saved to database."));
        } else
        {
-           //save to edit list.
+
            ucout << "not authorized\n";
        }
        return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Artifact Addition not implemente."));

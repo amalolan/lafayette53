@@ -67,7 +67,7 @@ public:
          * @brief Handler sets up the object adds support to GET,PUT,POST,DEL http requests.
          * @param url the url of the server
          */
-    Handler(utility::string_t url, ModelClassExt *model) : m_listener(url), model(nullptr) {
+    Handler(utility::string_t url, ModelClass *model) : m_listener(url), model(nullptr) {
         this->model = model;
         m_listener.support(methods::GET, std::bind(&Handler::handle_get, this, std::placeholders::_1));
         m_listener.support(methods::PUT, std::bind(&Handler::handle_put, this, std::placeholders::_1));
@@ -93,7 +93,7 @@ protected:
 
 private:
     http_listener m_listener;
-    ModelClassExt* model;
+    ModelClass* model;
 
     void handle_get(http_request);
     void returnFrontendFile(http_request);
