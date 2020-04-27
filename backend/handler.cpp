@@ -319,9 +319,11 @@ void Handler::addMuseum(http_request message){
         Util::validateJSON(data["museum"], {"name", "description", "introduction"});
         Util::checkLogin(data["user"],  this->model);
         ucout << data.dump(3);
+
         User museumCurator =  this->model->getUserObject(std::string(data["user"]["username"]));
         std::unique_ptr<Museum> m (new Museum(data["museum"]["name"], data["museum"]["description"],
                 data["museum"]["introduction"], data["museum"]["image"], museumCurator));
+
         this->model->saveMuseumToDB(*m);
         ucout << "Success saving museum to DB\n";
         return message.reply(status_codes::OK, Util::getSuccessJsonStr("Museum created."));
@@ -365,8 +367,10 @@ void Handler::addCollection(web::http::http_request message) {
         if(isCuratorOfMuseum){
             // TODO: Send args to constructor once ready
             Collection *collection = new Collection(data["collection"]["name"],
+
                     data["collection"]["description"], data["collection"]["introduction"],
                     data["collection"]["photo"], museum);
+
             this->model->saveCollectionToDB(*collection);
             ucout << "saved to database\n";
             delete collection;
@@ -387,6 +391,7 @@ void Handler::addCollection(web::http::http_request message) {
 
 void Handler::addArtifact(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
+
         json data = json::parse(s);
         ucout << data.dump(4) << std::endl;
         //validate JSON
@@ -416,6 +421,7 @@ void Handler::addArtifact(http_request message){
             ucout << "not authorized\n";
             return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Artifact Addition not implemente."));
         }
+
     }).then([=](pplx::task<void> t){
         this->handle_error(message, t, "Artifact addition not implemented.");
     });

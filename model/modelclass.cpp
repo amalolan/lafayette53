@@ -755,10 +755,12 @@ void ModelClass::saveMuseumToDB(Museum & museum){
     QString museumID(QString::fromStdString(std::to_string(nextMuseumIndex)));
     QString userID(QString::fromStdString(std::to_string(museum.getUser().getUserID())));
     QString desc = QString::fromStdString(museum.getDescription());
+
     QString intro = QString::fromStdString(museum.getIntro());
     QString photo = QString::fromStdString(museum.getPhoto());
     bool done = query.exec("INSERT INTO museum(museumID, userID, name, description, introduction, photo)"
                   " VALUES ("+museumID+", "+userID+", '"+name+"', '"+desc+"', '"+intro+"', '"+photo+"')");
+
 
     if(!done)
     {
