@@ -4,27 +4,29 @@
 class Artifact
 {
 public:
-    Artifact(std::string name, std::string desc, std::string photo, Museum museum):museum(museum)
+    Artifact(std::string name, std::string desc, std::string intro, Museum museum):museum(museum)
     {
         this->name = name;
         this->desc = desc;
-        this->photo = photo;
+        this->intro = intro;
         this->id = -1;
     }
 
-    Artifact(std::string name, std::string desc, std::string photo, Museum museum, int id):museum(museum)
+    Artifact(std::string name, std::string desc, std::string intro, std::string photo, Museum museum, int id):museum(museum)
     {
         this->name = name;
         this->desc = desc;
         this->photo = photo;
+        this->intro = intro;
         this->id = id;
     }
 
-    Artifact(std::string name, std::string desc, Museum museum):museum(museum)
+    Artifact(std::string name, std::string desc, std::string intro, std::string photo, Museum museum):museum(museum)
     {
         this->name = name;
         this->desc = desc;
-        this->photo = "";
+        this->intro = intro;
+        this->photo = photo;
         this->id = -1;
     }
 
@@ -36,6 +38,11 @@ public:
     std::string getName() const
     {
         return this->name;
+    }
+
+    std::string getIntro() const
+    {
+        return this->intro;
     }
 
     std::string getPhoto() const
@@ -63,6 +70,7 @@ public:
         json output = {
             {"name", this->getName()},
             {"description", this->getDescription()},
+            {"introduction", this->getIntro()},
             {"id", this->getID()},
             {"image", this->photo},
             {"museum", this->museum.toJSON()}
@@ -83,6 +91,11 @@ public:
     void setPhoto(std::string link)
     {
         this->photo = link;
+    }
+
+    void setIntro(std::string intro)
+    {
+        this->intro = intro;
     }
 
     void setID(int newID)
@@ -108,6 +121,7 @@ private:
     std::string name;
     std::string desc;
     std::string photo;
+    std::string intro;
     Museum museum;
 };
 

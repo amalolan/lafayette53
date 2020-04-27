@@ -88,6 +88,7 @@ ModelClass::ModelClass(std::string path, bool kind){
         qDebug("Model class build successful.");
     }
     query = QSqlQuery(db);
+    query.exec("PRAGMA foreign_keys = ON;");
 }
 
 /**
@@ -114,6 +115,7 @@ ModelClass::~ModelClass() {
 bool ModelClass::open(){
     if(!db.isOpen()){
         db.open();
+        query.exec("PRAGMA foreign_keys = ON;");
     }
     return db.isOpen();
 }
@@ -282,7 +284,7 @@ void ModelClass::collectionCheck(Collection & collection){
 
 Artifact ModelClass::getArtifact(int artifactID){
     QString id(QString::fromStdString(std::to_string(artifactID)));
-    query.exec("SELECT artifactID, museumID, name, description, photo FROM artifacts WHERE artifactID = "+id+";");
+    query.exec("SELECT artifactID, museumID, name, description, photo, introduction FROM artifacts WHERE artifactID = "+id+";");
     query.next();
     if (!query.isValid())
     {
@@ -291,9 +293,10 @@ Artifact ModelClass::getArtifact(int artifactID){
     std::string name = query.value(2).toString().toStdString();
     std::string description = query.value(3).toString().toStdString();
     std::string photo = query.value(4).toString().toStdString();
+    std::string intro = query.value(5).toString().toStdString();
     Museum museum = this->getMuseumObject(query.value(1).toInt());
     query.finish();
-    return Artifact(name, description, photo, museum, artifactID);
+    return Artifact(name, description, intro, photo, museum, artifactID);
 }
 
 void ModelClass::saveArtifactToDB(Artifact & artifact){
@@ -336,8 +339,9 @@ void ModelClass::saveArtifactToDB(Artifact & artifact){
     QString id(QString::fromStdString(std::to_string(nextArtifactIndex )));
     QString desc = QString::fromStdString(artifact.getDescription());
     QString photo = QString::fromStdString(artifact.getPhoto());
-    query.prepare("INSERT INTO artifacts(museumID, artifactID, name, description, photo)"
-                  " VALUES ("+museumID+", "+id+", '"+name+"', '"+desc+"', '"+photo+"')");
+    QString intro = QString::fromStdString(artifact.getIntro());
+    query.prepare("INSERT INTO artifacts(museumID, artifactID, name, description, photo, introduction)"
+                  " VALUES ("+museumID+", "+id+", '"+name+"', '"+desc+"', '"+photo+"', '"+intro+"')");
 
     if(!query.exec())
     {
@@ -354,8 +358,9 @@ void ModelClass::updateArtifactInDB(Artifact & artifact){
     QString id = QString::fromStdString(std::to_string(artifact.getID()));
     QString description = QString::fromStdString(artifact.getDescription());
     QString photo = QString::fromStdString(artifact.getPhoto());
+    QString intro = QString::fromStdString(artifact.getIntro());
     bool done = query.exec("UPDATE artifacts SET name = '"+name+"', description = '"+description+"', "
-                           "photo = '"+photo+"'"
+                           "photo = '"+photo+"', introduction = '"+intro+"'"
                            " WHERE artifactID = "+id+";");
     if(!done)
     {
@@ -383,21 +388,22 @@ void ModelClass::removeArtifactInDB(Artifact & artifact){
 
 std::vector<Artifact> ModelClass::getArtifactsByMuseum(int museumID){
     std::vector<Artifact> artifactList;
+    Museum museum = this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
-    query.exec("SELECT artifactID, museumID, name, description, photo FROM artifacts WHERE museumID = "+id+";");
+    query.exec("SELECT artifactID, museumID, name, description, photo, introduction FROM artifacts WHERE museumID = "+id+";");
     query.next();
     if (!query.isValid())
     {
         return artifactList;
     }
-    Museum museum = this->getMuseumObject(museumID);
     do
     {
         std::string name = query.value(2).toString().toStdString();
         std::string description = query.value(3).toString().toStdString();
         int id = query.value(0).toInt();
         std::string photo = query.value(4).toString().toStdString();
-        artifactList.push_back(Artifact(name, description, photo, museum, id));
+        std::string intro = query.value(5).toString().toStdString();
+        artifactList.push_back(Artifact(name, description, intro, photo, museum, id));
     }while(query.next());
     query.finish();
     return artifactList;
@@ -406,6 +412,7 @@ std::vector<Artifact> ModelClass::getArtifactsByMuseum(int museumID){
 std::vector<Collection> ModelClass::getCollectionsByArtifact(int artifactID){
     std::vector<Collection> collectionList;
     QString id(QString::fromStdString(std::to_string(artifactID)));
+    Artifact artifact = this->getArtifact(artifactID);
     query.exec("SELECT collectionID FROM artifactCollection WHERE artifactID = "+id+";");
     query.next();
     if (!query.isValid())
@@ -429,6 +436,7 @@ std::vector<Collection> ModelClass::getCollectionsByArtifact(int artifactID){
 std::vector<Artifact> ModelClass::getArtifactsByCollection(int collectionID){
     std::vector<Artifact> artifactList;
     QString id(QString::fromStdString(std::to_string(collectionID)));
+    Collection collection = this->getCollectionObject(collectionID);
     query.exec("SELECT artifactID FROM artifactCollection WHERE collectionID = "+id+";");
     query.next();
     if (!query.isValid())
@@ -452,12 +460,10 @@ std::vector<Artifact> ModelClass::getArtifactsByCollection(int collectionID){
 void ModelClass::addArtifactCollection(Collection collection, Artifact artifact){
     ModelClass::artifactCheck(artifact);
     ModelClass::collectionCheck(collection);
-
-    QString collectionID(collection.getID());
-    QString artifactID(artifact.getID());
+    QString collectionID = QString::fromStdString(std::to_string(collection.getID()));
+    QString artifactID = QString::fromStdString(std::to_string(artifact.getID()));
     query.prepare("INSERT INTO artifactCollection(artifactID, collectionID)"
                   " VALUES ("+artifactID+", "+collectionID+")");
-
     if(!query.exec())
     {
         std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
@@ -470,11 +476,10 @@ void ModelClass::addArtifactCollection(Artifact artifact, Collection collection)
     ModelClass::artifactCheck(artifact);
     ModelClass::collectionCheck(collection);
 
-    QString collectionID(collection.getID());
-    QString artifactID(artifact.getID());
+    QString collectionID = QString::fromStdString(std::to_string(collection.getID()));
+    QString artifactID = QString::fromStdString(std::to_string(artifact.getID()));
     query.prepare("INSERT INTO artifactCollection(artifactID, collectionID)"
                   " VALUES ("+artifactID+", "+collectionID+")");
-
     if(!query.exec())
     {
         std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
@@ -617,7 +622,7 @@ void ModelClass::removeCollectionInDB(Collection &collection){
  * @return
  */
 std::vector<Museum> ModelClass::getMuseumList(){
-    query.exec("SELECT museumID, userID, name, description, introduction FROM museum;");
+    query.exec("SELECT museumID, userID, name, description, introduction, photo FROM museum;");
     std::vector<Museum> museumList;
     this->query.next();
     if (!this->query.isValid())
@@ -628,12 +633,13 @@ std::vector<Museum> ModelClass::getMuseumList(){
     do{
         std::string name = query.value(2).toString().toStdString();
         std::string introduction = query.value(4).toString().toStdString();
+        std::string photo = query.value(5).toString().toStdString();
         std::string description = query.value(3).toString().toStdString();
         int id = query.value(0).toString().toInt();
         int userID = query.value(1).toString().toInt();
         User user("","","");
         user.setUserID(userID);
-        museumList.push_back(Museum(name, description, introduction, user, id));
+        museumList.push_back(Museum(name, description, introduction, photo, user, id));
     }while(query.next());
     query.finish();
 
@@ -680,7 +686,7 @@ json ModelClass::getMuseumListJSON() {
 
 Museum ModelClass::getMuseumObject(int museumID){
     QString id(QString::fromStdString(std::to_string(museumID)));
-    query.exec("SELECT name, description, userID, museumID, introduction FROM museum WHERE museumID = "+id+";");
+    query.exec("SELECT name, description, userID, museumID, introduction, photo FROM museum WHERE museumID = "+id+";");
     query.next();
     if (!query.isValid())
     {
@@ -689,16 +695,17 @@ Museum ModelClass::getMuseumObject(int museumID){
     QJsonObject object;
     std::string name = query.value(0).toString().toStdString();
     std::string introduction = query.value(4).toString().toStdString();
+    std::string photo = query.value(5).toString().toStdString();
     std::string description = query.value(1).toString().toStdString();
     int userID = query.value(2).toString().toInt();
     query.finish();
     User curator = this->getUserObject(userID);
-    return Museum(name, description, introduction, curator, museumID);
+    return Museum(name, description, introduction, photo, curator, museumID);
 }
 
 Museum ModelClass::getMuseumObject(std::string museumName){
     QString name = QString::fromStdString(museumName);
-    query.exec("SELECT museumID, userID, name, description, introduction FROM museum where name GLOB '"+name+"';");
+    query.exec("SELECT museumID, userID, name, description, introduction, photo FROM museum where name GLOB '"+name+"';");
     query.next();
     if (!query.isValid())
     {
@@ -709,9 +716,10 @@ Museum ModelClass::getMuseumObject(std::string museumName){
     std::string _museumName = query.value(2).toString().toStdString();
     std::string description = query.value(3).toString().toStdString();
     std::string introduction = query.value(4).toString().toStdString();
+    std::string photo = query.value(5).toString().toStdString();
     query.finish();
     User user(this->getUserObject(userID));
-    return Museum(_museumName, description, introduction, user, museumID);
+    return Museum(_museumName, description, introduction, photo, user, museumID);
 }
 
 void ModelClass::saveMuseumToDB(Museum & museum){

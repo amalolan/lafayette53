@@ -27,11 +27,12 @@ public:
         this->museumID = -1;
     }
 
-    Museum(std::string name, std::string description, std::string intro, User user, int museumID):user(user)
+    Museum(std::string name, std::string description, std::string intro, std::string photo, User user, int museumID):user(user)
     {
         this->name = name;
         this->description = description;
         this->intro = intro;
+        this->photo = photo;
         this->museumID = museumID;
     }
 
@@ -41,6 +42,7 @@ public:
         this->description = museum.getDescription();
         this->museumID = museum.getMuseumID();
         this->intro = museum.getIntro();
+        this->photo = museum.getPhoto();
     }
 
     Museum& operator = (const Museum &museum)
@@ -50,6 +52,7 @@ public:
         this->description = museum.getDescription();
         this->museumID = museum.getMuseumID();
         this->intro = museum.getIntro();
+        this->photo = museum.getPhoto();
         return *this;
     }
 
@@ -61,6 +64,11 @@ public:
     void setName(std::string name)
     {
         this->name = name;
+    }
+
+    void setPhoto(std::string photo)
+    {
+        this->photo = photo;
     }
 
     void setDescription(std::string desc)
@@ -98,6 +106,11 @@ public:
         return this->intro;
     }
 
+    std::string getPhoto() const
+    {
+        return this->photo;
+    }
+
     User getUser() const
     {
         return this->user;
@@ -130,7 +143,7 @@ public:
             {"description", this->getDescription()},
             {"id", this->getMuseumID()},
             {"userID", this->user.getUserID()},
-            {"image", ""}
+            {"image", this->getPhoto()}
         };
         return museum;
     }
@@ -142,6 +155,7 @@ private:
     std::string name;
     std::string description;
     std::string intro;
+    std::string photo;
     int museumID;
     User user;
 };
