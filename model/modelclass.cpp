@@ -28,7 +28,7 @@ void ModelClass::setup(){
         file.open(currPath);
         if (!file)
         {
-            std::cout << "Created database at " + currPath << std::endl;
+            std::cout << "Will create if necessary database at " + currPath << std::endl;
         }
         else
         {
