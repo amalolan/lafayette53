@@ -4,6 +4,8 @@
 #include "../model/ModelException.h"
 #include "../model/collection.h"
 #include "../nlohmann/json.hpp"
+#include "../model/artifact.h"
+#include <vector>
 using json=nlohmann::json;
 
 
@@ -13,7 +15,8 @@ public:
     ModelClassExt(std::string str) :  ModelClass(str) {
     }
 
-    virtual ~ModelClassExt() {
+    virtual ~ModelClassExt()
+    {
 
     }
 

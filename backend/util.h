@@ -70,7 +70,7 @@ public:
      * }
      * TODO
      */
-    static User checkLogin(json userJSON, ModelClassExt *model) {
+    static User checkLogin(json userJSON, ModelClass *model) {
         Util::validateJSON(userJSON, {"username", "password"});
         std::string username  = userJSON["username"];
         User user = model->getUserObject(username);

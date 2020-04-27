@@ -47,7 +47,7 @@
 #include "../model/collection.h"
 #include "../model/user.h"
 #include "../model/museum.h"
-
+#include "../model/artifact.h"
 using namespace utility;                    // Common utilities like string conversions
 //using namespace web; // Common features like URIs.
 //using http_request = web::http_request;
@@ -67,7 +67,7 @@ public:
          * @brief Handler sets up the object adds support to GET,PUT,POST,DEL http requests.
          * @param url the url of the server
          */
-    Handler(utility::string_t url, ModelClassExt *model) : m_listener(url), model(nullptr) {
+    Handler(utility::string_t url, ModelClass *model) : m_listener(url), model(nullptr) {
         this->model = model;
         m_listener.support(methods::GET, std::bind(&Handler::handle_get, this, std::placeholders::_1));
         m_listener.support(methods::PUT, std::bind(&Handler::handle_put, this, std::placeholders::_1));
@@ -93,15 +93,16 @@ protected:
 
 private:
     http_listener m_listener;
-    ModelClassExt* model;
+    ModelClass* model;
 
     void handle_get(http_request);
     void returnFrontendFile(http_request);
+    void returnWildCard(http_request);
     void returnMuseumList(http_request);
     void returnMuseumById(http_request,int);
     //DEPRECATED void returnUserById(http_request,int);
     void returnCollectionById(http_request, int);
-    void returnWildCard(http_request);
+    void returnArtifactById(http_request, int);
 
     void validateLogin(http_request);
     void getUserProfile(http_request);
@@ -110,6 +111,7 @@ private:
     void addMuseum(http_request);
     void addUser(http_request);
     void addCollection(http_request);
+    void addArtifact(http_request);
 
     void handle_put(http_request);
     void handle_delete(http_request);
