@@ -18,9 +18,9 @@
 class ModelClass
 {
 public:
-    virtual ModelClass& operator=(const ModelClass&) = delete;
 
     virtual ~ModelClass();
+    ModelClass& operator=(const ModelClass&) = delete;
     virtual bool open();
     virtual bool close();
     virtual bool status();
