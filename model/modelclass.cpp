@@ -752,7 +752,7 @@ void ModelClass::saveMuseumToDB(Museum & museum){
     QString desc = QString::fromStdString(museum.getDescription());
 //    std::cout << "name: " << name.toStdString() << "\nmuseumID: " << museumID.toStdString() <<
 //               "\nuserID: " << userID.toStdString() << "\ndesc: " << desc.toStdString() << std::endl;
-    query.prepare("INSERT INTO museum(museumID, userID, name, description)"
+    query.prepare("INSERT INTO museum(museumID, userID, name, description, photo)"
                   " VALUES ("+museumID+", "+userID+", '"+name+"', '"+desc+"')");
 
     if(!query.exec())

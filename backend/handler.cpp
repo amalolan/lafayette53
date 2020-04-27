@@ -329,6 +329,7 @@ void Handler::addMuseum(http_request message){
         ucout << data.dump(3);
         User museumCreator =  this->model->getUserObject(std::string(data["user"]["username"]));
         std::unique_ptr<Museum> m (new Museum(data["museum"]["name"], data["museum"]["description"], museumCreator));
+        m->setPhoto(data["museum"]["image"]);
         this->model->saveMuseumToDB(*m);
         ucout << "Success saving museum to DB\n";
         return message.reply(status_codes::OK, Util::getSuccessJsonStr("Museum created."));
@@ -373,7 +374,10 @@ void Handler::addCollection(web::http::http_request message) {
             // TODO: Send args to constructor once ready
             Collection *collection = new Collection(data["collection"]["name"],
                     data["collection"]["description"],
-                    museum);
+                    data["collection"]["introduction"],
+                    museum
+                    );
+            collection->setPhoto(data["collection"]["image"]);
             this->model->saveCollectionToDB(*collection);
             ucout << "saved to database\n";
             delete collection;
@@ -406,6 +410,7 @@ void Handler::addArtifact(http_request message){
        Museum m = this->model->getMuseumObject((int)data["museum"]);
 
        Artifact art(data["artifact"]["name"],data["artifact"]["description"],data["artifact"]["introduction"],m);
+       art.setPhoto(data["artifact"]["image"]);
        bool isCuratorOfMuseum = (m.getUser().getUserID() == u.getUserID());
        if(isCuratorOfMuseum)
        {
