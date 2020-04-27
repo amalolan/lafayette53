@@ -13,11 +13,30 @@ public:
         this->id = -1;
     }
 
-    Collection(std::string name, std::string description, Museum museum, int collectionID) : museum(museum)
+    Collection(std::string name, std::string description, std::string intro, Museum museum) : museum(museum)
+    {
+        this->name = name;
+        this->desc = description;
+        this->intro = intro;
+        this->id = -1;
+    }
+
+    Collection(std::string name, std::string description, std::string intro, std::string photo, Museum museum) : museum(museum)
+    {
+        this->name = name;
+        this->desc = description;
+        this->intro = intro;
+        this->photo = photo;
+        this->id = -1;
+    }
+
+    Collection(std::string name, std::string description, std::string intro, std::string photo, Museum museum, int collectionID) : museum(museum)
     {
         this->name = name;
         this->desc = description;
         this->id = collectionID;
+        this->photo = photo;
+        this->intro = intro;
     }
 
     Collection(const Collection &collection):museum(collection.getMuseum())
@@ -25,6 +44,8 @@ public:
         this->name = collection.getName();
         this->desc = collection.getDescription();
         this->id = collection.getID();
+        this->intro = collection.getIntro();
+        this->photo = collection.getPhoto();
     }
 
     Collection& operator = (const Collection &collection)
@@ -33,6 +54,8 @@ public:
         this->desc = collection.getDescription();
         this->id = collection.getID();
         this->museum = collection.getMuseum();
+        this->intro = collection.getIntro();
+        this->photo = collection.getPhoto();
         return *this;
     }
 
@@ -45,9 +68,19 @@ public:
         return this->name;
     }
 
+    std::string getPhoto() const
+    {
+        return this->photo;
+    }
+
     std::string getDescription() const
     {
         return this->desc;
+    }
+
+    std::string getIntro() const
+    {
+        return this->intro;
     }
 
     Museum getMuseum() const
@@ -66,8 +99,9 @@ public:
             {"name", this->getName()},
             {"description", this->getDescription()},
             {"id", this->getID()},
-            {"introduction", "This is " + this->getName()},
-            {"image", ""}
+            {"introduction", this->getIntro()},
+            {"image", this->photo},
+            {"museum", this->museum.toJSON()}
         };
         return output;
     }
@@ -80,6 +114,16 @@ public:
     void setDescription(std::string newDesc)
     {
         this->desc = newDesc;
+    }
+
+    void setIntro(std::string intro)
+    {
+        this->intro = intro;
+    }
+
+    void setPhoto(std::string link)
+    {
+        this->photo = link;
     }
 
     void setID(int newID)
@@ -96,9 +140,15 @@ public:
         return this->id > -1;
     }
 
+    bool empty(){
+        return name == "";
+    }
+
 private:
     std::string name;
     std::string desc;
+    std::string intro;
+    std::string photo;
     int id;
     Museum museum;
 };

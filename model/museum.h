@@ -19,10 +19,20 @@ public:
         this->museumID = -1;
     }
 
-    Museum(std::string name, std::string description, User user, int museumID):user(user)
+    Museum(std::string name, std::string description, std::string intro, User user):user(user)
     {
         this->name = name;
         this->description = description;
+        this->intro = intro;
+        this->museumID = -1;
+    }
+
+    Museum(std::string name, std::string description, std::string intro, std::string photo, User user, int museumID):user(user)
+    {
+        this->name = name;
+        this->description = description;
+        this->intro = intro;
+        this->photo = photo;
         this->museumID = museumID;
     }
 
@@ -31,6 +41,8 @@ public:
         this->name = museum.getName();
         this->description = museum.getDescription();
         this->museumID = museum.getMuseumID();
+        this->intro = museum.getIntro();
+        this->photo = museum.getPhoto();
     }
 
     Museum& operator = (const Museum &museum)
@@ -39,6 +51,8 @@ public:
         this->name = museum.getName();
         this->description = museum.getDescription();
         this->museumID = museum.getMuseumID();
+        this->intro = museum.getIntro();
+        this->photo = museum.getPhoto();
         return *this;
     }
 
@@ -52,9 +66,19 @@ public:
         this->name = name;
     }
 
+    void setPhoto(std::string photo)
+    {
+        this->photo = photo;
+    }
+
     void setDescription(std::string desc)
     {
         this->description = desc;
+    }
+
+    void setIntro(std::string intro)
+    {
+        this->intro = intro;
     }
 
     void setMuseumID(int id)
@@ -75,6 +99,16 @@ public:
     std::string getDescription() const
     {
         return this->description;
+    }
+
+    std::string getIntro() const
+    {
+        return this->intro;
+    }
+
+    std::string getPhoto() const
+    {
+        return this->photo;
     }
 
     User getUser() const
@@ -105,21 +139,23 @@ public:
     {
         json museum = {
             {"name", this->getName()},
-            {"introduction", "This is " + this->getName()},
+            {"introduction", this->getIntro()},
             {"description", this->getDescription()},
             {"id", this->getMuseumID()},
             {"userID", this->user.getUserID()},
-            {"image", ""}
+            {"image", this->getPhoto()}
         };
         return museum;
     }
 
     bool empty(){
-        return name == "" && description == "";
+        return name == "" && description == "" && intro == "";
     }
 private:
     std::string name;
     std::string description;
+    std::string intro;
+    std::string photo;
     int museumID;
     User user;
 };

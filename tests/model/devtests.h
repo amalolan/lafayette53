@@ -15,12 +15,11 @@ class DevTests : public ::testing::Test {
     // is empty.
 
     DevTests() : model(nullptr){
-    // You can do set-up work for each test here.
+        ModelClass::initdb(std::string(CODE_BASE_DIRECTORY));
     }
 
     virtual ~DevTests() {
         delete this->model;
-        this->model = nullptr;
     }
 
     // If the constructor and destructor are not enough for setting up
@@ -28,10 +27,13 @@ class DevTests : public ::testing::Test {
 
     virtual void SetUp() {
         if (this->model == nullptr)
-            this->model =  new ModelClass(std::string(CODE_BASE_DIRECTORY) + "database/db.db");
+            this->model =  ModelClass::getInstance(ModelClass::test);
+        model->createTables();
     }
 
     virtual void TearDown() {
+        delete this->model;
+        this->model = nullptr;
     }
     ModelClass * model;
 };

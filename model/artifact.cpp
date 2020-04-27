@@ -1,2 +1,1 @@
 #include "artifact.h"
-
