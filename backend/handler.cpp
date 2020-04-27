@@ -198,6 +198,7 @@ void Handler::returnCollectionById(http_request message, int collectionID) {
 
     json museumJSON = Util::getObjectWithKeys<Museum>(col.getMuseum(),{"id","name"});
 
+    //TODO: outputData["artifactList"] =
     json output = {
         {"collection", collectionJSON},
         {"museum", museumJSON}
