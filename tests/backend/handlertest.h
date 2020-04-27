@@ -3,7 +3,7 @@
 #ifdef __APPLE__
     #define CODE_BASE_DIRECTORY "../../../lafayette53/"
 #elif __linux
-    #define CODE_BASE_DIRECTORY "/../lafayette53/"
+    #define CODE_BASE_DIRECTORY "/../../../lafayette53/"
 #endif
 #define BOOST_ASIO_HAS_STD_ATOMIC
 
@@ -30,14 +30,19 @@ using json = nlohmann::json;
 class HandlerTest : public ::testing::Test {
 protected:
     http_client client;
-    Controller c;
+    Controller* c;
 
-    HandlerTest() : client(U("http://localhost:5300/")),
-                    c(U("http://127.0.0.1:5300"), new ModelClassExt(std::string(CODE_BASE_DIRECTORY) +  "database/db.db")){
+    HandlerTest() : client(U("http://localhost:5300/")), c(nullptr)
+                    {
+        ModelClass::initdb(CODE_BASE_DIRECTORY);
+//        ModelClass *model =  ModelClass::getInstance(ModelClass::pro);
+        ModelClassExt *model =  ModelClassExt::getInstance();
+        model->createTables();
+        this->c =  new Controller(U("http://127.0.0.1:5300"), model);
     }
 
     virtual ~HandlerTest() {
-        c.on_shutdown();
+        c->on_shutdown();
     }
 
 

@@ -34,7 +34,7 @@ public:
      * @param address string [usually "http://127.0.0.1:5300" ]
      * @param model The database/ModelClass object associated with this Controller object.
      */
-    Controller(const string_t& address, ModelClass *model)  {
+    Controller(const string_t& address, ModelClassExt *model)  {
         uri_builder uri(address);
         auto addr = uri.to_uri().to_string();
         this->g_httpHandler = new Handler(addr, model);
@@ -85,7 +85,8 @@ public:
      */
     static int runServer(std::string portString="5300") {
         ModelClass::initdb(CODE_BASE_DIRECTORY);
-        ModelClass *model =  ModelClass::getInstance(ModelClass::pro);
+//        ModelClass *model =  ModelClass::getInstance(ModelClass::pro);
+        ModelClassExt *model =  ModelClassExt::getInstance();
         model->createTables();
         Controller c(U("http://127.0.0.1:"+portString), model);
         std::string line;
