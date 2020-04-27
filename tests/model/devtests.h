@@ -1,7 +1,7 @@
 #ifndef DEVTESTS_H
 #define DEVTESTS_H
 #ifdef __APPLE__
-#define CODE_BASE_DIRECTORY "../../../lafayette53/"
+#define CODE_BASE_DIRECTORY "../../../../../lafayette53/"
 #elif __linux
 #define CODE_BASE_DIRECTORY "../../../lafayette53/"
 #endif

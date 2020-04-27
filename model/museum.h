@@ -27,6 +27,15 @@ public:
         this->museumID = -1;
     }
 
+    Museum(std::string name, std::string description, std::string intro, std::string photo, User user):user(user)
+    {
+        this->name = name;
+        this->description = description;
+        this->intro = intro;
+        this->photo = photo;
+        this->museumID = -1;
+    }
+
     Museum(std::string name, std::string description, std::string intro, std::string photo, User user, int museumID):user(user)
     {
         this->name = name;
@@ -149,7 +158,7 @@ public:
     }
 
     bool empty(){
-        return name == "" && description == "" && intro == "";
+        return name == "";
     }
 private:
     std::string name;
