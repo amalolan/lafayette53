@@ -341,10 +341,10 @@ void ModelClass::saveArtifactToDB(Artifact & artifact){
     QString desc = QString::fromStdString(artifact.getDescription());
     QString photo = QString::fromStdString(artifact.getPhoto());
     QString intro = QString::fromStdString(artifact.getIntro());
-    query.prepare("INSERT INTO artifacts(museumID, artifactID, name, description, photo, introduction)"
+    bool done = query.exec("INSERT INTO artifacts(museumID, artifactID, name, description, photo, introduction)"
                   " VALUES ("+museumID+", "+id+", '"+name+"', '"+desc+"', '"+photo+"', '"+intro+"')");
 
-    if(!query.exec())
+    if(!done)
     {
         std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
         throw ModelException("Saving artifact failed. Reason: "+err);
@@ -574,10 +574,10 @@ void ModelClass::saveCollectionToDB(Collection & collection){
     QString desc = QString::fromStdString(collection.getDescription());
     QString intro = QString::fromStdString(collection.getIntro());
     QString photo = QString::fromStdString(collection.getPhoto());
-    query.prepare("INSERT INTO collections(museumID, collectionID, name, description, introduction, photo)"
+    bool done = query.exec("INSERT INTO collections(museumID, collectionID, name, description, introduction, photo)"
                   " VALUES ("+museumID+", "+id+", '"+name+"', '"+desc+"', '"+intro+"', '"+photo+"')");
 
-    if(!query.exec())
+    if(!done)
     {
         std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
         throw ModelException("Saving collection failed. Reason: "+err);
