@@ -1,6 +1,6 @@
 #include "utiltest.h"
 
-TEST_F(UtilTest, TEST_successJSON) {
+TEST_F(UtilTest, successJSON) {
     string message = "hi";
     json j1 = {
         {"success", true},
@@ -17,7 +17,7 @@ TEST_F(UtilTest, TEST_successJSON) {
 }
 
 
-TEST_F(UtilTest, TEST_failureJSON) {
+TEST_F(UtilTest, failureJSON) {
     string message = "hi";
     json j1 = {
         {"success", false},

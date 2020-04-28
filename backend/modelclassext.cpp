@@ -1,6 +1,6 @@
 #include "modelclassext.h"
 
 
-ModelClassExt* ModelClassExt::getInstance(){
-    return new ModelClassExt(std::string(CODE_BASE_DIRECTORY)+ "database/testdb.db");
+ModelClassExt* ModelClassExt::getInstance(std::string baseDir){
+    return new ModelClassExt(baseDir + "database/testdb.db");
 }
