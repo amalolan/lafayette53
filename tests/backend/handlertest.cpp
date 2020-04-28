@@ -48,28 +48,6 @@ Response HandlerTest::requestTask(method mtd,
     return r;
 }
 
-
-/**
- * Returns the content type instead of the response's body.
- *
- * @copydoc HandlerTest::requestTask()
- */
-string HandlerTest::requestTaskContentType(method mtd, string uri, const json &jvalue) {
-    pplx::task<string_t> requestTask = this->make_task_request(mtd, uri, jvalue)
-            .then([=](http_response response) {
-        cout<<"Response Code: " <<response.status_code()<<endl;
-        return  response.headers().content_type();
-    });
-    try {
-        requestTask.wait();
-        return utility::conversions::to_string_t(requestTask.get());
-    } catch (const std::exception &e) {
-        cerr<<  "Error exception in test requestTask " << e.what() << endl;
-        throw e;
-    }
-    return "";
-}
-
 /**
  * @brief TEST_F Checks if the server has started running.
  */
@@ -80,12 +58,16 @@ TEST_F(HandlerTest, serverRunning) {
     ASSERT_NE(r.content,  "");
 }
 
+
+//TEST_F(HandlerTest, handleError) {}
+
 ///**
 // * @brief TEST_F Tests GET requests for erroneous URL inputs to ensure server doesn't break
 // * Front-end handles 404 errors. Backend merely returns the same index.html file.
 // * The test ensures the html file is returned.
 // */
-TEST_F(HandlerTest, handle_get)  {
+TEST_F(HandlerTest, handleGET)  {
+    int sleeptime = 200;
     string url;
     Response r;
     url = "/fae.css";
@@ -93,97 +75,187 @@ TEST_F(HandlerTest, handle_get)  {
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 
     url = "/fa3e.css1";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 
     url = "/fa~e.css";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 
     url = "/fae2.png";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 
     url = "/request/3e1.json";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 
     url = "/abc/def";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 
     url = "/request1/fae";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 
     url = "request1/fae.css";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 
     url = "///";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 
     url = "/request/index.html";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
     ASSERT_NE(r.content,  "");
-    usleep(200);
+    usleep(sleeptime);
 }
 
+/**
+ * @brief TEST_F Tests POST requests for erroneous URL inputs to ensure server doesn't break
+ * Server must return a 404 message
+ */
+TEST_F(HandlerTest, handlePOST) {
+    int sleeptime = 200;
+    string url;
+    Response r;
+    json data;
+    json user = {
+        {"user", {{"username","malo"},{"password", "123456"}}}
+    };
+    // All must 404 before trying to log user in.
+    EXPECT_CALL(this->model, getUserObject(testing::_))
+            .Times(0);
+
+    url = "/fae.css";
+    r = this->requestTask(methods::POST, url, user);
+    data = json::parse(r.content);
+    ASSERT_EQ(r.status, status_codes::NotFound);
+    ASSERT_EQ(data["success"],  false);
+    usleep(sleeptime);
+
+    url = "/";
+    r = this->requestTask(methods::POST, url, user);
+    data = json::parse(r.content);
+    ASSERT_EQ(r.status, status_codes::NotFound);
+    ASSERT_EQ(data["success"],  false);
+    usleep(sleeptime);
+
+    url = "/request/fae.css";
+    r = this->requestTask(methods::POST, url, user);
+    data = json::parse(r.content);
+    ASSERT_EQ(r.status, status_codes::NotFound);
+    ASSERT_EQ(data["success"],  false);
+    usleep(sleeptime);
+
+    url = "/request1/user-profile";
+    r = this->requestTask(methods::POST, url, user);
+    data = json::parse(r.content);
+    ASSERT_EQ(r.status, status_codes::NotFound);
+    ASSERT_EQ(data["success"],  false);
+    usleep(sleeptime);
+
+    url = "/request/user-profile/bsdata";
+    r = this->requestTask(methods::POST, url, user);
+    data = json::parse(r.content);
+    ASSERT_EQ(r.status, status_codes::NotFound);
+    ASSERT_EQ(data["success"],  false);
+    usleep(sleeptime);
+}
+
+//amalolan
+//password: "ba3253876aed6bc22d4a6ff53d8406c6ad864195ed144ab5c87621b6c233b548baeae6956df346ec8c17f5ea10f35ee3cbc514797ed7ddd3145464e2a0bab413"
 
 //TEST_F(HandlerTest, returnMuseumList) {
-
+//    EXPECT_CALL(this->model, getMuseumList());
 //}
 
-//TEST_F(HandlerTest, returnMuseumById) {}
+//TEST_F(HandlerTest, returnMuseumById) {
+//    EXPECT_CALL(this->model, getMuseumObject(testing::_));
+//    EXPECT_CALL(this->model, getCollectionListByMuseumID(testing::_));
+//    EXPECT_CALL(this->model, getArtifactsByMuseum(testing::_));
+//}
 
-//TEST_F(HandlerTest, returnCollectionById) {}
+//TEST_F(HandlerTest, returnCollectionById) {
+//    EXPECT_CALL(this->model, getCollectionObject(testing::_));
+//    EXPECT_CALL(this->model, getArtifactsByCollection(testing::_));
+//}
 
-//TEST_F(HandlerTest, returnArtifactById) {}
+//TEST_F(HandlerTest, returnArtifactById) {
+//    EXPECT_CALL(this->model, getArtifact(testing::_));
+//    EXPECT_CALL(this->model, getCollectionsByArtifact(testing::_));
+//}
 
-//TEST_F(HandlerTest, validateLogin) {}
 
-//TEST_F(HandlerTest, getUserProfile) {}
+//TEST_F(HandlerTest, validateLogin) {
+//    EXPECT_CALL(this->model, getUserObject(testing::_));
+//}
 
-//TEST_F(HandlerTest, handle_post) {}
+//TEST_F(HandlerTest, addUser) {
+//    EXPECT_CALL(this->model, saveUserToDB(testing::_));
+//}
 
-//TEST_F(HandlerTest, addMuseum) {}
 
-//TEST_F(HandlerTest, addUser) {}
 
-//TEST_F(HandlerTest, addCollection) {}
+//TEST_F(HandlerTest, addMuseum) {
+//    EXPECT_CALL(this->model, getUserObject(testing::_));
+//    EXPECT_CALL(this->model, getUserObject(testing::_));
+//    EXPECT_CALL(this->model, saveMuseumToDB(testing::_));
+//}
 
-//TEST_F(HandlerTest, addArtifact) {}
 
+//TEST_F(HandlerTest, addCollection) {
+//    EXPECT_CALL(this->model, getUserObject(testing::_));
+//    EXPECT_CALL(this->model, getMuseumObject(testing::_));
+//    // if  curator
+//    EXPECT_CALL(this->model, saveCollectionToDB(testing::_));
+//    // else
+//}
+
+//TEST_F(HandlerTest, addArtifact) {
+//    EXPECT_CALL(this->model, getUserObject(testing::_));
+//    EXPECT_CALL(this->model, getMuseumObject(testing::_));
+//    // if curator
+//    EXPECT_CALL(this->model, saveArtifactToDB(testing::_));
+//    // for every collection
+//    EXPECT_CALL(this->model, getCollectionObject(testing::_));
+//    EXPECT_CALL(this->model, addArtifactCollection(testing::_, testing::_));
+//}
+
+//TEST_F(HandlerTest, getUserProfile) {
+//    EXPECT_CALL(this->model, getUserObject(testing::_));
+//    EXPECT_CALL(this->model, getUserObject(testing::_));
+//}
 
 ////TEST_F(HandlerTest, user) {
 ////    json user =

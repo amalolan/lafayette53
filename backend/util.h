@@ -35,31 +35,12 @@ class Util
 public:
     Util();
 
-    static void validateJSON(json jsonObj, std::vector<std::string> keys) {
+    static void validateJSON(json &jsonObj, std::vector<std::string> keys) {
         for  (auto key : keys) {
             if  (! jsonObj.contains(key))
                 throw json::other_error::create(1, "JSON Schema not valid");
         }
     }
-
-    /**
-     * @brief parseMuseumJSON Parses a json string and returns a museum object.
-     * @param jsonStr JSON String
-     * {
-     *   museum:  {
-     *      "name": string,
-     *      "introduction": string,
-     *      "description": string,
-     *      "id": string
-     *    },
-     *   user: {
-     *       "username": string,
-     *       "password": string
-     *    }
-     * }
-     * @return Museum object
-     */
-
 
     /**
      * @brief checkLogin give {username="",password=""} object to check if the login is successful.
@@ -78,6 +59,26 @@ public:
             throw LoginException();
         }
         return user;
+    }
+
+
+    template<typename T>
+    static json getObjectWithKeys(T t, std::vector<std::string> keys) {
+        json tJSON = t.toJSON();
+        json object;
+        for (std::string key : keys) {
+            object[key] = tJSON[key];
+        }
+        return object;
+    }
+
+    template<typename T>
+    static json arrayFromVector(std::vector<T> list, std::vector<std::string> keys) {
+        json array = json::array();
+        for (T t: list) {
+            array.push_back(Util::getObjectWithKeys<T>(t, keys));
+        }
+        return array;
     }
 
     /**
@@ -114,24 +115,6 @@ public:
         return obj.dump();
     }
 
-    template<typename T>
-    static json getObjectWithKeys(T t, std::vector<std::string> keys) {
-        json tJSON = t.toJSON();
-        json object;
-        for (std::string key : keys) {
-            object[key] = tJSON[key];
-        }
-        return object;
-    }
-
-    template<typename T>
-    static json arrayFromVector(std::vector<T> list, std::vector<std::string> keys) {
-        json array = json::array();
-        for (T t: list) {
-            array.push_back(Util::getObjectWithKeys<T>(t, keys));
-        }
-        return array;
-    }
 };
 
 #endif // UTILITY_H

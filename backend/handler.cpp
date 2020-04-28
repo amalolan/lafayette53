@@ -246,7 +246,7 @@ void Handler::handle_post(http_request message)
     ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
     auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
     // URL: /request
-    if (paths[0] == "request")
+    if (paths.size() == 2  && paths[0] == "request")
     {
         // URL: /request/register
         if (paths[1] == "register")
@@ -279,7 +279,7 @@ void Handler::handle_post(http_request message)
             return;
         }
         // URL: /request/add-artifact
-        else if (paths[1] == "add-artifact")
+        else if (paths[1] == "add-artifact" && paths.size() == 2)
         {
             addArtifact(message);
             return;
