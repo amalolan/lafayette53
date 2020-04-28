@@ -2,6 +2,13 @@
 #define CONTROLLER_H
 #include <iostream>
 #include "handler.h"
+#ifndef CODE_BASE_DIRECTORY
+    #ifdef __APPLE__
+        #define CODE_BASE_DIRECTORY "../../../../../lafayette53/"
+    #elif __linux
+        #define CODE_BASE_DIRECTORY "../../lafayette53/"
+    #endif
+#endif// CODE_BASE_DIRECTORY
 #define BOOST_ASIO_HAS_STD_ATOMIC
 
 //using namespace web;
@@ -34,10 +41,10 @@ public:
      * @param address string [usually "http://127.0.0.1:5300" ]
      * @param model The database/ModelClass object associated with this Controller object.
      */
-    Controller(const string_t& address, ModelClass *model)  {
+    Controller(const string_t& address, ModelClassExt *model, std::string codeBaseDirectory)  {
         uri_builder uri(address);
         auto addr = uri.to_uri().to_string();
-        this->g_httpHandler = new Handler(addr, model);
+        this->g_httpHandler = new Handler(addr, model, codeBaseDirectory);
         this->g_httpHandler->open().wait();
         ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
         ucout << "Press ENTER to exit." << std::endl;
@@ -85,9 +92,10 @@ public:
      */
     static int runServer(std::string portString="5300") {
         ModelClass::initdb(CODE_BASE_DIRECTORY);
-        ModelClass *model =  ModelClass::getInstance(ModelClass::pro);
+//        ModelClass *model =  ModelClass::getInstance(ModelClass::pro);
+        ModelClassExt *model =  ModelClassExt::getInstance(CODE_BASE_DIRECTORY);
         model->createTables();
-        Controller c(U("http://127.0.0.1:"+portString), model);
+        Controller c(U("http://127.0.0.1:"+portString), model, CODE_BASE_DIRECTORY);
         std::string line;
         std::getline(std::cin, line);
         c.on_shutdown();

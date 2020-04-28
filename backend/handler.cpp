@@ -20,7 +20,7 @@ void Handler::handle_error(http_request message, pplx::task<void>& t, std::strin
     catch(std::exception &e)
     {
         ucout << e.what() << "\n";
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr(e.what()/* + std::string(e.what())*/));
+        message.reply(status_codes::InternalError, Util::getFailureJsonStr("Caught error " +  std::string(e.what())));
     }
 }
 
@@ -37,7 +37,7 @@ void Handler::handle_get(http_request message)
 
     // URL: /
     //check for frontend files.
-    QDirIterator dirIt((std::string(CODE_BASE_DIRECTORY)+"/frontend/").c_str(), QDirIterator::NoIteratorFlags);
+    QDirIterator dirIt((std::string(this->codeBaseDirectory)+"/frontend/").c_str(), QDirIterator::NoIteratorFlags);
     // || (paths[0] == "home" && paths.size() == 1)
     if(message.relative_uri() ==  "/" )
     {
@@ -88,15 +88,13 @@ void Handler::handle_get(http_request message)
             std::string artifactID = paths[2];
             returnArtifactById(message, std::stoi(artifactID));
         }
-        // URL: /request/user/[id]
-        else if(paths[1] == "user" && paths.size() == 3)
-        {
-            ucout << "user\n";
-            std::string userID = paths[2];
+        // URL: /request/???
+        else {
+            ucout << "Wildcard caught in GET request URL \n";
             returnWildCard(message);
-            //            returnUserById(message, std::stoi(userID));
         }
     }
+    // URL: /???
     else
     {
         ucout << "Wildcard caught in GET URL \n";
@@ -110,7 +108,7 @@ void Handler::handle_get(http_request message)
 void Handler::returnFrontendFile(http_request message){
     std::string mime = "text/html";
 
-    std::string base_path = (std::string(CODE_BASE_DIRECTORY) + "frontend/");
+    std::string base_path = (std::string(this->codeBaseDirectory) + "frontend");
     bool getIndex = false;
     if(message.relative_uri().to_string().find(".html") != std::string::npos)
     {
@@ -133,7 +131,6 @@ void Handler::returnFrontendFile(http_request message){
     {
         path = base_path + message.relative_uri().to_string();
     }
-
     concurrency::streams::fstream::open_istream(U(path),std::ios::in)
             .then([=](concurrency::streams::istream is) {
         return message.reply(status_codes::OK, is, U(mime));
@@ -148,7 +145,7 @@ void Handler::returnWildCard(http_request message)
 {
     std::string mime = "text/html";
 
-    std::string path = std::string(CODE_BASE_DIRECTORY) + "frontend/index.html";
+    std::string path = std::string(this->codeBaseDirectory) + "frontend/index.html";
 
     concurrency::streams::fstream::open_istream(U(path),std::ios::in)
             .then([=](concurrency::streams::istream is) {
@@ -251,7 +248,7 @@ void Handler::handle_post(http_request message)
     // URL: /request
     if (paths[0] == "request")
     {
-        // URL: /request/user
+        // URL: /request/register
         if (paths[1] == "register")
         {
             addUser(message);
@@ -288,12 +285,12 @@ void Handler::handle_post(http_request message)
             return;
         }
     }
-    else {
-        message.extract_string(false).then([](utility::string_t s){
-            ucout << s << std::endl;
-        });
-        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
-    }
+
+    message.extract_string(false).then([](utility::string_t s){
+        ucout << s << std::endl;
+    });
+    message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
+
     return;
 
 };
@@ -369,7 +366,7 @@ void Handler::addCollection(web::http::http_request message) {
             Collection *collection = new Collection(data["collection"]["name"],
 
                     data["collection"]["description"], data["collection"]["introduction"],
-                    data["collection"]["photo"], museum);
+                    data["collection"]["image"], museum);
 
             this->model->saveCollectionToDB(*collection);
             ucout << "saved to database\n";

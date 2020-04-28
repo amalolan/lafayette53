@@ -3,12 +3,13 @@
 #ifdef __APPLE__
     #define CODE_BASE_DIRECTORY "../../../lafayette53/"
 #elif __linux
-    #define CODE_BASE_DIRECTORY "/../lafayette53/"
+    #define CODE_BASE_DIRECTORY "/../../../lafayette53/"
 #endif
 #define BOOST_ASIO_HAS_STD_ATOMIC
 
 #include <iostream>
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/json.h>
@@ -17,12 +18,9 @@
 #include "../../backend/controller.h"
 #include "../../backend/handler.h"
 
+#include "mockmodelclass.h"
 using json = nlohmann::json;
-//using namespace utility;                    // Common utilities like string conversions
-//using namespace web;                        // Common features like URIs.
-//using namespace web::http;                  // Common HTTP functionality
-//using namespace web::http::client;          // HTTP client features
-//using namespace concurrency::streams;
+using namespace std;
 
 /**
  * @brief The HandlerTest class The fixture for testing class Handler
@@ -30,14 +28,21 @@ using json = nlohmann::json;
 class HandlerTest : public ::testing::Test {
 protected:
     http_client client;
-    Controller c;
+    Controller* c;
+    MockModelClass model;
 
-    HandlerTest() : client(U("http://localhost:5300/")),
-                    c(U("http://127.0.0.1:5300"), new ModelClassExt(std::string(CODE_BASE_DIRECTORY) +  "database/db.db")){
+    HandlerTest() : client(U("http://localhost:5300/")), c(nullptr)
+                    {
+        ModelClass::initdb(CODE_BASE_DIRECTORY);
+//        ModelClass *model =  ModelClass::getInstance(ModelClass::pro);
+//        ModelClassExt *model =  ModelClassExt::getInstance(CODE_BASE_DIRECTORY);
+//        model->createTables();
+        this->c =  new Controller(U("http://127.0.0.1:5300"), &this->model, CODE_BASE_DIRECTORY);
     }
 
     virtual ~HandlerTest() {
-        c.on_shutdown();
+        c->on_shutdown();
+        delete c;
     }
 
 
@@ -53,6 +58,7 @@ protected:
 
     pplx::task<http_response> make_task_request(method mtd, std::string uri, json const & jvalue);
     std::string requestTask(method mtd, std::string uri, json const & jvalue = json());
+    std::string requestTaskContentType(method mtd, std::string uri, json const & jvalue = json());
 
 };
 #endif // HANDLERTEST_H

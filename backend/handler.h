@@ -1,13 +1,6 @@
 #ifndef HANDLER_H
 #define HANDLER_H
 #define HELPER_H
-#ifndef CODE_BASE_DIRECTORY
-    #ifdef __APPLE__
-        #define CODE_BASE_DIRECTORY "../../../../../lafayette53/"
-    #elif __linux
-        #define CODE_BASE_DIRECTORY "../../lafayette53/"
-    #endif
-#endif// CODE_BASE_DIRECTORY
 #if defined(__GNUC__) || defined(__clang__)
     #define DEPRECATED __attribute__((deprecated))
 #elif defined(_MSC_VER)
@@ -67,8 +60,9 @@ public:
          * @brief Handler sets up the object adds support to GET,PUT,POST,DEL http requests.
          * @param url the url of the server
          */
-    Handler(utility::string_t url, ModelClass *model) : m_listener(url), model(nullptr) {
+    Handler(utility::string_t url, ModelClass *model, std::string codeBaseDirectory) : m_listener(url), model(nullptr) {
         this->model = model;
+        this->codeBaseDirectory =  codeBaseDirectory;
         m_listener.support(methods::GET, std::bind(&Handler::handle_get, this, std::placeholders::_1));
         m_listener.support(methods::PUT, std::bind(&Handler::handle_put, this, std::placeholders::_1));
         m_listener.support(methods::POST, std::bind(&Handler::handle_post, this, std::placeholders::_1));
@@ -79,7 +73,6 @@ public:
          * @brief ~Handler destructor.
          */
     virtual ~Handler() {
-        delete this->model;
     }
     /**
          * @brief open opens the listener callback method.
@@ -94,6 +87,7 @@ protected:
 private:
     http_listener m_listener;
     ModelClass* model;
+    std::string codeBaseDirectory;
 
     void handle_get(http_request);
     void returnFrontendFile(http_request);
