@@ -13,9 +13,7 @@
 using namespace std;
 class MockModelClass: public  ModelClassExt {
 public:
-    MockModelClass() : ModelClassExt("") {
-
-    }
+    MockModelClass() : ModelClassExt("") {}
     // User
     MOCK_METHOD1(getUserObject, User(string));
     MOCK_METHOD1(saveUserToDB, void(User&));
@@ -38,6 +36,7 @@ public:
     MOCK_METHOD1(saveArtifactToDB, void(Artifact&));
     MOCK_METHOD1(getArtifact, Artifact(int));
 };
+
 
 
 

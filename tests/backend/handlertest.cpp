@@ -26,8 +26,8 @@ pplx::task<http_response> HandlerTest::make_task_request(
  * the status_code object, and the content_type as a string.
  */
 Response HandlerTest::requestTask(method mtd,
-                                 string uri,
-                                 json const & jvalue) {
+                                  string uri,
+                                  json const & jvalue) {
     Response r;
     pplx::task<web::http::http_response> requestTask = this->make_task_request(mtd, uri, jvalue)
             .then([=](http_response response) {
@@ -58,14 +58,18 @@ TEST_F(HandlerTest, serverRunning) {
     ASSERT_NE(r.content,  "");
 }
 
+/**
+ * @brief TEST_F Tests to see if exceptions are caught without crashing the server
+ */
+TEST_F(HandlerTest, handleError) {
 
-//TEST_F(HandlerTest, handleError) {}
+}
 
-///**
-// * @brief TEST_F Tests GET requests for erroneous URL inputs to ensure server doesn't break
-// * Front-end handles 404 errors. Backend merely returns the same index.html file.
-// * The test ensures the html file is returned.
-// */
+/**
+ * @brief TEST_F Tests GET requests for erroneous URL inputs to ensure server doesn't break
+ * Front-end handles 404 errors. Backend merely returns the same index.html file.
+ * The test ensures the html file is returned.
+ */
 TEST_F(HandlerTest, handleGET)  {
     int sleeptime = 200;
     string url;
@@ -143,7 +147,11 @@ TEST_F(HandlerTest, handleGET)  {
 
 /**
  * @brief TEST_F Tests POST requests for erroneous URL inputs to ensure server doesn't break
- * Server must return a 404 message
+ * Server must return a 404 message, with a dumped JSON object
+ * {
+ *  success: false,
+ *  message: [string]
+ * }
  */
 TEST_F(HandlerTest, handlePOST) {
     int sleeptime = 200;
@@ -196,9 +204,49 @@ TEST_F(HandlerTest, handlePOST) {
 //amalolan
 //password: "ba3253876aed6bc22d4a6ff53d8406c6ad864195ed144ab5c87621b6c233b548baeae6956df346ec8c17f5ea10f35ee3cbc514797ed7ddd3145464e2a0bab413"
 
-//TEST_F(HandlerTest, returnMuseumList) {
-//    EXPECT_CALL(this->model, getMuseumList());
-//}
+/**
+ * @brief TEST_F Tests HTTP GET request at /request/museum-list
+ * 2 test cases: empty list and non-empty list. Validity of  Museum  objects are tested in returnMuseumById().
+ * @see Handler::returnMuseumList() for deatils of the HTTP Message response
+ */
+TEST_F(HandlerTest, returnMuseumList) {
+    int sleeptime = 200;
+    string url = "/request/museum-list";
+    Response r;
+    json expectation;
+    vector<Museum> museumList;
+    {
+        InSequence s;
+        expectation = json::array(); /**< Empty expectation */
+        EXPECT_CALL(this->model, getMuseumList())
+                .WillOnce(Return(museumList))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET,  url);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
+
+
+        museumList = {
+            Museum("1", "1desc", User("malo", "malo@", "k21")),
+            Museum("2", "lsf", "21", "", User("2", "", "")),
+            Museum("3", "ls2", "21432", "https://placekitten.com/200/300", User("2", "", "")),
+        };
+        /**< Expect the json list of museums. Can use Util since it is already tested. */
+        expectation = Util::arrayFromVector<Museum>(museumList,
+        {"id", "name", "description", "introduction", "userID", "image"});
+
+        EXPECT_CALL(this->model, getMuseumList())
+                .WillOnce(Return(museumList))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET,  url);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
+   }
+}
 
 //TEST_F(HandlerTest, returnMuseumById) {
 //    EXPECT_CALL(this->model, getMuseumObject(testing::_));
