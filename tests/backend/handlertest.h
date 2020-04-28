@@ -22,6 +22,13 @@
 using json = nlohmann::json;
 using namespace std;
 
+struct Response {
+    status_code status;
+    string type;
+    string content;
+};
+
+
 /**
  * @brief The HandlerTest class The fixture for testing class Handler
  */
@@ -57,8 +64,7 @@ protected:
     }
 
     pplx::task<http_response> make_task_request(method mtd, std::string uri, json const & jvalue);
-    std::string requestTask(method mtd, std::string uri, json const & jvalue = json());
-    std::string requestTaskContentType(method mtd, std::string uri, json const & jvalue = json());
+    Response requestTask(method mtd, std::string uri, json const & jvalue = json());
 
 };
 #endif // HANDLERTEST_H

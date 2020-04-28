@@ -7,14 +7,14 @@
  * @return the task which can then make the request on callback
  */
 pplx::task<http_response> HandlerTest::make_task_request(
-   method mtd,
-   string uri,
-   json const & jvalue)
+        method mtd,
+        string uri,
+        json const & jvalue)
 {
-    uri_builder builder(U(uri));    
-   return (mtd == methods::GET || mtd == methods::HEAD) ?
-      this->client.request(mtd, builder.to_string()) :
-      this->client.request(mtd, builder.to_string(), jvalue.dump());
+    uri_builder builder(U(uri));
+    return (mtd == methods::GET || mtd == methods::HEAD) ?
+                this->client.request(mtd, builder.to_string()) :
+                this->client.request(mtd, builder.to_string(), jvalue.dump());
 }
 
 /**
@@ -22,25 +22,32 @@ pplx::task<http_response> HandlerTest::make_task_request(
  * @param mtd The HTTP Method Called (GET, POST, etc.)
  * @param uri the uri to send the request to
  * @param jvalue if POST, PUT, DEL, the data as a json object to send with the request
- * @return the body of the response message from the server as a string
+ * @return a Response object,  containing the body of the response message from the server as a string,
+ * the status_code object, and the content_type as a string.
  */
-string HandlerTest::requestTask(method mtd,
-                   string uri,
-                   json const & jvalue) {
-    pplx::task<string_t> requestTask = this->make_task_request(mtd, uri, jvalue)
+Response HandlerTest::requestTask(method mtd,
+                                 string uri,
+                                 json const & jvalue) {
+    Response r;
+    pplx::task<web::http::http_response> requestTask = this->make_task_request(mtd, uri, jvalue)
             .then([=](http_response response) {
-        cout<<"Response Code: " <<response.status_code()<<endl;
-        return response.extract_string();
+        //        cout<<"Response Code: " <<response.status_code()<<endl;
+        return response.content_ready();
     });
     try {
         requestTask.wait();
-        return utility::conversions::to_string_t(requestTask.get());
+        r.status =  requestTask.get().status_code();
+        r.type  =  requestTask.get().headers().content_type();
+        pplx::task<string_t> stringTask =  requestTask.get().extract_string();
+        stringTask.wait();
+        r.content =  utility::conversions::to_string_t(stringTask.get());
     } catch (const std::exception &e) {
         cerr<<  "Error exception in test requestTask: " << e.what() << endl;
         throw e;
     }
-    return "";
+    return r;
 }
+
 
 /**
  * Returns the content type instead of the response's body.
@@ -67,12 +74,10 @@ string HandlerTest::requestTaskContentType(method mtd, string uri, const json &j
  * @brief TEST_F Checks if the server has started running.
  */
 TEST_F(HandlerTest, serverRunning) {
-     string result = this->requestTaskContentType(methods::GET, "/");
-     ASSERT_EQ(result, "text/html");
-     usleep(200);
-     result = this->requestTask(methods::GET,"/");
-     ASSERT_NE(result, "");
-
+    Response r = this->requestTask(methods::GET,  "/");
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
 }
 
 ///**
@@ -81,85 +86,77 @@ TEST_F(HandlerTest, serverRunning) {
 // * The test ensures the html file is returned.
 // */
 TEST_F(HandlerTest, handle_get)  {
-   string result, url;
-   url = "/fae.css";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
-   usleep(200);
+    string url;
+    Response r;
+    url = "/fae.css";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 
-   url = "/fa3e.css1";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
-   usleep(200);
+    url = "/fa3e.css1";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 
-   url = "/fa~e.css";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
-   usleep(200);
+    url = "/fa~e.css";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 
-   url = "/fae2.png";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
-   usleep(200);
+    url = "/fae2.png";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 
-   url = "/request/3e1.json";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
-   usleep(200);
+    url = "/request/3e1.json";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 
-   url = "/abc/def";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
-   usleep(200);
+    url = "/abc/def";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 
-   url = "/request1/fae";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
-   usleep(200);
+    url = "/request1/fae";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 
-   url = "request1/fae.css";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
-   usleep(200);
+    url = "request1/fae.css";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 
-   url = "///";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
-   usleep(200);
+    url = "///";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 
-   url = "/request/index.html";
-   result = this->requestTaskContentType(methods::GET, url);
-   ASSERT_EQ(result, "text/html");
-   usleep(200);
-   result = this->requestTask(methods::GET, url);
-   ASSERT_NE(result, "");
+    url = "/request/index.html";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(200);
 }
 
 
