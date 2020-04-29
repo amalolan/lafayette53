@@ -219,11 +219,11 @@ void Handler::returnArtifactById(http_request message, int artifactID) {
     {"id", "name", "description", "introduction", "image"});
 
     std::vector<Collection> collections = this->model->getCollectionsByArtifact(artifactID);
-    json collectionListJSON = Util::arrayFromVector<Collection>(collections,{"id"});
+    json collectionListJSON = Util::arrayFromVector<Collection>(collections,{"id","name"});
 
     json museumJSON = Util::getObjectWithKeys<Museum>(artifact.getMuseum(), {"id"});
     json output = {
-        {"museum", artifact.getMuseum().getMuseumID()},
+        {"museum", {{"id",artifact.getMuseum().getMuseumID()}}},
         {"artifact", artifactJSON},
         {"collectionList", collectionListJSON}
     };
@@ -398,7 +398,7 @@ void Handler::addArtifact(http_request message){
         //retrieve data from database. Check login info.
         User u = Util::checkLogin(data["user"], this->model);
         // TODO: Change once peter fixes this.
-        Museum m = this->model->getMuseumObject((int)data["museum"]);
+        Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
 
         bool isCuratorOfMuseum = (m.getUser().getUserID() == u.getUserID());
         if(isCuratorOfMuseum)
