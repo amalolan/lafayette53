@@ -121,7 +121,17 @@ private:
 
 
 inline bool operator==(const User& lhs, const User& rhs) {
-        return (lhs.getName() == rhs.getName());
+        return ((lhs.getName() == rhs.getName())
+                && (lhs.getEmail() == rhs.getEmail())
+                && (lhs.getPassword() == rhs.getPassword())
+                && (lhs.getUserID() == rhs.getUserID()));
+}
+
+inline bool operator!=(const User& lhs, const User& rhs) {
+        return ((lhs.getName() != rhs.getName())
+                || (lhs.getEmail() != rhs.getEmail())
+                || (lhs.getPassword() != rhs.getPassword())
+                || (lhs.getUserID() != rhs.getUserID()));
 }
 
 #endif // USER_H

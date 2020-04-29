@@ -125,4 +125,22 @@ private:
     Museum museum;
 };
 
+inline bool operator==(const Artifact& lhs, const Artifact& rhs) {
+        return ((lhs.getName() == rhs.getName())
+                && (lhs.getDescription() == rhs.getDescription())
+                && (lhs.getIntro() == rhs.getIntro())
+                && (lhs.getPhoto() == rhs.getPhoto())
+                && (lhs.getID() == rhs.getID())
+                && (lhs.getMuseum() == rhs.getMuseum()));
+}
+
+inline bool operator!=(const Artifact& lhs, const Artifact& rhs) {
+    return ((lhs.getName() != rhs.getName())
+            || (lhs.getDescription() != rhs.getDescription())
+            || (lhs.getIntro() != rhs.getIntro())
+            || (lhs.getPhoto() != rhs.getPhoto())
+            || (lhs.getID() != rhs.getID())
+            || (lhs.getMuseum() != rhs.getMuseum()));
+}
+
 #endif // ARTIFACT_H

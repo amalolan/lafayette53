@@ -160,6 +160,7 @@ public:
     bool empty(){
         return name == "";
     }
+
 private:
     std::string name;
     std::string description;
@@ -168,5 +169,23 @@ private:
     int museumID;
     User user;
 };
+
+inline bool operator==(const Museum& lhs, const Museum& rhs) {
+        return ((lhs.getName() == rhs.getName())
+                && (lhs.getDescription() == rhs.getDescription())
+                && (lhs.getIntro() == rhs.getIntro())
+                && (lhs.getPhoto() == rhs.getPhoto())
+                && (lhs.getMuseumID() == rhs.getMuseumID())
+                && (lhs.getUser() == rhs.getUser()));
+}
+
+inline bool operator!=(const Museum& lhs, const Museum& rhs) {
+    return ((lhs.getName() != rhs.getName())
+            || (lhs.getDescription() != rhs.getDescription())
+            || (lhs.getIntro() != rhs.getIntro())
+            || (lhs.getPhoto() != rhs.getPhoto())
+            || (lhs.getMuseumID() != rhs.getMuseumID())
+            || (lhs.getUser() != rhs.getUser()));
+}
 
 #endif // MUSEUM_H

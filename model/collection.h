@@ -153,4 +153,21 @@ private:
     Museum museum;
 };
 
+inline bool operator==(const Collection& lhs, const Collection& rhs) {
+        return ((lhs.getName() == rhs.getName())
+                && (lhs.getDescription() == rhs.getDescription())
+                && (lhs.getIntro() == rhs.getIntro())
+                && (lhs.getPhoto() == rhs.getPhoto())
+                && (lhs.getID() == rhs.getID())
+                && (lhs.getMuseum() == rhs.getMuseum()));
+}
+
+inline bool operator!=(const Collection& lhs, const Collection& rhs) {
+    return ((lhs.getName() != rhs.getName())
+            || (lhs.getDescription() != rhs.getDescription())
+            || (lhs.getIntro() != rhs.getIntro())
+            || (lhs.getPhoto() != rhs.getPhoto())
+            || (lhs.getID() != rhs.getID())
+            || (lhs.getMuseum() != rhs.getMuseum()));
+}
 #endif // COLLECTION_H
