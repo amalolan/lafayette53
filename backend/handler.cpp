@@ -440,7 +440,10 @@ void Handler::editArtifact(http_request message){
 
         //TODO initialize edit object
         if(isCurator){
-            //TODO act on edit imediately.
+            //TODO change collection stuff.
+            this->model->updateArtifactInDB(artifact);
+            ucout << "edit done.\n";
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact in your museum updated!"));
         } else{
             this->model->saveEditToDB(edit);
             ucout << "edit added to review list.\n";
