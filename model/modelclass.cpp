@@ -239,6 +239,9 @@ void ModelClass::createTables(){
                     "FOREIGN KEY(museumID) REFERENCES museum(museumID) "
                     "ON DELETE CASCADE "
                     "ON UPDATE CASCADE, "
+                    "FOREIGN KEY(userID) REFERENCES public(userID) "
+                    "ON DELETE CASCADE "
+                    "ON UPDATE CASCADE, "
                     "PRIMARY KEY(editID)"
                     ");";
     if (!query.exec(q))
@@ -477,7 +480,7 @@ void ModelClass::saveEditToDB(Edit<Artifact> edit){
     }
     QString list = QString::fromStdString(stdList);
     bool done =
-    query.exec("INSERT INTO edit(museumID, userID, artifactID, name, description, photo, introduction, kind, status)"
+    query.exec("INSERT INTO edit(museumID, userID, artifactID, name, description, photo, introduction, kind, status, list)"
                " VALUES ("+museumID+", "+userID+", "+artifactID+", '"+name+"', '"+description+"', '"+photo+"', "
                  "'"+intro+"', "+kind+", "+status+", '"+list+"')");
 

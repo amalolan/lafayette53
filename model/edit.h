@@ -35,6 +35,7 @@ public:
         this-> kind = kind;
         this->status = pending;
         this->collection = list;
+        this->id = -1;
     }
 
     Edit(Artifact object, int kind, User user, std::vector<Collection> list, int status, int id):user(user), object(object){
