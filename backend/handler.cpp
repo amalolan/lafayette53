@@ -288,6 +288,12 @@ void Handler::handle_post(http_request message)
             addArtifact(message);
             return;
         }
+        // URL: /request/edit-artifact
+        else if(paths[1] == "edit-artifact" && paths.size() == 2)
+        {
+            editArtifact(message);
+            return;
+        }
     }
 
     message.extract_string(false).then([](utility::string_t s){
@@ -514,30 +520,30 @@ void Handler::getUserProfile(http_request message){
         Util::validateJSON(data, {"username", "password"});
         Util::checkLogin(data,  this->model);
         ucout << "Authorized.\n";
-        std::string username = data["username"];
 
-        User u = this->model->getUserObject(username);
+        ucout << data.dump(3) << '\n';
+
+        User u = this->model->getUserObject(std::string(data["username"]));
 
         json userJSON = Util::getObjectWithKeys<User>(u, {"username", "email", "id"});
 
-        //TODO user,museumList,actionsList,editList
-        //user
-        json output;
-        output["user"] = userJSON;
         //editList
-        std::vector<Edit<Artifact>> eList = this->model->getArtifactEdits(userJSON["id"]);
+        ucout << userJSON["id"] << '\n';
+        std::vector<Edit<Artifact>> eList = this->model->getArtifactEdits((int)userJSON["id"]);
+        ucout << eList.size() << '\n';
         json editList = Util::arrayFromVector<Edit<Artifact>>(eList,{"id", "type", "category", "artifact",
-                                                                     "collection","approvalStatus"});
-        output["editsList"] = editList;
-
+                                                                     "collection", "approvalStatus"});
+        //museums
         std::vector<Museum> museums = this->model->getMuseumByCurator(userJSON["id"]);
         json museumsJSON = Util::arrayFromVector(museums,{"id", "name", "description",
                                                           "introduction", "userID", "image"});
-        output["museumList"] = museumsJSON;
-
         //TODO output["actionsList"]
-        ucout << output.dump(3);
 
+        json output;
+        output["user"] = userJSON;
+        output["editsList"] = editList;
+        output["museumList"] = museumsJSON;
+        ucout << output.dump(3);
         return message.reply(status_codes::OK, output.dump(3));
 
     }).then([=] (pplx::task<void> t) {
