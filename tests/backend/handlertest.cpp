@@ -6,10 +6,7 @@
  * @param jvalue if POST, PUT, DEL, the data as a json object to send with the request
  * @return the task which can then make the request on callback
  */
-pplx::task<http_response> HandlerTest::make_task_request(
-        method mtd,
-        string uri,
-        json const & jvalue)
+pplx::task<http_response> HandlerTest::make_task_request(method mtd, string uri, json const & jvalue)
 {
     uri_builder builder(U(uri));
     return (mtd == methods::GET || mtd == methods::HEAD) ?
@@ -25,9 +22,7 @@ pplx::task<http_response> HandlerTest::make_task_request(
  * @return a Response object,  containing the body of the response message from the server as a string,
  * the status_code object, and the content_type as a string.
  */
-Response HandlerTest::requestTask(method mtd,
-                                  string uri,
-                                  json const & jvalue) {
+Response HandlerTest::requestTask(method mtd, string uri, json const & jvalue) {
     Response r;
     pplx::task<web::http::http_response> requestTask = this->make_task_request(mtd, uri, jvalue)
             .then([=](http_response response) {
@@ -248,11 +243,22 @@ TEST_F(HandlerTest, returnMuseumList) {
    }
 }
 
-//TEST_F(HandlerTest, returnMuseumById) {
-//    EXPECT_CALL(this->model, getMuseumObject(testing::_));
-//    EXPECT_CALL(this->model, getCollectionListByMuseumID(testing::_));
-//    EXPECT_CALL(this->model, getArtifactsByMuseum(testing::_));
-//}
+/**
+ * @brief TEST_F Tests HTTP GET request at /request/museum-list/[id]
+ */
+TEST_F(HandlerTest, returnMuseumById) {
+    int sleeptime = 200;
+    string url = "/request/museum/";  // /request/museum/[id]
+    Response r;
+    json expectation;
+    vector<Museum> collectionList;
+    {
+        InSequence s;
+
+    }
+    EXPECT_CALL(this->model, getMuseumObject(testing::_));
+    EXPECT_CALL(this->model, getCollectionListByMuseumID(testing::_));
+}
 
 //TEST_F(HandlerTest, returnCollectionById) {
 //    EXPECT_CALL(this->model, getCollectionObject(testing::_));

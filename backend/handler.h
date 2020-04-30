@@ -94,7 +94,6 @@ private:
     void returnWildCard(http_request);
     void returnMuseumList(http_request);
     void returnMuseumById(http_request,int);
-    //DEPRECATED void returnUserById(http_request,int);
     void returnCollectionById(http_request, int);
     void returnArtifactById(http_request, int);
 
@@ -106,6 +105,7 @@ private:
     void addUser(http_request);
     void addCollection(http_request);
     void addArtifact(http_request);
+    void editArtifact(http_request);
 
     void handle_put(http_request);
     void handle_delete(http_request);
