@@ -9,10 +9,10 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <vector>
-#include "museum.h"
-#include "user.h"
-#include "collection.h"
-#include "artifact.h"
+#include <string>
+#include <sstream>
+#include <iostream>
+#include "edit.h"
 #include "ModelException.h"
 
 class ModelClass
@@ -26,6 +26,22 @@ public:
     virtual bool status();
     virtual void createTables();
 
+    virtual void saveEditToDB(Edit<Collection>);
+    virtual void updateEditInDB(Edit<Collection>);
+    virtual void saveEditToDB(Edit<Artifact>);
+    virtual void updateEditInDB(Edit<Artifact>);
+    virtual void saveEditToDB(Edit<Museum>);
+    virtual void updateEditInDB(Edit<Museum>);
+
+
+    virtual std::vector<Edit<Museum>> getMuseumEdits(int userID);
+    virtual std::vector<Edit<Collection>> getCollectionEdits(int userID);
+    virtual std::vector<Edit<Artifact>> getArtifactEdits(int userID);
+
+    virtual std::vector<Edit<Museum>> getMuseumActions(int museumID);
+    virtual std::vector<Edit<Collection>> getCollectionActions(int museumID);
+    virtual std::vector<Edit<Artifact>> getArtifactActions(int museumID);
+
     virtual Artifact getArtifact(int artifactID);
     virtual void saveArtifactToDB(Artifact &);
     virtual void updateArtifactInDB(Artifact &);
@@ -34,8 +50,8 @@ public:
 
     virtual std::vector<Collection> getCollectionsByArtifact(int artifactID);
     virtual std::vector<Artifact> getArtifactsByCollection(int collectionID);
-    virtual void addArtifactCollection(Collection collection, Artifact artifact);
-    virtual void addArtifactCollection(Artifact artifact, Collection collection);
+    virtual void addArtifactCollection(const Collection & collection, const Artifact & artifact);
+    virtual void addArtifactCollection(const Artifact & artifact, const Collection & collection);
 
     virtual Collection getCollectionObject(int collectionID);
     virtual std::vector<Collection> getCollectionListByMuseumID(int museumID);
@@ -52,6 +68,8 @@ public:
     virtual void removeMuseumFromDB(Museum & museum);
     virtual void updateMuseumInDB(Museum & museum);
 
+    virtual std::vector<Museum> getMuseumByCurator(int userID);
+
     virtual User getUserObject(std::string username);
     virtual User getUserObject(int userID);
     virtual void saveUserToDB(User & user);
@@ -67,8 +85,10 @@ protected:
     ModelClass(std::string);
     ModelClass(std::string, bool);
     ModelClass(const ModelClass&) = delete;
-    virtual void artifactCheck(Artifact &);
-    virtual void collectionCheck(Collection &);
+    virtual void artifactCheck(const Artifact &);
+    virtual void artifactPreCheck(const Artifact & artifact);
+    virtual void collectionCheck(const Collection &);
+    virtual void museumCheck(const Museum &);
     QSqlDatabase db;
     QSqlQuery query;
 

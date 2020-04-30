@@ -215,10 +215,76 @@ void ModelClass::createTables(){
     {
         throw ModelException("ArtifactCollection table failed to create.");
     }
+
+    q =             "CREATE TABLE IF NOT EXISTS "
+                    "edit("
+                    "editID INTEGER NOT NULL, "
+                    "kind INTEGER NOT NULL, "
+                    "status INTEGER NOT NULL, "
+                    "museumID INTEGER DEFAULT -2, "
+                    "collectionID INTEGER DEFAULT -2, "
+                    "artifactID INTEGER DEFAULT -2, "
+                    "userID INTEGER NOT NULL, "
+                    "name TEXT NOT NULL, "
+                    "description TEXT, "
+                    "introduction TEXT, "
+                    "photo TEXT, "
+                    "list TEXT, "
+                    "FOREIGN KEY(artifactID) REFERENCES artifacts(artifactID) "
+                    "ON DELETE CASCADE "
+                    "ON UPDATE CASCADE, "
+                    "FOREIGN KEY(collectionID) REFERENCES collections(collectionID) "
+                    "ON DELETE CASCADE "
+                    "ON UPDATE CASCADE, "
+                    "FOREIGN KEY(museumID) REFERENCES museum(museumID) "
+                    "ON DELETE CASCADE "
+                    "ON UPDATE CASCADE, "
+                    "FOREIGN KEY(userID) REFERENCES public(userID) "
+                    "ON DELETE CASCADE "
+                    "ON UPDATE CASCADE, "
+                    "PRIMARY KEY(editID)"
+                    ");";
+    if (!query.exec(q))
+    {
+        throw ModelException("ArtifactCollection table failed to create.");
+    }
 }
 
-void ModelClass::artifactCheck(Artifact & artifact){
+void ModelClass::artifactCheck(const Artifact & artifact){
     if(!artifact.indb())
+    {
+        throw ModelException("Artifact does not exists in database");
+    }
+    else if (!artifact.getMuseum().indb())
+    {
+        throw ModelException("Museum object of artifact does not exist in database");
+    }
+    else if (!artifact.getMuseum().getUser().indb())
+    {
+        throw ModelException("User object of Museum object of artifact does not exist in database");
+    }
+    else
+    {
+        try
+        {
+            Museum museum = this->getMuseumObject(artifact.getMuseum().getName());
+        } catch (ModelException e)
+        {
+            throw ModelException("Museum object of artifact does not exist in database");
+        }
+
+        try
+        {
+            User user = this->getUserObject(artifact.getMuseum().getUser().getName());
+        } catch (ModelException e)
+        {
+            throw ModelException("User object of Museum object of artifact does not exist in database");
+        }
+    }
+}
+
+void ModelClass::artifactPreCheck(const Artifact & artifact){
+    if(artifact.indb())
     {
         throw ModelException("Artifact already exists in database");
     }
@@ -250,7 +316,7 @@ void ModelClass::artifactCheck(Artifact & artifact){
     }
 }
 
-void ModelClass::collectionCheck(Collection & collection){
+void ModelClass::collectionCheck(const Collection & collection){
     if(!collection.indb())
         {
             throw ModelException("Collection not in database");
@@ -281,6 +347,494 @@ void ModelClass::collectionCheck(Collection & collection){
                 throw ModelException("User object of Museum object of collection does not exist in database");
             }
         }
+}
+
+void ModelClass::museumCheck(const Museum & museum){
+    if (!museum.indb())
+    {
+        throw ModelException("Museum object not stored in database");
+    }
+    else if(museum.empty())
+    {
+        throw ModelException("Museum object empty");
+    }
+    else if (!museum.getUser().indb())
+    {
+        throw ModelException("User object of Museum object does not exist in database");
+    }
+    else
+    {
+        try
+        {
+            User user = this->getUserObject(museum.getUser().getName());
+        } catch (ModelException e)
+        {
+            throw ModelException("User object of Museum object does not exist in database");
+        }
+    }
+}
+
+void ModelClass::saveEditToDB(Edit<Museum> edit){
+    if (edit.indb())
+    {
+        throw ModelException("Edit object already in database");
+    }
+    museumCheck(edit.getObject());
+    query.exec("PRAGMA foreign_keys = OFF;");
+    int seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    std::default_random_engine eng(seed);
+    int nextEditIndex = eng();
+    QString museumID = QString::fromStdString(std::to_string(edit.getObject().getMuseumID()));
+    QString description = QString::fromStdString(edit.getObject().getDescription());
+    QString intro = QString::fromStdString(edit.getObject().getIntro());
+    QString photo = QString::fromStdString(edit.getObject().getPhoto());
+    QString name = QString::fromStdString(edit.getObject().getName());
+    QString userID = QString::fromStdString(std::to_string(edit.getEditor().getUserID()));
+    QString status = QString::fromStdString(std::to_string(edit.getStatus()));
+    QString kind = QString::fromStdString(std::to_string(edit.getKind()));
+
+    bool done =
+    query.exec("INSERT INTO edit(museumID, userID, name, description, photo, introduction, kind, status)"
+               " VALUES ("+museumID+", "+userID+", '"+name+"', '"+description+"', '"+photo+"', "
+                 "'"+intro+"', "+kind+", "+status+")");
+
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Saving Edit<Museum> failed. Reason: "+err);
+    }
+    edit.setID(nextEditIndex);
+    query.exec("PRAGMA foreign_keys = ON;");
+    query.finish();
+}
+
+void ModelClass::saveEditToDB(Edit<Collection> edit){
+    if (edit.indb())
+    {
+        throw ModelException("Edit object already in database");
+    }
+    collectionCheck(edit.getObject());
+    query.exec("PRAGMA foreign_keys = OFF;");
+    int seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    std::default_random_engine eng(seed);
+    int nextEditIndex = eng();
+    QString collectionID = QString::fromStdString(std::to_string(edit.getObject().getID()));
+    QString museumID = QString::fromStdString(std::to_string(edit.getObject().getMuseum().getMuseumID()));
+    QString description = QString::fromStdString(edit.getObject().getDescription());
+    QString intro = QString::fromStdString(edit.getObject().getIntro());
+    QString photo = QString::fromStdString(edit.getObject().getPhoto());
+    QString name = QString::fromStdString(edit.getObject().getName());
+    QString status = QString::fromStdString(std::to_string(edit.getStatus()));
+    QString kind = QString::fromStdString(std::to_string(edit.getKind()));
+    QString userID = QString::fromStdString(std::to_string(edit.getEditor().getUserID()));
+    bool done =
+    query.exec("INSERT INTO edit(museumID, userID, collectionID, name, description, photo, introduction, kind, status)"
+               " VALUES ("+museumID+", "+userID+", "+collectionID+", '"+name+"', '"+description+"', '"+photo+"', "
+                 "'"+intro+"', "+kind+", "+status+")");
+
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Saving Edit<Museum> failed. Reason: "+err);
+    }
+    edit.setID(nextEditIndex);
+    query.exec("PRAGMA foreign_keys = ON;");
+    query.finish();
+}
+
+void ModelClass::saveEditToDB(Edit<Artifact> edit){
+    if (edit.indb())
+    {
+        throw ModelException("Edit object already in database");
+    }
+    //TODO those have to be fixed some typos.
+    else if (edit.getKind() != Edit<Artifact>::add){
+        artifactCheck(edit.getObject());
+    }
+    else
+    {
+        artifactPreCheck(edit.getObject());
+    }
+    query.exec("PRAGMA foreign_keys = OFF;");
+    int seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    std::default_random_engine eng(seed);
+    int nextEditIndex = eng();
+    QString artifactID = QString::fromStdString(std::to_string(edit.getObject().getID()));
+    QString museumID = QString::fromStdString(std::to_string(edit.getObject().getMuseum().getMuseumID()));
+    QString description = QString::fromStdString(edit.getObject().getDescription());
+    QString intro = QString::fromStdString(edit.getObject().getIntro());
+    QString photo = QString::fromStdString(edit.getObject().getPhoto());
+    QString name = QString::fromStdString(edit.getObject().getName());
+    QString status = QString::fromStdString(std::to_string(edit.getStatus()));
+    QString kind = QString::fromStdString(std::to_string(edit.getKind()));
+    QString userID = QString::fromStdString(std::to_string(edit.getEditor().getUserID()));
+
+    std::string stdList;
+    for(unsigned long i = 0; i < edit.getCollectionList().size(); i++)
+    {
+        stdList += std::to_string(edit.getCollectionList().at(i).getID());
+
+        if (i != edit.getCollectionList().size() - 1)
+        {
+            stdList += " ";
+        }
+    }
+    QString list = QString::fromStdString(stdList);
+    bool done =
+    query.exec("INSERT INTO edit(museumID, userID, artifactID, name, description, photo, introduction, kind, status, list)"
+               " VALUES ("+museumID+", "+userID+", "+artifactID+", '"+name+"', '"+description+"', '"+photo+"', "
+                 "'"+intro+"', "+kind+", "+status+", '"+list+"')");
+
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Saving Edit<Museum> failed. Reason: "+err);
+    }
+    edit.setID(nextEditIndex);
+    query.exec("PRAGMA foreign_keys = ON;");
+    query.finish();
+}
+
+void ModelClass::updateEditInDB(Edit<Collection> edit){
+    if (!edit.indb())
+    {
+        throw ModelException("Edit object not in database");
+    }
+    collectionCheck(edit.getObject());
+    query.exec("PRAGMA foreign_keys = OFF;");
+    QString status = QString::fromStdString(std::to_string(edit.getStatus()));
+    QString id = QString::fromStdString(std::to_string(edit.getID()));
+    bool done =
+    query.exec("UPDATE edit SET status = "+status+" WHERE editID = "+id+";");
+
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Saving Edit<Museum> failed. Reason: "+err);
+    }
+    query.exec("PRAGMA foreign_keys = ON;");
+    query.finish();
+}
+
+void ModelClass::updateEditInDB(Edit<Artifact> edit){
+    if (!edit.indb())
+    {
+        throw ModelException("Edit object not in database");
+    }
+    artifactCheck(edit.getObject());
+    query.exec("PRAGMA foreign_keys = OFF;");
+    QString status = QString::fromStdString(std::to_string(edit.getStatus()));
+    QString id = QString::fromStdString(std::to_string(edit.getID()));
+    bool done =
+    query.exec("UPDATE edit SET status = "+status+" WHERE editID = "+id+";");
+
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Saving Edit<Artifact> failed. Reason: "+err);
+    }
+    query.exec("PRAGMA foreign_keys = ON;");
+    query.finish();
+}
+
+void ModelClass::updateEditInDB(Edit<Museum> edit){
+    if (!edit.indb())
+    {
+        throw ModelException("Edit object not in database");
+    }
+    museumCheck(edit.getObject());
+    query.exec("PRAGMA foreign_keys = OFF;");
+    QString status = QString::fromStdString(std::to_string(edit.getStatus()));
+    QString id = QString::fromStdString(std::to_string(edit.getID()));
+    bool done =
+    query.exec("UPDATE edit SET status = "+status+" WHERE editID = "+id+";");
+
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Saving Edit<Museum> failed. Reason: "+err);
+    }
+    query.exec("PRAGMA foreign_keys = ON;");
+    query.finish();
+}
+
+std::vector<Edit<Museum>> ModelClass::getMuseumEdits(int userID){
+    QString id(QString::fromStdString(std::to_string(userID)));
+    User user = this->getUserObject(userID);
+    query.exec
+    ("SELECT museumID, name, description, photo, introduction, status, kind, editID"
+     " FROM edit WHERE userID = "+id+" AND collectionID = -2 AND artifactID = -2;");
+
+    std::vector<Edit<Museum>> output;
+    query.next();
+    if (!query.isValid())
+    {
+        return output;
+    }
+    std::vector<std::vector<std::string>> queryList;
+    do
+    {
+        std::vector<std::string> rowList;
+        rowList.push_back(query.value(0).toString().toStdString());
+        rowList.push_back(query.value(1).toString().toStdString());
+        rowList.push_back(query.value(2).toString().toStdString());
+        rowList.push_back(query.value(3).toString().toStdString());
+        rowList.push_back(query.value(4).toString().toStdString());
+        rowList.push_back(query.value(5).toString().toStdString());
+        rowList.push_back(query.value(6).toString().toStdString());
+        rowList.push_back(query.value(7).toString().toStdString());
+
+    }while (query.next());
+
+    for (std::vector<std::string> row : queryList)
+    {
+        Museum museum = this->getMuseumObject(std::stoi(row.at(0)));
+        museum.setName(row.at(1));
+        museum.setDescription(row.at(2));
+        museum.setIntro(row.at(4));
+        museum.setPhoto(row.at(3));
+        Edit<Museum> edit(museum, std::stoi(row.at(6)), user, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        output.push_back(edit);
+    }
+    return output;
+}
+
+std::vector<Edit<Collection>> ModelClass::getCollectionEdits(int userID){
+    QString id(QString::fromStdString(std::to_string(userID)));
+    User user = this->getUserObject(userID);
+    query.exec
+    ("SELECT collectionID, name, description, photo, introduction, status, kind, editID"
+     " FROM edit WHERE userID = "+id+" AND collectionID != -2;");
+
+    std::vector<Edit<Collection>> output;
+    query.next();
+    if (!query.isValid())
+    {
+        return output;
+    }
+
+    std::vector<std::vector<std::string>> queryList;
+    do
+    {
+        std::vector<std::string> rowList;
+        rowList.push_back(query.value(0).toString().toStdString());
+        rowList.push_back(query.value(1).toString().toStdString());
+        rowList.push_back(query.value(2).toString().toStdString());
+        rowList.push_back(query.value(3).toString().toStdString());
+        rowList.push_back(query.value(4).toString().toStdString());
+        rowList.push_back(query.value(5).toString().toStdString());
+        rowList.push_back(query.value(6).toString().toStdString());
+        rowList.push_back(query.value(7).toString().toStdString());
+
+    }while (query.next());
+
+    for (std::vector<std::string> row : queryList)
+    {
+        Collection collection = this->getCollectionObject(std::stoi(row.at(0)));
+        collection.setName(row.at(1));
+        collection.setDescription(row.at(2));
+        collection.setIntro(row.at(4));
+        collection.setPhoto(row.at(3));
+        Edit<Collection> edit(collection, std::stoi(row.at(6)), user, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        output.push_back(edit);
+    }
+    return output;
+}
+
+std::vector<Edit<Artifact>> ModelClass::getArtifactEdits(int userID){
+    QString id(QString::fromStdString(std::to_string(userID)));
+    User user = this->getUserObject(userID);
+    query.exec
+    ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, list, museumID"
+     " FROM edit WHERE userID = "+id+" AND artifactID != -2;");
+
+    std::vector<Edit<Artifact>> output;
+    query.next();
+    if (!query.isValid())
+    {
+        return output;
+    }
+
+    std::vector<std::vector<std::string>> queryList;
+    do
+    {
+        std::vector<std::string> rowList;
+        rowList.push_back(query.value(0).toString().toStdString());
+        rowList.push_back(query.value(1).toString().toStdString());
+        rowList.push_back(query.value(2).toString().toStdString());
+        rowList.push_back(query.value(3).toString().toStdString());
+        rowList.push_back(query.value(4).toString().toStdString());
+        rowList.push_back(query.value(5).toString().toStdString());
+        rowList.push_back(query.value(6).toString().toStdString());
+        rowList.push_back(query.value(7).toString().toStdString());
+        rowList.push_back(query.value(8).toString().toStdString());
+        rowList.push_back(query.value(9).toString().toStdString());
+
+    }while (query.next());
+
+    for (std::vector<std::string> row : queryList)
+    {
+        Artifact artifact("","","","", this->getMuseumObject(std::stoi(row.at(9))));
+        if (std::stoi(row.at(6)) != Edit<Artifact>::add)
+        {
+            artifact = this->getArtifact(std::stoi(row.at(0)));
+        }
+        artifact.setName(row.at(1));
+        artifact.setDescription(row.at(2));
+        artifact.setIntro(row.at(4));
+        artifact.setPhoto(row.at(3));
+        std::vector<Collection> list;
+        std::stringstream ss(row.at(8));
+        std::string token;
+        while (std::getline(ss, token, ' '))
+        {
+            list.push_back(this->getCollectionObject(std::stoi(token)));
+        }
+        Edit<Artifact> edit(artifact, std::stoi(row.at(6)), user, list, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        output.push_back(edit);
+    }
+    return output;
+}
+
+std::vector<Edit<Museum>> ModelClass::getMuseumActions(int museumID){
+    this->getMuseumObject(museumID);
+    QString id(QString::fromStdString(std::to_string(museumID)));
+    query.exec
+    ("SELECT userID, name, description, photo, introduction, status, kind, editID, userID"
+     " FROM edit WHERE museumID = "+id+" AND collectionID = -2 AND artifactID = -2 AND status = 0;");
+
+    std::vector<Edit<Museum>> output;
+    query.next();
+    if (!query.isValid())
+    {
+        return output;
+    }
+    std::vector<std::vector<std::string>> queryList;
+    do
+    {
+        std::vector<std::string> rowList;
+        rowList.push_back(query.value(0).toString().toStdString());
+        rowList.push_back(query.value(1).toString().toStdString());
+        rowList.push_back(query.value(2).toString().toStdString());
+        rowList.push_back(query.value(3).toString().toStdString());
+        rowList.push_back(query.value(4).toString().toStdString());
+        rowList.push_back(query.value(5).toString().toStdString());
+        rowList.push_back(query.value(6).toString().toStdString());
+        rowList.push_back(query.value(7).toString().toStdString());
+        rowList.push_back(query.value(8).toString().toStdString());
+
+    }while (query.next());
+
+    for (std::vector<std::string> row : queryList)
+    {
+        Museum museum = this->getMuseumObject(std::stoi(row.at(0)));
+        museum.setName(row.at(1));
+        museum.setDescription(row.at(2));
+        museum.setIntro(row.at(4));
+        museum.setPhoto(row.at(3));
+        User user = getUserObject(std::stoi(row.at(8)));
+        Edit<Museum> edit(museum, std::stoi(row.at(6)), user, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        output.push_back(edit);
+    }
+    return output;
+}
+
+std::vector<Edit<Collection>> ModelClass::getCollectionActions(int museumID){
+    this->getMuseumObject(museumID);
+    QString id(QString::fromStdString(std::to_string(museumID)));
+    query.exec
+    ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, userID"
+     " FROM edit WHERE museumID = "+id+" AND collectionID != -2 AND status = 0;");
+
+    std::vector<Edit<Collection>> output;
+    query.next();
+    if (!query.isValid())
+    {
+        return output;
+    }
+    std::vector<std::vector<std::string>> queryList;
+    do
+    {
+        std::vector<std::string> rowList;
+        rowList.push_back(query.value(0).toString().toStdString());
+        rowList.push_back(query.value(1).toString().toStdString());
+        rowList.push_back(query.value(2).toString().toStdString());
+        rowList.push_back(query.value(3).toString().toStdString());
+        rowList.push_back(query.value(4).toString().toStdString());
+        rowList.push_back(query.value(5).toString().toStdString());
+        rowList.push_back(query.value(6).toString().toStdString());
+        rowList.push_back(query.value(7).toString().toStdString());
+        rowList.push_back(query.value(8).toString().toStdString());
+
+    }while (query.next());
+
+    for (std::vector<std::string> row : queryList)
+    {
+        Collection collection = this->getCollectionObject(std::stoi(row.at(0)));
+        collection.setName(row.at(1));
+        collection.setDescription(row.at(2));
+        collection.setIntro(row.at(4));
+        collection.setPhoto(row.at(3));
+        User user = getUserObject(std::stoi(row.at(8)));
+        Edit<Collection> edit(collection, std::stoi(row.at(6)), user, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        output.push_back(edit);
+    }
+    return output;
+}
+
+std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
+    Museum museum = this->getMuseumObject(museumID);
+    QString id(QString::fromStdString(std::to_string(museumID)));
+    query.exec
+    ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, userID, list"
+     " FROM edit WHERE museumID = "+id+" AND artifactID != -2 AND status = 0;");
+
+    std::vector<Edit<Artifact>> output;
+    query.next();
+    if (!query.isValid())
+    {
+        return output;
+    }
+    std::vector<std::vector<std::string>> queryList;
+    do
+    {
+        std::vector<std::string> rowList;
+        rowList.push_back(query.value(0).toString().toStdString());
+        rowList.push_back(query.value(1).toString().toStdString());
+        rowList.push_back(query.value(2).toString().toStdString());
+        rowList.push_back(query.value(3).toString().toStdString());
+        rowList.push_back(query.value(4).toString().toStdString());
+        rowList.push_back(query.value(5).toString().toStdString());
+        rowList.push_back(query.value(6).toString().toStdString());
+        rowList.push_back(query.value(7).toString().toStdString());
+        rowList.push_back(query.value(8).toString().toStdString());
+        rowList.push_back(query.value(9).toString().toStdString());
+
+    }while (query.next());
+
+    for (std::vector<std::string> row : queryList)
+    {
+        Artifact artifact("","","","", museum);
+        if (std::stoi(row.at(6)) != Edit<Artifact>::add)
+        {
+            artifact = this->getArtifact(std::stoi(row.at(0)));
+        }
+        artifact.setName(row.at(1));
+        artifact.setDescription(row.at(2));
+        artifact.setIntro(row.at(4));
+        artifact.setPhoto(row.at(3));
+        User user = getUserObject(std::stoi(row.at(8)));
+        std::vector<Collection> list;
+        std::stringstream ss(row.at(9));
+        std::string token;
+        while (std::getline(ss, token, ' '))
+        {
+            list.push_back(this->getCollectionObject(std::stoi(token)));
+        }
+        Edit<Artifact> edit(artifact, std::stoi(row.at(6)), user, list, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        output.push_back(edit);
+    }
+    return output;
 }
 
 Artifact ModelClass::getArtifact(int artifactID){
@@ -458,7 +1012,7 @@ std::vector<Artifact> ModelClass::getArtifactsByCollection(int collectionID){
     return artifactList;
 }
 
-void ModelClass::addArtifactCollection(Collection collection, Artifact artifact){
+void ModelClass::addArtifactCollection(const Collection & collection, const Artifact & artifact){
     ModelClass::artifactCheck(artifact);
     ModelClass::collectionCheck(collection);
     QString collectionID = QString::fromStdString(std::to_string(collection.getID()));
@@ -473,7 +1027,7 @@ void ModelClass::addArtifactCollection(Collection collection, Artifact artifact)
     query.finish();
 }
 
-void ModelClass::addArtifactCollection(Artifact artifact, Collection collection){
+void ModelClass::addArtifactCollection(const Artifact & artifact, const Collection & collection){
     ModelClass::artifactCheck(artifact);
     ModelClass::collectionCheck(collection);
 
@@ -646,7 +1200,7 @@ std::vector<Museum> ModelClass::getMuseumList(){
     }while(query.next());
     query.finish();
 
-    for (Museum museum : museumList)
+    for (Museum & museum : museumList)
     {
         museum.setUser(this->getUserObject(museum.getUser().getUserID()));
     }
@@ -843,6 +1397,31 @@ void ModelClass::updateMuseumInDB(Museum & museum){
         throw ModelException("Museum object failed to update in database. Reason: "+err);
     }
     query.finish();
+}
+
+std::vector<Museum> ModelClass::getMuseumByCurator(int userID){
+    QString id = QString::fromStdString(std::to_string(userID));
+    User user = this->getUserObject(userID);
+    query.exec("SELECT museumID, userID, name, description, introduction, photo FROM museum WHERE userID = '"+id+"';");
+    query.next();
+
+    std::vector<Museum> output;
+    if (!query.isValid())
+    {
+        return output;
+    }
+
+    do
+    {
+        output.push_back(Museum(query.value(2).toString().toStdString(),
+                                query.value(3).toString().toStdString(),
+                                query.value(4).toString().toStdString(),
+                                query.value(5).toString().toStdString(),
+                                user,
+                                query.value(0).toInt()));
+    }
+    while(query.next());
+    return output;
 }
 
 User ModelClass::getUserObject(std::string username){
