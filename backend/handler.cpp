@@ -31,81 +31,78 @@ void Handler::handle_error(http_request message, pplx::task<void>& t, std::strin
 
 void Handler::handle_get(http_request message)
 {
-    try{
-        auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
 
-        ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
+    auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
 
-        // URL: /
-        //check for frontend files.
-        QDirIterator dirIt((std::string(this->codeBaseDirectory)+"/frontend/").c_str(), QDirIterator::NoIteratorFlags);
-        // || (paths[0] == "home" && paths.size() == 1)
-        if(message.relative_uri() ==  "/" )
+    ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
+
+    // URL: /
+    //check for frontend files.
+    QDirIterator dirIt((std::string(this->codeBaseDirectory)+"/frontend/").c_str(), QDirIterator::NoIteratorFlags);
+    // || (paths[0] == "home" && paths.size() == 1)
+    if(message.relative_uri() ==  "/" )
+    {
+        returnFrontendFile(message);
+        return;
+    }
+    //dirIt.hasNext() can not be written in while statement
+    //causes errors for the last file in the directory.
+    while(true)
+    {
+        std::string s = "/" + dirIt.fileName().toStdString();
+        if(message.relative_uri().to_string() == s)
         {
             returnFrontendFile(message);
+            return ;
+        }
+        if(!dirIt.hasNext()) break;
+        dirIt.next();
+    }
+    //frontend check ends here
+
+    //check for specific urls
+    // URL: /request/museum-list/
+    if (paths.size() >= 2 && paths[0] == "request")
+    {
+        if(paths[1] == "museum-list" && paths.size() == 2)
+        {
+            returnMuseumList(message);
             return;
         }
-        //dirIt.hasNext() can not be written in while statement
-        //causes errors for the last file in the directory.
-        while(true)
-        {
-            std::string s = "/" + dirIt.fileName().toStdString();
-            if(message.relative_uri().to_string() == s)
-            {
-                returnFrontendFile(message);
-                return ;
-            }
-            if(!dirIt.hasNext()) break;
-            dirIt.next();
-        }
-        //frontend check ends here
-
-        //check for specific urls
-        // URL: /request/museum-list/
-        if (paths.size() >= 2 && paths[0] == "request")
-        {
-            if(paths[1] == "museum-list" && paths.size() == 2)
-            {
-                returnMuseumList(message);
+        else if (paths.size() == 3) {
+            int id;
+            try {
+                id  =  std::stoi(paths[2]);
+            } catch(std::exception &e) {
+                message.reply(status_codes::InternalError,
+                                Util::getFailureJsonStr("ID could not be converted to an integer."));
+                return;
             }
             // URL: /request/museum/[id]
-            else if(paths[1] == "museum" && paths.size() == 3)
+            if(paths[1] == "museum" && paths.size() == 3)
             {
-                ucout << "museum\n";
-                std::string museumID = paths[2];
-                returnMuseumById(message,std::stoi(museumID));
+                returnMuseumByID(message, id);
+                return;
             }
             // URL: /request/collection/[collectionID]
             else if(paths[1] == "collection" && paths.size() == 3)
             {
-                ucout<< "collection\n";
                 std::string collectionID = paths[2];
-                returnCollectionById(message, std::stoi(collectionID));
+                returnCollectionByID(message, id);
+                return;
             }
             // URL: /request/artifact/[artifactID]
             else if(paths[1] == "artifact" && paths.size() == 3)
             {
-                ucout << "artifact\n";
                 std::string artifactID = paths[2];
-                returnArtifactById(message, std::stoi(artifactID));
-            }
-            // URL: /request/???
-            else {
-                ucout << "Wildcard caught in GET request URL \n";
-                returnWildCard(message);
+                returnArtifactByID(message, id);
+                return;
             }
         }
-        // URL: /???
-        else
-        {
-            ucout << "Wildcard caught in GET URL \n";
-            returnWildCard(message);
-        }
-    } catch(std::exception &e) {
-        ucout <<"Caught error in GET Handler"<< e.what() << "\n";
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr("Caught error: " +  std::string(e.what())));
     }
-
+    // URL: /???
+    ucout << "Wildcard caught in GET URL \n";
+    returnWildCard(message);
     return;
 
 };
@@ -165,75 +162,79 @@ void Handler::returnWildCard(http_request message)
 
 
 void Handler::returnMuseumList(http_request message){
-    json museumList = Util::arrayFromVector<Museum>(this->model->getMuseumList(),
-    {"id", "name", "description", "introduction", "userID", "image"});
-    //    json museumList = this->model->getMuseumListJSON();
-    message.reply(status_codes::OK, museumList.dump(3))
-            .then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Museum list could not be found.");
+    message.extract_string(false).then([=](utility::string_t s){
+        ucout  << s <<  std::endl;
+        json output = Util::arrayFromVector<Museum>(this->model->getMuseumList(),
+        {"id", "name", "description", "introduction", "userID", "image"});
+        //    json museumList = this->model->getMuseumListJSON();
+        message.reply(status_codes::OK, output.dump(4));
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Museum list could not be found");
     });
     return;
 };
 
 
-void Handler::returnMuseumById(http_request message,int museumID){
-    json outputData;
-    outputData["museum"] = Util::getObjectWithKeys<Museum>(this->model->getMuseumObject(museumID),
-    {"id", "name", "description", "introduction", "userID", "image"});
-    outputData["collectionList"] = Util::arrayFromVector<Collection>(this->model->getCollectionListByMuseumID(museumID),
-    {"id", "name", "description", "introduction", "image"});
-    //TODO: outputData["artifactList"] =
-    ucout << outputData.dump(3) << '\n';
-    //ucout<<outputData.dump(4)<<std::endl;
-    message.reply(status_codes::OK,outputData.dump(3))
-            .then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Museum could not be found.");
+void Handler::returnMuseumByID(http_request message,int museumID){
+    message.extract_string(false).then([=](utility::string_t s){
+        ucout  << s <<  std::endl;
+        json output;
+        output["museum"] = Util::getObjectWithKeys<Museum>(this->model->getMuseumObject(museumID),
+        {"id", "name", "description", "introduction", "userID", "image"});
+        output["collectionList"] = Util::arrayFromVector<Collection>(this->model->getCollectionListByMuseumID(museumID),
+        {"id", "name", "description", "introduction", "image"});
+//        ucout << output.dump(3) << '\n';
+        message.reply(status_codes::OK, output.dump(4));
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Museum could not be found");
     });
     return;
 }
 
 
-void Handler::returnCollectionById(http_request message, int collectionID) {
-    Collection col = this->model->getCollectionObject(collectionID);
+void Handler::returnCollectionByID(http_request message, int collectionID) {
+    message.extract_string(false).then([=](utility::string_t s){
+        ucout  << s <<  std::endl;
+        Collection col = this->model->getCollectionObject(collectionID);
 
-    json collectionJSON = Util::getObjectWithKeys<Collection>(col,
-    {"id", "name", "description", "introduction", "image"});
+        json collectionJSON = Util::getObjectWithKeys<Collection>(col,
+        {"id", "name", "description", "introduction", "image"});
 
-    json museumJSON = Util::getObjectWithKeys<Museum>(col.getMuseum(),{"id","name"});
+        json museumJSON = Util::getObjectWithKeys<Museum>(col.getMuseum(),{"id","name"});
 
-    //TODO: outputData["artifactList"] =
-    json output = {
-        {"collection", collectionJSON},
-        {"museum", museumJSON}
-    };
-    output["artifactList"] = Util::arrayFromVector<Artifact>(this->model->getArtifactsByCollection(collectionID),
-    {"id", "name", "description", "introduction", "image"});
+        //TODO: outputData["artifactList"] =
+        json output = {
+            {"collection", collectionJSON},
+            {"museum", museumJSON}
+        };
+        output["artifactList"] = Util::arrayFromVector<Artifact>(this->model->getArtifactsByCollection(collectionID),
+        {"id", "name", "description", "introduction", "image"});
 
-    message.reply(status_codes::OK, output.dump(4))
-            .then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "Collection could not be found.");
+        message.reply(status_codes::OK, output.dump(4));
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "Collection could not be found");
     });
     return;
 }
 
-void Handler::returnArtifactById(http_request message, int artifactID) {
+void Handler::returnArtifactByID(http_request message, int artifactID) {
+    message.extract_string(false).then([=](utility::string_t s){
+        ucout  << s <<  std::endl;
+        Artifact artifact = this->model->getArtifact(artifactID);
+        json artifactJSON = Util::getObjectWithKeys<Artifact>(artifact,
+        {"id", "name", "description", "introduction", "image"});
 
-    Artifact artifact = this->model->getArtifact(artifactID);
-    json artifactJSON = Util::getObjectWithKeys<Artifact>(artifact,
-    {"id", "name", "description", "introduction", "image"});
+        std::vector<Collection> collections = this->model->getCollectionsByArtifact(artifactID);
+        json collectionListJSON = Util::arrayFromVector<Collection>(collections,{"id","name"});
 
-    std::vector<Collection> collections = this->model->getCollectionsByArtifact(artifactID);
-    json collectionListJSON = Util::arrayFromVector<Collection>(collections,{"id","name"});
-
-    json museumJSON = Util::getObjectWithKeys<Museum>(artifact.getMuseum(), {"id"});
-    json output = {
-        {"museum", {{"id",artifact.getMuseum().getMuseumID()}}},
-        {"artifact", artifactJSON},
-        {"collectionList", collectionListJSON}
-    };
-
-    message.reply(status_codes::OK, output.dump(4))
-            .then([=] (pplx::task<void> t) {
+        json museumJSON = Util::getObjectWithKeys<Museum>(artifact.getMuseum(), {"id"});
+        json output = {
+            {"museum", {{"id",artifact.getMuseum().getMuseumID()}}},
+            {"artifact", artifactJSON},
+            {"collectionList", collectionListJSON}
+        };
+        message.reply(status_codes::OK, output.dump(4));
+    }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Artifact could not be found");
     });
     return;
@@ -246,59 +247,55 @@ void Handler::returnArtifactById(http_request message, int artifactID) {
 
 void Handler::handle_post(http_request message)
 {
-    try {
-        //ucout <<  message.to_string() << std::endl;
-        ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
-        auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
-        // URL: /request
-        if (paths.size() == 2  && paths[0] == "request")
+    //ucout <<  message.to_string() << std::endl;
+    ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
+    auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
+    // URL: /request
+    if (paths.size() == 2  && paths[0] == "request")
+    {
+        // URL: /request/register
+        if (paths[1] == "register")
         {
-            // URL: /request/register
-            if (paths[1] == "register")
-            {
-                addUser(message);
-                return;
-            }
-            // URL: /request/login
-            else if (paths[1] == "login")
-            {
-                validateLogin(message);
-                return;
-            }
-            // URL: /request/add-museum
-            else if(paths[1] == "add-museum")
-            {
-                addMuseum(message);
-                return;
-            }
-            // URL: /request/add-collection
-            else if(paths[1] == "add-collection")
-            {
-                addCollection(message);
-                return;
-            }
-            // URL: /request/user-profile
-            else if (paths[1] == "user-profile")
-            {
-                getUserProfile(message);
-                return;
-            }
-            // URL: /request/add-artifact
-            else if (paths[1] == "add-artifact" && paths.size() == 2)
-            {
-                addArtifact(message);
-                return;
-            }
+            addUser(message);
+            return;
         }
-
-        message.extract_string(false).then([](utility::string_t s){
-            ucout << s << std::endl;
-        });
-        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
-    } catch(std::exception &e) {
-        ucout <<"Caught error in GET Handler"<< e.what() << "\n";
-        message.reply(status_codes::InternalError, Util::getFailureJsonStr("Caught error: " +  std::string(e.what())));
+        // URL: /request/login
+        else if (paths[1] == "login")
+        {
+            validateLogin(message);
+            return;
+        }
+        // URL: /request/add-museum
+        else if(paths[1] == "add-museum")
+        {
+            addMuseum(message);
+            return;
+        }
+        // URL: /request/add-collection
+        else if(paths[1] == "add-collection")
+        {
+            addCollection(message);
+            return;
+        }
+        // URL: /request/user-profile
+        else if (paths[1] == "user-profile")
+        {
+            getUserProfile(message);
+            return;
+        }
+        // URL: /request/add-artifact
+        else if (paths[1] == "add-artifact" && paths.size() == 2)
+        {
+            addArtifact(message);
+            return;
+        }
     }
+
+    message.extract_string(false).then([](utility::string_t s){
+        ucout << s << std::endl;
+    });
+    message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
+
     return;
 
 };

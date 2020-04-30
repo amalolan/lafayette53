@@ -21,8 +21,10 @@
 #include "mockmodelclass.h"
 using json = nlohmann::json;
 using namespace std;
+using ::testing::Sequence;
 using ::testing::InSequence;
 using ::testing::Return;
+using ::testing::Throw;
 
 struct Response {
     status_code status;

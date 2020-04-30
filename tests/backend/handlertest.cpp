@@ -55,10 +55,11 @@ TEST_F(HandlerTest, serverRunning) {
 
 /**
  * @brief TEST_F Tests to see if exceptions are caught without crashing the server
- */
+ *//*
 TEST_F(HandlerTest, handleError) {
 
 }
+*/
 
 /**
  * @brief TEST_F Tests GET requests for erroneous URL inputs to ensure server doesn't break
@@ -119,6 +120,20 @@ TEST_F(HandlerTest, handleGET)  {
     usleep(sleeptime);
 
     url = "request1/fae.css";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(sleeptime);
+
+    url = "request/museum/";
+    r = this->requestTask(methods::GET,  url);
+    ASSERT_EQ(r.status, status_codes::OK);
+    ASSERT_EQ(r.type,  "text/html");
+    ASSERT_NE(r.content,  "");
+    usleep(sleeptime);
+
+    url = "request/collection";
     r = this->requestTask(methods::GET,  url);
     ASSERT_EQ(r.status, status_codes::OK);
     ASSERT_EQ(r.type,  "text/html");
@@ -201,7 +216,11 @@ TEST_F(HandlerTest, handlePOST) {
 
 /**
  * @brief TEST_F Tests HTTP GET request at /request/museum-list
- * 2 test cases: empty list and non-empty list. Validity of  Museum  objects are tested in returnMuseumById().
+ * Validity of  Museum JSON objects are tested in model tests.
+ * 3 test cases:
+ * 1. Model has an exception
+ * 2. empty list
+ * 3. non-empty list.
  * @see Handler::returnMuseumList() for deatils of the HTTP Message response
  */
 TEST_F(HandlerTest, returnMuseumList) {
@@ -212,7 +231,20 @@ TEST_F(HandlerTest, returnMuseumList) {
     vector<Museum> museumList;
     {
         InSequence s;
-        expectation = json::array(); /**< Empty expectation */
+
+        /**< Case 1 */
+        EXPECT_CALL(this->model, getMuseumList())
+                .WillOnce(Throw(ModelException("Museum  list not working")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET,  url);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+
+        /**< Case 2 */
+        expectation = json::array();
         EXPECT_CALL(this->model, getMuseumList())
                 .WillOnce(Return(museumList))
                 .RetiresOnSaturation();
@@ -223,12 +255,12 @@ TEST_F(HandlerTest, returnMuseumList) {
         ASSERT_EQ(json::parse(r.content),  expectation);
 
 
+        /**< Case Expect the json list of museums. Can use Util since it is already tested. */
         museumList = {
             Museum("1", "1desc", User("malo", "malo@", "k21")),
             Museum("2", "lsf", "21", "", User("2", "", "")),
             Museum("3", "ls2", "21432", "https://placekitten.com/200/300", User("2", "", "")),
         };
-        /**< Expect the json list of museums. Can use Util since it is already tested. */
         expectation = Util::arrayFromVector<Museum>(museumList,
         {"id", "name", "description", "introduction", "userID", "image"});
 
@@ -245,27 +277,96 @@ TEST_F(HandlerTest, returnMuseumList) {
 
 /**
  * @brief TEST_F Tests HTTP GET request at /request/museum-list/[id]
+ * No ID is tested in handleGET() tests. Validity of collection JSON objects are tested in model tests.
+ * 4 Test Cases:
+ * 1. Invalid IDs (string and
+ * 2. Valid ID, Not found in DB
+ * 3. Valid ID, Found, Valid Museum Object, No Collections
+ * 4. Valid ID, Found, Valid Museum Object, Collections present.
  */
-TEST_F(HandlerTest, returnMuseumById) {
+TEST_F(HandlerTest, returnMuseumByID) {
     int sleeptime = 200;
     string url = "/request/museum/";  // /request/museum/[id]
+    string id;
     Response r;
     json expectation;
-    vector<Museum> collectionList;
+
+    /**< Case 1 */
+    id = "AB1";
+    usleep(sleeptime);
+    r = this->requestTask(methods::GET,  url + id);
+    ASSERT_EQ(r.status, status_codes::InternalError);
+    ASSERT_FALSE(json::parse(r.content)["success"]);
+
+    id = "91111111111111111111111111111111111111111111111";
+    usleep(sleeptime);
+    r = this->requestTask(methods::GET,  url + id);
+    ASSERT_EQ(r.status, status_codes::InternalError);
+    ASSERT_FALSE(json::parse(r.content)["success"]);
     {
         InSequence s;
+        /**< Case 2 */
+        id = to_string(INT_MAX);
+        EXPECT_CALL(this->model, getMuseumObject(stoi(id)))
+                .WillOnce(testing::Throw(ModelException("Can't find Museum")));
 
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET,  url + id);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        Museum museum("name", "description", "introduction",  "image",
+                 User("username", "email", "password", 1), stoi(id));
+
+
+        /**< Case 3 */
+        vector<Collection> collectionList;
+        expectation =  {
+                {"museum", museum.toJSON()},
+                {"collectionList", json::array()}
+        };
+        EXPECT_CALL(this->model, getMuseumObject(stoi(id)))
+                .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getCollectionListByMuseumID(stoi(id)))
+                .WillOnce(Return(collectionList))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET, url + id);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
+
+
+        /**< Case 4 */
+        collectionList.push_back(Collection("collectionName", "collectionDescription",
+                                            "collectionIntroduction", "collectionImage",
+                                            museum, 1));
+        collectionList.push_back(Collection("collectionName", "collectionDescription",
+                                            "collectionIntroduction", "collectionImage",
+                                            museum, 2));
+        expectation["collectionList"]  = Util::arrayFromVector<Collection>(collectionList,
+        {"id",  "name", "description", "introduction", "image"});
+        EXPECT_CALL(this->model, getMuseumObject(stoi(id)))
+                .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getCollectionListByMuseumID(stoi(id)))
+                .WillOnce(Return(collectionList))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET, url + id);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
     }
-    EXPECT_CALL(this->model, getMuseumObject(testing::_));
-    EXPECT_CALL(this->model, getCollectionListByMuseumID(testing::_));
 }
 
-//TEST_F(HandlerTest, returnCollectionById) {
+//TEST_F(HandlerTest, returnCollectionByID) {
 //    EXPECT_CALL(this->model, getCollectionObject(testing::_));
 //    EXPECT_CALL(this->model, getArtifactsByCollection(testing::_));
 //}
 
-//TEST_F(HandlerTest, returnArtifactById) {
+//TEST_F(HandlerTest, returnArtifactByID) {
 //    EXPECT_CALL(this->model, getArtifact(testing::_));
 //    EXPECT_CALL(this->model, getCollectionsByArtifact(testing::_));
 //}
