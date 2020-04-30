@@ -253,7 +253,7 @@ void ModelClass::createTables(){
 void ModelClass::artifactCheck(const Artifact & artifact){
     if(!artifact.indb())
     {
-        throw ModelException("Artifact already exists in database");
+        throw ModelException("Artifact not in database");
     }
     else if (!artifact.getMuseum().indb())
     {
