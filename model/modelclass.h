@@ -34,8 +34,8 @@ public:
 
     virtual std::vector<Collection> getCollectionsByArtifact(int artifactID);
     virtual std::vector<Artifact> getArtifactsByCollection(int collectionID);
-    virtual void addArtifactCollection(Collection collection, Artifact artifact);
-    virtual void addArtifactCollection(Artifact artifact, Collection collection);
+    virtual void addArtifactCollection(const Collection & collection, const Artifact & artifact);
+    virtual void addArtifactCollection(const Artifact & artifact, const Collection & collection);
 
     virtual Collection getCollectionObject(int collectionID);
     virtual std::vector<Collection> getCollectionListByMuseumID(int museumID);
@@ -67,8 +67,8 @@ protected:
     ModelClass(std::string);
     ModelClass(std::string, bool);
     ModelClass(const ModelClass&) = delete;
-    virtual void artifactCheck(Artifact &);
-    virtual void collectionCheck(Collection &);
+    virtual void artifactCheck(const Artifact &);
+    virtual void collectionCheck(const Collection &);
     QSqlDatabase db;
     QSqlQuery query;
 

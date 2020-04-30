@@ -93,7 +93,7 @@ public:
         return this->id;
     }
 
-    json toJSON()
+    json toJSON() const
     {
         json output = {
             {"name", this->getName()},
@@ -136,11 +136,13 @@ public:
         this->museum = newMuseum;
     }
 
-    bool indb(){
+    bool indb() const
+    {
         return this->id > -1;
     }
 
-    bool empty(){
+    bool empty() const
+    {
         return name == "";
     }
 

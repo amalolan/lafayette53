@@ -50,6 +50,11 @@ public:
 
     }
 
+    friend std::ostream& operator<<(std::ostream &strm, const User &u) {
+      return strm << "User(name : "<< u.username <<", "
+                     "email: "<< u.email<< ")";
+    }
+
     std::string getEmail() const
     {
         return this->email;
@@ -84,7 +89,7 @@ public:
         this->password = newPassword;
     }
 
-    bool indb()
+    bool indb() const
     {
         return this->userID > -1;
     }
@@ -98,7 +103,8 @@ public:
      *        }
      *
      */
-    virtual json toJSON() const {
+    virtual json toJSON() const
+    {
         json output  =  {
             {"username", this->getName()},
             {"email", this->getEmail()},

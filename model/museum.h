@@ -70,6 +70,14 @@ public:
 
     }
 
+    friend std::ostream& operator<<(std::ostream &strm, const Museum &m) {
+      return strm << "Museum(name : "<< m.name <<", "
+                     "introduction: "<< m.intro<< ", "
+                     "description: " << m.description << ", "
+                     "user: " << m.user << ", "
+                     "photoURL: " << m.photo << ")";
+    }
+
     void setName(std::string name)
     {
         this->name = name;
@@ -130,7 +138,7 @@ public:
         return this->museumID;
     }
 
-    bool indb()
+    bool indb() const
     {
         return this->museumID > -1;
     }
@@ -144,7 +152,8 @@ public:
     {
         return this->user.getPassword();
     }
-    json toJSON()
+
+    json toJSON() const
     {
         json museum = {
             {"name", this->getName()},

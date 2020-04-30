@@ -217,7 +217,7 @@ void ModelClass::createTables(){
     }
 }
 
-void ModelClass::artifactCheck(Artifact & artifact){
+void ModelClass::artifactCheck(const Artifact & artifact){
     if(!artifact.indb())
     {
         throw ModelException("Artifact already exists in database");
@@ -250,7 +250,7 @@ void ModelClass::artifactCheck(Artifact & artifact){
     }
 }
 
-void ModelClass::collectionCheck(Collection & collection){
+void ModelClass::collectionCheck(const Collection & collection){
     if(!collection.indb())
         {
             throw ModelException("Collection not in database");
@@ -458,7 +458,7 @@ std::vector<Artifact> ModelClass::getArtifactsByCollection(int collectionID){
     return artifactList;
 }
 
-void ModelClass::addArtifactCollection(Collection collection, Artifact artifact){
+void ModelClass::addArtifactCollection(const Collection & collection, const Artifact & artifact){
     ModelClass::artifactCheck(artifact);
     ModelClass::collectionCheck(collection);
     QString collectionID = QString::fromStdString(std::to_string(collection.getID()));
@@ -473,7 +473,7 @@ void ModelClass::addArtifactCollection(Collection collection, Artifact artifact)
     query.finish();
 }
 
-void ModelClass::addArtifactCollection(Artifact artifact, Collection collection){
+void ModelClass::addArtifactCollection(const Artifact & artifact, const Collection & collection){
     ModelClass::artifactCheck(artifact);
     ModelClass::collectionCheck(collection);
 
@@ -646,7 +646,7 @@ std::vector<Museum> ModelClass::getMuseumList(){
     }while(query.next());
     query.finish();
 
-    for (Museum museum : museumList)
+    for (Museum & museum : museumList)
     {
         museum.setUser(this->getUserObject(museum.getUser().getUserID()));
     }
