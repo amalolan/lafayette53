@@ -239,6 +239,9 @@ void ModelClass::createTables(){
                     "FOREIGN KEY(museumID) REFERENCES museum(museumID) "
                     "ON DELETE CASCADE "
                     "ON UPDATE CASCADE, "
+                    "FOREIGN KEY(userID) REFERENCES public(userID) "
+                    "ON DELETE CASCADE "
+                    "ON UPDATE CASCADE, "
                     "PRIMARY KEY(editID)"
                     ");";
     if (!query.exec(q))
