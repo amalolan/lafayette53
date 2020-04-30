@@ -93,9 +93,20 @@ private:
     void returnFrontendFile(http_request);
     void returnWildCard(http_request);
     void returnMuseumList(http_request);
+<<<<<<< HEAD
     void returnMuseumByID(http_request,int);
     void returnCollectionByID(http_request, int);
     void returnArtifactByID(http_request, int);
+||||||| merged common ancestors
+    void returnMuseumById(http_request,int);
+    //DEPRECATED void returnUserById(http_request,int);
+    void returnCollectionById(http_request, int);
+    void returnArtifactById(http_request, int);
+=======
+    void returnMuseumById(http_request,int);
+    void returnCollectionById(http_request, int);
+    void returnArtifactById(http_request, int);
+>>>>>>> d40f140864ebd99c382c26bdceb1d3bee7c3eb8a
 
     void validateLogin(http_request);
     void getUserProfile(http_request);
@@ -105,6 +116,7 @@ private:
     void addUser(http_request);
     void addCollection(http_request);
     void addArtifact(http_request);
+    void editArtifact(http_request);
 
     void handle_put(http_request);
     void handle_delete(http_request);
