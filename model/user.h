@@ -45,7 +45,7 @@ public:
         return *this;
     }
 
-    ~User()
+    virtual ~User()
     {
 
     }

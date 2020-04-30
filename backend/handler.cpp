@@ -176,8 +176,6 @@ void Handler::returnMuseumById(http_request message,int museumID){
     {"id", "name", "description", "introduction", "userID", "image"});
     outputData["collectionList"] = Util::arrayFromVector<Collection>(this->model->getCollectionListByMuseumID(museumID),
     {"id", "name", "description", "introduction", "image"});
-    outputData["artifactList"] = Util::arrayFromVector<Artifact>(this->model->getArtifactsByMuseum(museumID),
-    {"id", "name", "description", "introduction", "image"});
     //TODO: outputData["artifactList"] =
     ucout << outputData.dump(3) << '\n';
     //ucout<<outputData.dump(4)<<std::endl;
