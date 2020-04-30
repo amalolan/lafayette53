@@ -250,7 +250,7 @@ void ModelClass::createTables(){
 void ModelClass::artifactCheck(const Artifact & artifact){
     if(!artifact.indb())
     {
-        throw ModelException("Artifact already exists in database");
+        throw ModelException("Artifact does not exists in database");
     }
     else if (!artifact.getMuseum().indb())
     {
@@ -444,6 +444,7 @@ void ModelClass::saveEditToDB(Edit<Artifact> edit){
     {
         throw ModelException("Edit object already in database");
     }
+    //TODO those have to be fixed some typos.
     else if (edit.getKind() != Edit<Artifact>::add){
         artifactCheck(edit.getObject());
     }
@@ -477,7 +478,7 @@ void ModelClass::saveEditToDB(Edit<Artifact> edit){
     }
     QString list = QString::fromStdString(stdList);
     bool done =
-    query.exec("INSERT INTO edit(museumID, userID, artifactID, name, description, photo, introduction, kind, status)"
+    query.exec("INSERT INTO edit(museumID, userID, artifactID, name, description, photo, introduction, kind, status, list)"
                " VALUES ("+museumID+", "+userID+", "+artifactID+", '"+name+"', '"+description+"', '"+photo+"', "
                  "'"+intro+"', "+kind+", "+status+", '"+list+"')");
 

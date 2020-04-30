@@ -406,17 +406,35 @@ void Handler::addCollection(web::http::http_request message) {
 
 void Handler::editArtifact(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
+        //general data.
         json data = json::parse(s);
         ucout << data.dump(3) << std::endl;
-        Util::validateJSON(data, {"artifact, collection, museum, user"});
+        Util::validateJSON(data, {"artifact", "collection", "museum", "user"});
         json artifactJSON = data["artifact"];
-
+        //museum
         Util::validateJSON(data["museum"], {"id"});
         Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
-
+        //editor
         Util::validateJSON(data["user"], {"username", "password"});
         Util::checkLogin(data["user"], this->model);
         User editor = this->model->getUserObject((std::string)data["user"]["username"]);
+        //artifact
+        Util::validateJSON(artifactJSON, {"name","description", "introduction", "collectionList"});
+        Artifact artifact(artifactJSON["name"], artifactJSON["description"],
+                          artifactJSON["introduction"], m);
+        artifact.setID(artifactJSON["id"]);
+        //collctions
+        std::vector<Collection> collections;
+        json collectionList = artifactJSON["collectionList"];
+        for(auto item : collectionList.items())
+        {
+            json c = item.value();
+            Util::validateJSON(c, {"id","name"});
+            Collection col(c["name"], "", "", "", m, c["id"]);
+            collections.push_back(col);
+        }
+
+        Edit<Artifact> edit(artifact, Edit<Artifact>::edit, editor, collections);
 
         bool isCurator = (m.getUser().getUserID() == editor.getUserID());
 
@@ -424,7 +442,10 @@ void Handler::editArtifact(http_request message){
         if(isCurator){
             //TODO act on edit imediately.
         } else{
-            //TODO add edit to the list.
+            this->model->saveEditToDB(edit);
+            ucout << "edit added to review list.\n";
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edis Successfully added to "
+                                                                           "the review list."));
         }
 
         return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Edit unsuccesful "
