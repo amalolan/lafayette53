@@ -448,8 +448,6 @@ void Handler::editArtifact(http_request message){
     });
 }
 
-
-
 void Handler::addArtifact(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
 
@@ -484,7 +482,7 @@ void Handler::addArtifact(http_request message){
             delete artifact;
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact saved to database."));
         } else {
-            //todo add to edit list.
+            //TODO add to edit list.
             ucout << "not authorized\n";
             return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You re not authorized to add artifact."));
         }
@@ -522,16 +520,25 @@ void Handler::getUserProfile(http_request message){
 
         json userJSON = Util::getObjectWithKeys<User>(u, {"username", "email", "id"});
 
-        //TODO user,museumList,actionList,editList
-
+        //TODO user,museumList,actionsList,editList
+        //user
         json output;
         output["user"] = userJSON;
+        //editList
+        std::vector<Edit<Artifact>> eList = this->model->getArtifactEdits(userJSON["id"]);
+        json editList = Util::arrayFromVector<Edit<Artifact>>(eList,{"id", "type", "category", "artifact",
+                                                                     "collection","approvalStatus"});
+        output["editsList"] = editList;
 
-        //TODO json museumList = Util::arrayFromVector<Museum>(this->model->getMuseumByCurator(u.getUserID()),
-        //{"id","name","introduction","description","userID","image"}
+        std::vector<Museum> museums = this->model->getMuseumByCurator(userJSON["id"]);
+        json museumsJSON = Util::arrayFromVector(museums,{"id", "name", "description",
+                                                          "introduction", "userID", "image"});
+        output["museumList"] = museumsJSON;
 
-        message.reply(status_codes::OK, Util::getObjectWithKeys<User>(u,
-        {"username", "email", "id"}).dump(3));
+        //TODO output["actionsList"]
+        ucout << output.dump(3);
+
+        return message.reply(status_codes::OK, output.dump(3));
 
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Get User Profile Error.");
