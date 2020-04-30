@@ -219,11 +219,11 @@ void Handler::returnArtifactById(http_request message, int artifactID) {
     {"id", "name", "description", "introduction", "image"});
 
     std::vector<Collection> collections = this->model->getCollectionsByArtifact(artifactID);
-    json collectionListJSON = Util::arrayFromVector<Collection>(collections,{"id"});
+    json collectionListJSON = Util::arrayFromVector<Collection>(collections,{"id","name"});
 
     json museumJSON = Util::getObjectWithKeys<Museum>(artifact.getMuseum(), {"id"});
     json output = {
-        {"museum", artifact.getMuseum().getMuseumID()},
+        {"museum", {{"id",artifact.getMuseum().getMuseumID()}}},
         {"artifact", artifactJSON},
         {"collectionList", collectionListJSON}
     };
@@ -397,8 +397,13 @@ void Handler::addArtifact(http_request message){
         json collectionList = data["collection"];
         //retrieve data from database. Check login info.
         User u = Util::checkLogin(data["user"], this->model);
-        // TODO: Change once peter fixes this.
-        Museum m = this->model->getMuseumObject((int)data["museum"]);
+        Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
+
+        //check if artifact has at least one collection associated.
+        if(data["artifact"]["collectionList"].size() == 0) {
+            return message.reply(status_codes::Conflict, Util::getFailureJsonStr("Artifact has to be associated with"
+                                                                                 " at least one collection."));
+        }
 
         bool isCuratorOfMuseum = (m.getUser().getUserID() == u.getUserID());
         if(isCuratorOfMuseum)
@@ -416,11 +421,11 @@ void Handler::addArtifact(http_request message){
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact saved to database."));
         } else {
             ucout << "not authorized\n";
-            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Artifact Addition not implemente."));
+            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You re not authorized to add artifact."));
         }
 
     }).then([=](pplx::task<void> t){
-        this->handle_error(message, t, "Artifact addition not implemented.");
+        this->handle_error(message, t, "Artifact addition incomplete.");
     });
 
 }
