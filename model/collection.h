@@ -93,7 +93,7 @@ public:
         return this->id;
     }
 
-    json toJSON()
+    json toJSON() const
     {
         json output = {
             {"name", this->getName()},
@@ -136,11 +136,13 @@ public:
         this->museum = newMuseum;
     }
 
-    bool indb(){
+    bool indb() const
+    {
         return this->id > -1;
     }
 
-    bool empty(){
+    bool empty() const
+    {
         return name == "";
     }
 
@@ -153,4 +155,21 @@ private:
     Museum museum;
 };
 
+inline bool operator==(const Collection& lhs, const Collection& rhs) {
+        return ((lhs.getName() == rhs.getName())
+                && (lhs.getDescription() == rhs.getDescription())
+                && (lhs.getIntro() == rhs.getIntro())
+                && (lhs.getPhoto() == rhs.getPhoto())
+                && (lhs.getID() == rhs.getID())
+                && (lhs.getMuseum() == rhs.getMuseum()));
+}
+
+inline bool operator!=(const Collection& lhs, const Collection& rhs) {
+    return ((lhs.getName() != rhs.getName())
+            || (lhs.getDescription() != rhs.getDescription())
+            || (lhs.getIntro() != rhs.getIntro())
+            || (lhs.getPhoto() != rhs.getPhoto())
+            || (lhs.getID() != rhs.getID())
+            || (lhs.getMuseum() != rhs.getMuseum()));
+}
 #endif // COLLECTION_H

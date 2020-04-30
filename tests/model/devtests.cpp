@@ -66,31 +66,15 @@ TEST_F(DevTests, testingMuseumInput){
 TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
     User newUser("sena", "s@lafayette.edu", "password");
     this->model->open();
+    ASSERT_THROW(this->model->getMuseumByCurator(newUser.getUserID()), ModelException);
     EXPECT_NO_THROW(this->model->saveUserToDB(newUser));
+    ASSERT_NO_THROW(this->model->getMuseumByCurator(newUser.getUserID()));
     Museum museum("aMuseum", "a sample museum", "intro", "photo", newUser);
     EXPECT_NO_THROW(this->model->saveMuseumToDB(museum));
-    EXPECT_EQ(museum.getMuseumID(), this->model->getMuseumObject("aMuseum").getMuseumID());
-    EXPECT_EQ(museum.getName(), this->model->getMuseumObject("aMuseum").getName());
-    EXPECT_EQ(museum.getDescription(), this->model->getMuseumObject("aMuseum").getDescription());
-    EXPECT_EQ(museum.getPhoto(), this->model->getMuseumObject("aMuseum").getPhoto());
-    EXPECT_EQ(museum.getIntro(), this->model->getMuseumObject("aMuseum").getIntro());
-    EXPECT_EQ(museum.getUser().getUserID(), this->model->getMuseumObject("aMuseum").getUser().getUserID());
-    EXPECT_EQ(museum.getUser().getName(), this->model->getMuseumObject("aMuseum").getUser().getName());
-    EXPECT_EQ(museum.getUser().getEmail(), this->model->getMuseumObject("aMuseum").getUser().getEmail());
-    EXPECT_EQ(museum.getUser().getPassword(), this->model->getMuseumObject("aMuseum").getUser().getPassword());
-    EXPECT_EQ(museum.getUser().toJSON(), this->model->getMuseumObject("aMuseum").getUser().toJSON());
-
-    EXPECT_EQ(museum.getMuseumID(), this->model->getMuseumObject(museum.getMuseumID()).getMuseumID());
-    EXPECT_EQ(museum.getName(), this->model->getMuseumObject(museum.getMuseumID()).getName());
-    EXPECT_EQ(museum.getDescription(), this->model->getMuseumObject(museum.getMuseumID()).getDescription());
-    EXPECT_EQ(museum.getPhoto(), this->model->getMuseumObject(museum.getMuseumID()).getPhoto());
-    EXPECT_EQ(museum.getIntro(), this->model->getMuseumObject(museum.getMuseumID()).getIntro());
-    EXPECT_EQ(museum.getUser().getUserID(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getUserID());
-    EXPECT_EQ(museum.getUser().getName(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getName());
-    EXPECT_EQ(museum.getUser().getEmail(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getEmail());
-    EXPECT_EQ(museum.getUser().getPassword(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getPassword());
-    EXPECT_EQ(museum.getUser().toJSON(), this->model->getMuseumObject(museum.getMuseumID()).getUser().toJSON());
-
+    EXPECT_EQ(museum, this->model->getMuseumObject("aMuseum"));
+    EXPECT_EQ(museum, this->model->getMuseumObject(museum.getMuseumID()));
+    EXPECT_EQ(museum, this->model->getMuseumByCurator(newUser.getUserID()).front());
+    EXPECT_EQ(1, this->model->getMuseumByCurator(newUser.getUserID()).size());
     museum.setPhoto("newPhoto");
     museum.setDescription("newDesc");
     museum.setIntro("newIntro");
@@ -98,31 +82,16 @@ TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
     newUser.setEmail("newEmail");
     newUser.setPassword("newEmail");
     ASSERT_NO_THROW(this->model->updateUserInDB(newUser));
+    EXPECT_EQ(newUser, this->model->getUserObject(newUser.getUserID()));
     museum.setUser(newUser);
     ASSERT_NO_THROW(this->model->updateMuseumInDB(museum));
-    EXPECT_EQ(museum.getMuseumID(), this->model->getMuseumObject(museum.getName()).getMuseumID());
-    EXPECT_EQ(museum.getName(), this->model->getMuseumObject(museum.getName()).getName());
-    EXPECT_EQ(museum.getDescription(), this->model->getMuseumObject(museum.getName()).getDescription());
-    EXPECT_EQ(museum.getPhoto(), this->model->getMuseumObject(museum.getName()).getPhoto());
-    EXPECT_EQ(museum.getIntro(), this->model->getMuseumObject(museum.getName()).getIntro());
-    EXPECT_EQ(museum.getUser().getUserID(), this->model->getMuseumObject(museum.getName()).getUser().getUserID());
-    EXPECT_EQ(museum.getUser().getName(), this->model->getMuseumObject(museum.getName()).getUser().getName());
-    EXPECT_EQ(museum.getUser().getEmail(), this->model->getMuseumObject(museum.getName()).getUser().getEmail());
-    EXPECT_EQ(museum.getUser().getPassword(), this->model->getMuseumObject(museum.getName()).getUser().getPassword());
-    EXPECT_EQ(museum.getUser().toJSON(), this->model->getMuseumObject(museum.getName()).getUser().toJSON());
-
-    EXPECT_EQ(museum.getMuseumID(), this->model->getMuseumObject(museum.getMuseumID()).getMuseumID());
-    EXPECT_EQ(museum.getName(), this->model->getMuseumObject(museum.getMuseumID()).getName());
-    EXPECT_EQ(museum.getDescription(), this->model->getMuseumObject(museum.getMuseumID()).getDescription());
-    EXPECT_EQ(museum.getPhoto(), this->model->getMuseumObject(museum.getMuseumID()).getPhoto());
-    EXPECT_EQ(museum.getIntro(), this->model->getMuseumObject(museum.getMuseumID()).getIntro());
-    EXPECT_EQ(museum.getUser().getUserID(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getUserID());
-    EXPECT_EQ(museum.getUser().getName(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getName());
-    EXPECT_EQ(museum.getUser().getEmail(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getEmail());
-    EXPECT_EQ(museum.getUser().getPassword(), this->model->getMuseumObject(museum.getMuseumID()).getUser().getPassword());
-    EXPECT_EQ(museum.getUser().toJSON(), this->model->getMuseumObject(museum.getMuseumID()).getUser().toJSON());
-
+    EXPECT_EQ(museum, this->model->getMuseumObject("newMuseum"));
+    EXPECT_EQ(museum, this->model->getMuseumObject(museum.getMuseumID()));
+    EXPECT_EQ(museum, this->model->getMuseumList().front());
+    EXPECT_EQ(1, this->model->getMuseumList().size());
     EXPECT_NO_THROW(this->model->removeMuseumFromDB(museum));
+    std::vector<Museum> output = {};
+    EXPECT_EQ(output, this->model->getMuseumList());
     ASSERT_TRUE(!museum.indb());
     EXPECT_NO_THROW(this->model->removeUserFromDB(newUser));
     ASSERT_TRUE(!newUser.indb());
@@ -171,12 +140,9 @@ TEST_F(DevTests, TestingArtifactInput){
     artifact.setDescription("newDesc");
     artifact.setIntro("newIntro");
     ASSERT_NO_THROW(this->model->updateArtifactInDB(artifact));
-    EXPECT_EQ(artifact.getID(), this->model->getArtifact(artifact.getID()).getID());
-    EXPECT_EQ(artifact.getName(), this->model->getArtifact(artifact.getID()).getName());
-    EXPECT_EQ(artifact.getPhoto(), this->model->getArtifact(artifact.getID()).getPhoto());
-    EXPECT_EQ(artifact.getDescription(), this->model->getArtifact(artifact.getID()).getDescription());
-    EXPECT_EQ(artifact.getIntro(), this->model->getArtifact(artifact.getID()).getIntro());
+    std::vector<Artifact> output = {artifact};
     EXPECT_NO_THROW(this->model->getArtifactsByMuseum(museum.getMuseumID()));
+    EXPECT_EQ(output, this->model->getArtifactsByMuseum(museum.getMuseumID()));
     this->model->removeUserFromDB(user);
     EXPECT_THROW(this->model->getArtifactsByMuseum(museum.getMuseumID()), ModelException);
 }
@@ -186,7 +152,7 @@ TEST_F(DevTests, TestingCollectionInput){
     ASSERT_NO_THROW(this->model->saveUserToDB(user));
     Museum museum("museum", "desc", "intro", user);
     ASSERT_NO_THROW(this->model->saveMuseumToDB(museum));
-    Collection collection("artifact", "desc", "intro", "photo", museum);
+    Collection collection("collection", "desc", "intro", "photo", museum);
     ASSERT_NO_THROW(this->model->saveCollectionToDB(collection));
     EXPECT_TRUE(collection.indb());
     collection.setPhoto("newPhoto");
@@ -194,12 +160,9 @@ TEST_F(DevTests, TestingCollectionInput){
     collection.setDescription("newDesc");
     collection.setIntro("newIntro");
     ASSERT_NO_THROW(this->model->updateCollectionInDB(collection));
-    EXPECT_EQ(collection.getID(), this->model->getCollectionObject(collection.getID()).getID());
-    EXPECT_EQ(collection.getName(), this->model->getCollectionObject(collection.getID()).getName());
-    EXPECT_EQ(collection.getPhoto(), this->model->getCollectionObject(collection.getID()).getPhoto());
-    EXPECT_EQ(collection.getDescription(), this->model->getCollectionObject(collection.getID()).getDescription());
-    EXPECT_EQ(collection.getIntro(), this->model->getCollectionObject(collection.getID()).getIntro());
+    std::vector<Collection> output = {collection};
     EXPECT_NO_THROW(this->model->getCollectionListByMuseumID(museum.getMuseumID()));
+    EXPECT_EQ(output, this->model->getCollectionListByMuseumID(museum.getMuseumID()));
     this->model->removeUserFromDB(user);
     EXPECT_THROW(this->model->getCollectionListByMuseumID(museum.getMuseumID()), ModelException);
 }
@@ -217,5 +180,13 @@ TEST_F(DevTests, TestingArtifactCollectionInput){
     EXPECT_TRUE(artifact.indb());
     ASSERT_NO_THROW(this->model->addArtifactCollection(artifact, collection));
     ASSERT_THROW(this->model->addArtifactCollection(artifact, collection), ModelException);
+    EXPECT_EQ(1, this->model->getCollectionsByArtifact(artifact.getID()).size());
+    EXPECT_EQ(collection, this->model->getCollectionsByArtifact(artifact.getID()).front());
+    EXPECT_EQ(artifact, this->model->getArtifactsByCollection(collection.getID()).front());
+    EXPECT_EQ(1, this->model->getArtifactsByCollection(collection.getID()).size());
     this->model->removeUserFromDB(user);
+}
+
+TEST_F(DevTests, TestEditInput){
+
 }

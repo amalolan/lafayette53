@@ -35,6 +35,25 @@ public:
 
     }
 
+    Artifact(const Artifact &artifact):museum(artifact.getMuseum())
+    {
+        this->name = artifact.getName();
+        this->desc = artifact.getDescription();
+        this->id = artifact.getID();
+        this->intro = artifact.getIntro();
+        this->photo = artifact.getPhoto();
+    }
+
+    Artifact& operator = (const Artifact &artifact)
+    {
+        this->name = artifact.getName();
+        this->desc = artifact.getDescription();
+        this->id = artifact.getID();
+        this->intro = artifact.getIntro();
+        this->photo = artifact.getPhoto();
+        return *this;
+    }
+
     std::string getName() const
     {
         return this->name;
@@ -65,7 +84,7 @@ public:
         return this->id;
     }
 
-    json toJSON()
+    json toJSON() const
     {
         json output = {
             {"name", this->getName()},
@@ -108,11 +127,13 @@ public:
         this->museum = newMuseum;
     }
 
-    bool indb(){
+    bool indb() const
+    {
         return this->id > -1;
     }
 
-    bool empty(){
+    bool empty() const
+    {
         return name == "";
     }
 
@@ -124,5 +145,23 @@ private:
     std::string intro;
     Museum museum;
 };
+
+inline bool operator==(const Artifact& lhs, const Artifact& rhs) {
+        return ((lhs.getName() == rhs.getName())
+                && (lhs.getDescription() == rhs.getDescription())
+                && (lhs.getIntro() == rhs.getIntro())
+                && (lhs.getPhoto() == rhs.getPhoto())
+                && (lhs.getID() == rhs.getID())
+                && (lhs.getMuseum() == rhs.getMuseum()));
+}
+
+inline bool operator!=(const Artifact& lhs, const Artifact& rhs) {
+    return ((lhs.getName() != rhs.getName())
+            || (lhs.getDescription() != rhs.getDescription())
+            || (lhs.getIntro() != rhs.getIntro())
+            || (lhs.getPhoto() != rhs.getPhoto())
+            || (lhs.getID() != rhs.getID())
+            || (lhs.getMuseum() != rhs.getMuseum()));
+}
 
 #endif // ARTIFACT_H

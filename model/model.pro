@@ -12,6 +12,7 @@ HEADERS += \
     ModelException.h \
     artifact.h \
     collection.h \
+    edit.h \
     museum.h \
     modelclass.h \
     user.h \
