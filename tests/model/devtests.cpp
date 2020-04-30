@@ -66,12 +66,15 @@ TEST_F(DevTests, testingMuseumInput){
 TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
     User newUser("sena", "s@lafayette.edu", "password");
     this->model->open();
+    ASSERT_THROW(this->model->getMuseumByCurator(newUser.getUserID()), ModelException);
     EXPECT_NO_THROW(this->model->saveUserToDB(newUser));
+    ASSERT_NO_THROW(this->model->getMuseumByCurator(newUser.getUserID()));
     Museum museum("aMuseum", "a sample museum", "intro", "photo", newUser);
     EXPECT_NO_THROW(this->model->saveMuseumToDB(museum));
     EXPECT_EQ(museum, this->model->getMuseumObject("aMuseum"));
     EXPECT_EQ(museum, this->model->getMuseumObject(museum.getMuseumID()));
-
+    EXPECT_EQ(museum, this->model->getMuseumByCurator(newUser.getUserID()).front());
+    EXPECT_EQ(1, this->model->getMuseumByCurator(newUser.getUserID()).size());
     museum.setPhoto("newPhoto");
     museum.setDescription("newDesc");
     museum.setIntro("newIntro");
@@ -182,4 +185,8 @@ TEST_F(DevTests, TestingArtifactCollectionInput){
     EXPECT_EQ(artifact, this->model->getArtifactsByCollection(collection.getID()).front());
     EXPECT_EQ(1, this->model->getArtifactsByCollection(collection.getID()).size());
     this->model->removeUserFromDB(user);
+}
+
+TEST_F(DevTests, TestEditInput){
+
 }

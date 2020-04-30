@@ -35,6 +35,25 @@ public:
 
     }
 
+    Artifact(const Artifact &artifact):museum(artifact.getMuseum())
+    {
+        this->name = artifact.getName();
+        this->desc = artifact.getDescription();
+        this->id = artifact.getID();
+        this->intro = artifact.getIntro();
+        this->photo = artifact.getPhoto();
+    }
+
+    Artifact& operator = (const Artifact &artifact)
+    {
+        this->name = artifact.getName();
+        this->desc = artifact.getDescription();
+        this->id = artifact.getID();
+        this->intro = artifact.getIntro();
+        this->photo = artifact.getPhoto();
+        return *this;
+    }
+
     std::string getName() const
     {
         return this->name;

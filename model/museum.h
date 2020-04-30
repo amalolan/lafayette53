@@ -166,7 +166,8 @@ public:
         return museum;
     }
 
-    bool empty(){
+    bool empty() const
+    {
         return name == "";
     }
 
