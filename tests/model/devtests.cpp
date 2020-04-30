@@ -188,5 +188,26 @@ TEST_F(DevTests, TestingArtifactCollectionInput){
 }
 
 TEST_F(DevTests, TestEditInput){
-
+    User user("sena", "s@lafayette.edu", "password");
+    ASSERT_NO_THROW(this->model->saveUserToDB(user));
+    Museum museum("museum", "desc", "intro", user);
+    ASSERT_NO_THROW(this->model->saveMuseumToDB(museum));
+    Collection collection("artifact", "desc", "intro", "photo", museum);
+    ASSERT_NO_THROW(this->model->saveCollectionToDB(collection));
+    EXPECT_TRUE(collection.indb());
+    Artifact artifact("artifact", "desc", "intro", "photo", museum);
+    ASSERT_NO_THROW(this->model->saveArtifactToDB(artifact));
+    EXPECT_TRUE(artifact.indb());
+    ASSERT_NO_THROW(this->model->addArtifactCollection(artifact, collection));
+    artifact.setPhoto("newPhoto");
+    artifact.setName("newName");
+    artifact.setDescription("newDesc");
+    artifact.setIntro("newIntro");
+    Edit<Artifact> edit(artifact, Edit<Artifact>::edit, user, this->model->getCollectionsByArtifact(artifact.getID()));
+    ASSERT_NO_THROW(this->model->saveEditToDB(edit));
+    ASSERT_NO_THROW(this->model->getArtifactActions(user.getUserID()));
+//    EXPECT_EQ(edit.getObject(), this->model->getArtifactActions(user.getUserID()).front().getObject());
+//    EXPECT_EQ(edit.getKind(), this->model->getArtifactActions(user.getUserID()).front().getKind());
+//    EXPECT_EQ(edit.getStatus(), this->model->getArtifactActions(user.getUserID()).front().getStatus());
+    this->model->removeUserFromDB(user);
 }
