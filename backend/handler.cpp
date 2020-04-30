@@ -14,7 +14,7 @@ void Handler::handle_error(http_request message, pplx::task<void>& t, std::strin
         message.reply(status_codes::Conflict, Util::getFailureJsonStr(error /* + std::string(m.what())*/));
     }
     catch(json::exception &j) {
-        ucout << j.what() << '\n';
+        ucout << "Internal Error"<<j.what() << '\n';
         message.reply(status_codes::InternalError, Util::getFailureJsonStr(j.what()));
     }
     catch(std::exception &e)
@@ -31,75 +31,81 @@ void Handler::handle_error(http_request message, pplx::task<void>& t, std::strin
 
 void Handler::handle_get(http_request message)
 {
-    auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
+    try{
+        auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
 
-    ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
+        ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
 
-    // URL: /
-    //check for frontend files.
-    QDirIterator dirIt((std::string(this->codeBaseDirectory)+"/frontend/").c_str(), QDirIterator::NoIteratorFlags);
-    // || (paths[0] == "home" && paths.size() == 1)
-    if(message.relative_uri() ==  "/" )
-    {
-        returnFrontendFile(message);
-        return;
-    }
-    //dirIt.hasNext() can not be written in while statement
-    //causes errors for the last file in the directory.
-    while(true)
-    {
-        std::string s = "/" + dirIt.fileName().toStdString();
-        if(message.relative_uri().to_string() == s)
+        // URL: /
+        //check for frontend files.
+        QDirIterator dirIt((std::string(this->codeBaseDirectory)+"/frontend/").c_str(), QDirIterator::NoIteratorFlags);
+        // || (paths[0] == "home" && paths.size() == 1)
+        if(message.relative_uri() ==  "/" )
         {
             returnFrontendFile(message);
-            return ;
+            return;
         }
-        if(!dirIt.hasNext()) break;
-        dirIt.next();
-    }
-    //frontend check ends here
+        //dirIt.hasNext() can not be written in while statement
+        //causes errors for the last file in the directory.
+        while(true)
+        {
+            std::string s = "/" + dirIt.fileName().toStdString();
+            if(message.relative_uri().to_string() == s)
+            {
+                returnFrontendFile(message);
+                return ;
+            }
+            if(!dirIt.hasNext()) break;
+            dirIt.next();
+        }
+        //frontend check ends here
 
-    //check for specific urls
-    // URL: /request/museum-list/
-    if (paths[0] == "request")
-    {
-        if(paths[1] == "museum-list")
+        //check for specific urls
+        // URL: /request/museum-list/
+        if (paths.size() >= 2 && paths[0] == "request")
         {
-            returnMuseumList(message);
+            if(paths[1] == "museum-list" && paths.size() == 2)
+            {
+                returnMuseumList(message);
+            }
+            // URL: /request/museum/[id]
+            else if(paths[1] == "museum" && paths.size() == 3)
+            {
+                ucout << "museum\n";
+                std::string museumID = paths[2];
+                returnMuseumById(message,std::stoi(museumID));
+            }
+            // URL: /request/collection/[collectionID]
+            else if(paths[1] == "collection" && paths.size() == 3)
+            {
+                ucout<< "collection\n";
+                std::string collectionID = paths[2];
+                returnCollectionById(message, std::stoi(collectionID));
+            }
+            // URL: /request/artifact/[artifactID]
+            else if(paths[1] == "artifact" && paths.size() == 3)
+            {
+                ucout << "artifact\n";
+                std::string artifactID = paths[2];
+                returnArtifactById(message, std::stoi(artifactID));
+            }
+            // URL: /request/???
+            else {
+                ucout << "Wildcard caught in GET request URL \n";
+                returnWildCard(message);
+            }
         }
-        // URL: /request/museum/[id]
-        else if(paths[1] == "museum" && paths.size() == 3)
+        // URL: /???
+        else
         {
-            ucout << "museum\n";
-            std::string museumID = paths[2];
-            returnMuseumById(message,std::stoi(museumID));
-        }
-        // URL: /request/collection/[collectionID]
-        else if(paths[1] == "collection" && paths.size() == 3)
-        {
-            ucout<< "collection\n";
-            std::string collectionID = paths[2];
-            returnCollectionById(message, std::stoi(collectionID));
-        }
-        // URL: /request/artifact/[artifactID]
-        else if(paths[1] == "artifact" && paths.size() == 3)
-        {
-            ucout << "artifact\n";
-            std::string artifactID = paths[2];
-            returnArtifactById(message, std::stoi(artifactID));
-        }
-        // URL: /request/???
-        else {
-            ucout << "Wildcard caught in GET request URL \n";
+            ucout << "Wildcard caught in GET URL \n";
             returnWildCard(message);
         }
+    } catch(std::exception &e) {
+        ucout <<"Caught error in GET Handler"<< e.what() << "\n";
+        message.reply(status_codes::InternalError, Util::getFailureJsonStr("Caught error: " +  std::string(e.what())));
     }
-    // URL: /???
-    else
-    {
-        ucout << "Wildcard caught in GET URL \n";
-        returnWildCard(message);
-    }
+
     return;
 
 };
@@ -240,55 +246,59 @@ void Handler::returnArtifactById(http_request message, int artifactID) {
 
 void Handler::handle_post(http_request message)
 {
-    //ucout <<  message.to_string() << std::endl;
-    ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
-    auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
-    // URL: /request
-    if (paths.size() == 2  && paths[0] == "request")
-    {
-        // URL: /request/register
-        if (paths[1] == "register")
+    try {
+        //ucout <<  message.to_string() << std::endl;
+        ucout << "relative uri POST " << message.relative_uri().to_string() << "\n";
+        auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
+        // URL: /request
+        if (paths.size() == 2  && paths[0] == "request")
         {
-            addUser(message);
-            return;
+            // URL: /request/register
+            if (paths[1] == "register")
+            {
+                addUser(message);
+                return;
+            }
+            // URL: /request/login
+            else if (paths[1] == "login")
+            {
+                validateLogin(message);
+                return;
+            }
+            // URL: /request/add-museum
+            else if(paths[1] == "add-museum")
+            {
+                addMuseum(message);
+                return;
+            }
+            // URL: /request/add-collection
+            else if(paths[1] == "add-collection")
+            {
+                addCollection(message);
+                return;
+            }
+            // URL: /request/user-profile
+            else if (paths[1] == "user-profile")
+            {
+                getUserProfile(message);
+                return;
+            }
+            // URL: /request/add-artifact
+            else if (paths[1] == "add-artifact" && paths.size() == 2)
+            {
+                addArtifact(message);
+                return;
+            }
         }
-        // URL: /request/login
-        else if (paths[1] == "login")
-        {
-            validateLogin(message);
-            return;
-        }
-        // URL: /request/add-museum
-        else if(paths[1] == "add-museum")
-        {
-            addMuseum(message);
-            return;
-        }
-        // URL: /request/add-collection
-        else if(paths[1] == "add-collection")
-        {
-            addCollection(message);
-            return;
-        }
-        // URL: /request/user-profile
-        else if (paths[1] == "user-profile")
-        {
-            getUserProfile(message);
-            return;
-        }
-        // URL: /request/add-artifact
-        else if (paths[1] == "add-artifact" && paths.size() == 2)
-        {
-            addArtifact(message);
-            return;
-        }
+
+        message.extract_string(false).then([](utility::string_t s){
+            ucout << s << std::endl;
+        });
+        message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
+    } catch(std::exception &e) {
+        ucout <<"Caught error in GET Handler"<< e.what() << "\n";
+        message.reply(status_codes::InternalError, Util::getFailureJsonStr("Caught error: " +  std::string(e.what())));
     }
-
-    message.extract_string(false).then([](utility::string_t s){
-        ucout << s << std::endl;
-    });
-    message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
-
     return;
 
 };

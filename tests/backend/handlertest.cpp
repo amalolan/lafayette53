@@ -243,10 +243,21 @@ TEST_F(HandlerTest, returnMuseumList) {
    }
 }
 
+/**
+ * @brief TEST_F Tests HTTP GET request at /request/museum-list/[id]
+ */
 TEST_F(HandlerTest, returnMuseumById) {
+    int sleeptime = 200;
+    string url = "/request/museum/";  // /request/museum/[id]
+    Response r;
+    json expectation;
+    vector<Museum> collectionList;
+    {
+        InSequence s;
+
+    }
     EXPECT_CALL(this->model, getMuseumObject(testing::_));
     EXPECT_CALL(this->model, getCollectionListByMuseumID(testing::_));
-    EXPECT_CALL(this->model, getArtifactsByMuseum(testing::_));
 }
 
 //TEST_F(HandlerTest, returnCollectionById) {
