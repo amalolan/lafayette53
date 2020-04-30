@@ -558,7 +558,7 @@ void ModelClass::updateEditInDB(Edit<Museum> edit){
     query.finish();
 }
 
-std::vector<Edit<Museum>> ModelClass::getMuseumActions(int userID){
+std::vector<Edit<Museum>> ModelClass::getMuseumEdits(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
     User user = this->getUserObject(userID);
     query.exec
@@ -599,7 +599,7 @@ std::vector<Edit<Museum>> ModelClass::getMuseumActions(int userID){
     return output;
 }
 
-std::vector<Edit<Collection>> ModelClass::getCollectionActions(int userID){
+std::vector<Edit<Collection>> ModelClass::getCollectionEdits(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
     User user = this->getUserObject(userID);
     query.exec
@@ -641,7 +641,7 @@ std::vector<Edit<Collection>> ModelClass::getCollectionActions(int userID){
     return output;
 }
 
-std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int userID){
+std::vector<Edit<Artifact>> ModelClass::getArtifactEdits(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
     User user = this->getUserObject(userID);
     query.exec
@@ -696,7 +696,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int userID){
     return output;
 }
 
-std::vector<Edit<Museum>> ModelClass::getMuseumChanges(int museumID){
+std::vector<Edit<Museum>> ModelClass::getMuseumActions(int museumID){
     this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
     query.exec
@@ -739,7 +739,7 @@ std::vector<Edit<Museum>> ModelClass::getMuseumChanges(int museumID){
     return output;
 }
 
-std::vector<Edit<Collection>> ModelClass::getCollectionChanges(int museumID){
+std::vector<Edit<Collection>> ModelClass::getCollectionActions(int museumID){
     this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
     query.exec
@@ -782,7 +782,7 @@ std::vector<Edit<Collection>> ModelClass::getCollectionChanges(int museumID){
     return output;
 }
 
-std::vector<Edit<Artifact>> ModelClass::getArtifactChanges(int museumID){
+std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
     Museum museum = this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
     query.exec

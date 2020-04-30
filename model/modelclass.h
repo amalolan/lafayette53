@@ -34,13 +34,13 @@ public:
     virtual void updateEditInDB(Edit<Museum>);
 
 
-    virtual std::vector<Edit<Museum>> getMuseumActions(int userID);
-    virtual std::vector<Edit<Collection>> getCollectionActions(int userID);
-    virtual std::vector<Edit<Artifact>> getArtifactActions(int userID);
+    virtual std::vector<Edit<Museum>> getMuseumEdits(int userID);
+    virtual std::vector<Edit<Collection>> getCollectionEdits(int userID);
+    virtual std::vector<Edit<Artifact>> getArtifactEdits(int userID);
 
-    virtual std::vector<Edit<Museum>> getMuseumChanges(int museumID);
-    virtual std::vector<Edit<Collection>> getCollectionChanges(int museumID);
-    virtual std::vector<Edit<Artifact>> getArtifactChanges(int museumID);
+    virtual std::vector<Edit<Museum>> getMuseumActions(int museumID);
+    virtual std::vector<Edit<Collection>> getCollectionActions(int museumID);
+    virtual std::vector<Edit<Artifact>> getArtifactActions(int museumID);
 
     virtual Artifact getArtifact(int artifactID);
     virtual void saveArtifactToDB(Artifact &);
