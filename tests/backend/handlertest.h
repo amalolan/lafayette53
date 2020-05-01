@@ -69,6 +69,6 @@ protected:
 
     pplx::task<http_response> make_task_request(method mtd, std::string uri, json const & jvalue);
     Response requestTask(method mtd, std::string uri, json const & jvalue = json());
-
+    void loginTest(string url);
 };
 #endif // HANDLERTEST_H

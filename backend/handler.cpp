@@ -7,7 +7,7 @@ void Handler::handle_error(http_request message, pplx::task<void>& t, std::strin
     }
     catch(LoginException &l) {
         ucout << l.what() << "\n";
-        message.reply(status_codes::Unauthorized, error + "\n" +  Util::getFailureJsonStr(l.what()));
+        message.reply(status_codes::Unauthorized, Util::getFailureJsonStr(l.what()));
     }
     catch(ModelException &m) {
         ucout << m.what() << "\n";
@@ -201,7 +201,6 @@ void Handler::returnCollectionByID(http_request message, int collectionID) {
         {"id", "name", "description", "introduction", "image"});
 
         json museumJSON = Util::getObjectWithKeys<Museum>(col.getMuseum(),{"id","name"});
-        //TODO: outputData["artifactList"] =
         json output = {
             {"collection", collectionJSON},
             {"museum", museumJSON}
@@ -228,7 +227,7 @@ void Handler::returnArtifactByID(http_request message, int artifactID) {
 
         json museumJSON = Util::getObjectWithKeys<Museum>(artifact.getMuseum(), {"id"});
         json output = {
-            {"museum", {{"id",artifact.getMuseum().getMuseumID()}}},
+            {"museum", museumJSON},
             {"artifact", artifactJSON},
             {"collectionList", collectionListJSON}
         };
@@ -308,7 +307,7 @@ void Handler::handle_post(http_request message)
 
 void Handler::validateLogin(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-        //ucout  << s<<  std::endl;
+        ucout  << s<<  std::endl;
         Util::checkLogin(json::parse(s),  this->model);
         ucout << "Login successful\n";
         return message.reply(status_codes::OK, Util::getSuccessJsonStr("Login successful."));
@@ -445,10 +444,6 @@ void Handler::editArtifact(http_request message){
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edis Successfully added to "
                                                                            "the review list."));
         }
-
-        return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Edit unsuccesful "
-                                                                                   "try again."));
-
     }).then([=](pplx::task<void> t){
         this->handle_error(message,t,"Edit unsuccessful.");
     });

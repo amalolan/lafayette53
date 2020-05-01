@@ -272,14 +272,14 @@ TEST_F(HandlerTest, returnMuseumList) {
         r = this->requestTask(methods::GET,  url);
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_EQ(json::parse(r.content),  expectation);
-   }
+    }
 }
 
 /**
- * @brief TEST_F Tests HTTP GET request at /request/museum-list/[id]
+ * @brief TEST_F Tests HTTP GET request at /request/museum/[id]
  * No ID is tested in handleGET() tests. Validity of collection JSON objects are tested in model tests.
  * 4 Test Cases:
- * 1. Invalid IDs (string and
+ * 1. Invalid IDs (string and greater than INT_MAX)
  * 2. Valid ID, Not found in DB
  * 3. Valid ID, Found, Valid Museum Object, No Collections
  * 4. Valid ID, Found, Valid Museum Object, Collections present.
@@ -308,7 +308,8 @@ TEST_F(HandlerTest, returnMuseumByID) {
         /**< Case 2 */
         id = to_string(INT_MAX);
         EXPECT_CALL(this->model, getMuseumObject(stoi(id)))
-                .WillOnce(testing::Throw(ModelException("Can't find Museum")));
+                .WillOnce(testing::Throw(ModelException("Can't find Museum")))
+                .RetiresOnSaturation();
 
         usleep(sleeptime);
         r = this->requestTask(methods::GET,  url + id);
@@ -316,14 +317,14 @@ TEST_F(HandlerTest, returnMuseumByID) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
         Museum museum("name", "description", "introduction",  "image",
-                 User("username", "email", "password", 1), stoi(id));
+                      User("username", "email", "password", 1), stoi(id));
 
 
         /**< Case 3 */
         vector<Collection> collectionList;
         expectation =  {
-                {"museum", museum.toJSON()},
-                {"collectionList", json::array()}
+            {"museum", museum.toJSON()},
+            {"collectionList", json::array()}
         };
         EXPECT_CALL(this->model, getMuseumObject(stoi(id)))
                 .WillOnce(Return(museum))
@@ -361,32 +362,292 @@ TEST_F(HandlerTest, returnMuseumByID) {
     }
 }
 
-//TEST_F(HandlerTest, returnCollectionByID) {
-//    EXPECT_CALL(this->model, getCollectionObject(testing::_));
-//    EXPECT_CALL(this->model, getArtifactsByCollection(testing::_));
-//}
+/**
+ * @brief TEST_F Tests HTTP GET request at /request/collection/[id]
+ * No ID is tested in handleGET() tests. Validity of collection JSON objects are tested in model tests.
+ * 4 Test Cases:
+ * 1. Invalid IDs (string and greater than INT_MAX)
+ * 2. Valid ID, Not found in DB
+ * 3. Valid ID, Found, Valid Collection Object, No Artifacts
+ * 4. Valid ID, Found, Valid Collections Object, Artifacts present.
+ */
+TEST_F(HandlerTest, returnCollectionByID) {
+    int sleeptime = 500;
+    string url = "/request/collection/";  // /request/collection/[id]
+    string id;
+    Response r;
+    json expectation;
 
-//TEST_F(HandlerTest, returnArtifactByID) {
-//    EXPECT_CALL(this->model, getArtifact(testing::_));
-//    EXPECT_CALL(this->model, getCollectionsByArtifact(testing::_));
-//}
+    /**< Case 1 */
+    id = "AB1";
+    usleep(sleeptime);
+    r = this->requestTask(methods::GET,  url + id);
+    ASSERT_EQ(r.status, status_codes::InternalError);
+    ASSERT_FALSE(json::parse(r.content)["success"]);
+
+    id = "91111111111111111111111111111111111111111111111";
+    usleep(sleeptime);
+    r = this->requestTask(methods::GET,  url + id);
+    ASSERT_EQ(r.status, status_codes::InternalError);
+    ASSERT_FALSE(json::parse(r.content)["success"]);
+    {
+        InSequence s;
+        /**< Case 2 */
+        id = to_string(INT_MAX);
+        EXPECT_CALL(this->model, getCollectionObject(stoi(id)))
+                .WillOnce(testing::Throw(ModelException("Can't find Collection")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET,  url + id);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        Museum museum("name", "description", "introduction",  "image",
+                      User("username", "email", "password", 1), 2);
+        Collection collection("collectionName", "collectionDescription",
+                              "collectionIntroduction", "collectionImage",
+                              museum, stoi(id));
+
+        /**< Case 3 */
+        vector<Artifact> artifactList;
+        expectation =  {
+            {"collection", Util::getObjectWithKeys<Collection>(collection,
+             {"id", "name", "description", "introduction", "image"})},
+            {"artifactList", json::array()},
+            {"museum", Util::getObjectWithKeys<Museum>(collection.getMuseum(),{"id","name"})}
+        };
+        EXPECT_CALL(this->model, getCollectionObject(stoi(id)))
+                .WillOnce(Return(collection))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getArtifactsByCollection(stoi(id)))
+                .WillOnce(Return(artifactList))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET, url + id);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
 
 
-//TEST_F(HandlerTest, validateLogin) {
-//    EXPECT_CALL(this->model, getUserObject(testing::_));
-//}
+        /**< Case 4 */
+        artifactList.push_back(Artifact("artifactName", "artifactDescription",
+                                        "artifactIntroduction", "artifactImage",
+                                        museum, 3));
+        artifactList.push_back(Artifact("artifactName", "artifactDescription",
+                                        "artifactIntroduction", "artifactImage",
+                                        museum, 2));
+        expectation["artifactList"]  = Util::arrayFromVector<Artifact>(artifactList,
+        {"id",  "name", "description", "introduction", "image"});
+        EXPECT_CALL(this->model, getCollectionObject(stoi(id)))
+                .WillOnce(Return(collection))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getArtifactsByCollection(stoi(id)))
+                .WillOnce(Return(artifactList))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET, url + id);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
+    }
+}
+
+/**
+ * @brief TEST_F Tests HTTP GET request at /request/artifact/[id]
+ * No ID is tested in handleGET() tests. Validity of collection JSON objects are tested in model tests.
+ * 4 Test Cases:
+ * 1. Invalid IDs (string and greater than INT_MAX)
+ * 2. Valid ID, Not found in DB
+ * 3. Valid ID, Found, Valid Artifact Object, Single Collection Association
+ * 4. Valid ID, Found, Valid Artifact Object, Multiple Collection Associations.
+ */
+TEST_F(HandlerTest, returnArtifactByID) {
+    int sleeptime = 200;
+    string url = "/request/artifact/";  // /request/artifact/[id]
+    string id;
+    Response r;
+    json expectation;
+
+    /**< Case 1 */
+    id = "AB1";
+    usleep(sleeptime);
+    r = this->requestTask(methods::GET,  url + id);
+    ASSERT_EQ(r.status, status_codes::InternalError);
+    ASSERT_FALSE(json::parse(r.content)["success"]);
+
+    id = "91111111111111111111111111111111111111111111111";
+    usleep(sleeptime);
+    r = this->requestTask(methods::GET,  url + id);
+    ASSERT_EQ(r.status, status_codes::InternalError);
+    ASSERT_FALSE(json::parse(r.content)["success"]);
+    {
+        InSequence s;
+        /**< Case 2 */
+        id = to_string(INT_MAX);
+        EXPECT_CALL(this->model, getArtifact(stoi(id)))
+                .WillOnce(testing::Throw(ModelException("Can't find Artifact")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET,  url + id);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        Museum museum("name", "description", "introduction",  "image",
+                      User("username", "email", "password", 1), 2);
+        Artifact artifact("artifactName", "artifactDescription",
+                          "artifactIntroduction", "artifactImage",
+                          museum, stoi(id));
+
+        /**< Case 3 */
+        vector<Collection> collectionList;
+        expectation =  {
+            {"artifact", Util::getObjectWithKeys<Artifact>(artifact,
+             {"id", "name", "description", "introduction", "image"})},
+            {"collectionList", json::array()},
+            {"museum", Util::getObjectWithKeys<Museum>(artifact.getMuseum(),{"id"})}
+        };
+        collectionList.push_back(Collection("1collectionName", "1collectionDescription",
+                                            "1collectionIntroduction", "1collectionImage",
+                                            museum, 12211));
+        expectation["collectionList"]  = Util::arrayFromVector<Collection>(collectionList,
+        {"id",  "name"});
+        EXPECT_CALL(this->model, getArtifact(stoi(id)))
+                .WillOnce(Return(artifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getCollectionsByArtifact(stoi(id)))
+                .WillOnce(Return(collectionList))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET, url + id);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
+
+
+        /**< Case 4 */
+        collectionList.push_back(Collection("2collectionName", "2collectionDescription",
+                                   "2collectionIntroduction", "2collectionImage",
+                                    museum, 321));
+        collectionList.push_back(Collection("3collectionName", "3collectionDescription",
+                                            "3collectionIntroduction", "3collectionImage",
+                                            museum, 3211));
+
+        expectation["collectionList"]  = Util::arrayFromVector<Collection>(collectionList,
+        {"id",  "name"});
+        EXPECT_CALL(this->model, getArtifact(stoi(id)))
+                .WillOnce(Return(artifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getCollectionsByArtifact(stoi(id)))
+                .WillOnce(Return(collectionList))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET, url + id);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
+    }
+}
+
+/**
+ * @brief HandlerTest::loginTest Helper test function to ensure log in actually works.
+ * Called by many POST request test functions.
+ * Validity of collection JSON objects are tested in model tests.
+ * Validity of Username, Password asserted on front-end.
+ * 4 Test Cases:
+ * 1. Invalid POST data (no username & password).
+ * 2. Valid data, Username not found in DB.
+ * 3. Valid data, Username Found, Password mismatch.
+ * 4. Valid data, Username Found, Password match.
+ * @param url The POST url to perform the login test on.
+ */
+void HandlerTest::loginTest(string url) {
+    int sleeptime = 200;
+    string username;
+    Response r;
+    json data;
+    json expectation;
+
+    {
+        InSequence s;
+        /**< Case 1 */
+        data = {
+            {"username",  "anfann12"   },
+            {"passwor12d", "password~*?"}
+        };
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 2 */
+        data = {
+            {"username",  "anfann12"},
+            {"password", "password~*?"}
+        };
+        User user(data["username"],"email@example.com", "realpassword", 12);
+        /**< Case 1 */
+        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                .WillOnce(testing::Throw(ModelException("Can't find User")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 3 */
+        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                .WillOnce(Return(user))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        usleep(sleeptime);
+        ASSERT_EQ(r.status, status_codes::Unauthorized);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 4 */
+        data["password"] = "realpassword";
+        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                .Times(testing::AtLeast(1))
+                .WillOnce(Return(user))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+    }
+}
+
+
+/**
+ * @brief TEST_F Tests HTTP POST request at /request/login
+ * @see HandlerTest::loginTest()
+ * Calls the login helper function loginTest()
+ */
+TEST_F(HandlerTest, validateLogin) {
+    this->loginTest("/request/login");
+}
 
 //TEST_F(HandlerTest, addUser) {
 //    EXPECT_CALL(this->model, saveUserToDB(testing::_));
 //}
 
 
-
-//TEST_F(HandlerTest, addMuseum) {
-//    EXPECT_CALL(this->model, getUserObject(testing::_));
-//    EXPECT_CALL(this->model, getUserObject(testing::_));
-//    EXPECT_CALL(this->model, saveMuseumToDB(testing::_));
-//}
+/**
+ * @brief TEST_F Tests HTTP POST request at /request/add-museum/
+ * @see HandlerTest::loginTest()
+ * Needs login. Tested by helper function loginTest()
+ *
+ */
+TEST_F(HandlerTest, addMuseum) {
+    EXPECT_CALL(this->model, getUserObject(testing::_));
+    EXPECT_CALL(this->model, getUserObject(testing::_));
+    EXPECT_CALL(this->model, saveMuseumToDB(testing::_));
+}
 
 
 //TEST_F(HandlerTest, addCollection) {
