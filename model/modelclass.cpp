@@ -674,14 +674,11 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int userID){
     for (std::vector<std::string> row : queryList)
     {
         Artifact artifact("","","","", this->getMuseumObject(std::stoi(row.at(9))));
-        if (std::stoi(row.at(6)) != Edit<Artifact>::add)
-        {
-            artifact = this->getArtifact(std::stoi(row.at(0)));
-        }
         artifact.setName(row.at(1));
         artifact.setDescription(row.at(2));
         artifact.setIntro(row.at(4));
         artifact.setPhoto(row.at(3));
+        artifact.setID(std::stoi(row.at(0)));
         std::vector<Collection> list;
         std::stringstream ss(row.at(8));
         std::string token;

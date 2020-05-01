@@ -11,6 +11,11 @@ using json = nlohmann::json;
 class User
 {
 public:
+    User()
+    {
+        this->userID = -1;
+    }
+
     User(std::string username, std::string email, std::string password, int id)
     {
         this->userID = id;
@@ -27,27 +32,12 @@ public:
         this->password = password;
     }
 
-    User(const User &user)
+    User(const User &user) = default;
+    User& operator = (const User&) = default;
+    User& operator=(User&&) = default;
+    User(User&&) = default;
+    virtual ~User()
     {
-        this->userID = user.getUserID();
-        this->username = user.getName();
-        this->email = user.getEmail();
-        this->password = user.getPassword();
-
-    }
-
-    User& operator = (const User &user)
-    {
-        this->userID = user.getUserID();
-        this->username = user.getName();
-        this->email = user.getEmail();
-        this->password = user.getPassword();
-        return *this;
-    }
-
-    ~User()
-    {
-
     }
 
     friend std::ostream& operator<<(std::ostream &strm, const User &u) {
@@ -117,6 +107,14 @@ public:
     bool empty(){
         return username == "" && email == "" && password == "";
     }
+
+    std::string toString() const
+    {
+        return "Public(name : "+ this->username + ", "
+                       "email: " + this->email + ", "
+                       "id: " + std::to_string(this->userID) + ")";
+    }
+
 private:
     int userID;
     std::string username;

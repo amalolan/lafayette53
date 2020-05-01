@@ -206,7 +206,8 @@ TEST_F(DevTests, TestEditInput){
     Edit<Artifact> edit(artifact, Edit<Artifact>::edit, user, this->model->getCollectionsByArtifact(artifact.getID()));
     ASSERT_NO_THROW(this->model->saveEditToDB(edit));
     ASSERT_NO_THROW(this->model->getArtifactActions(user.getUserID()));
-//    EXPECT_EQ(edit.getObject(), this->model->getArtifactActions(user.getUserID()).front().getObject());
+    Artifact returned(this->model->getArtifactActions(user.getUserID()).front().getObject());
+    std::cout << returned.toString() << " : " << artifact.toString() << std::endl;
 //    EXPECT_EQ(edit.getKind(), this->model->getArtifactActions(user.getUserID()).front().getKind());
 //    EXPECT_EQ(edit.getStatus(), this->model->getArtifactActions(user.getUserID()).front().getStatus());
     this->model->removeUserFromDB(user);

@@ -6,6 +6,11 @@
 class Collection
 {
 public:
+    Collection(Museum museum = Museum()):museum(museum)
+    {
+        this->id = -1;
+    }
+
     Collection(std::string name, std::string description, Museum museum) : museum(museum)
     {
         this->name = name;
@@ -39,28 +44,12 @@ public:
         this->intro = intro;
     }
 
-    Collection(const Collection &collection):museum(collection.getMuseum())
+    Collection(const Collection &) = default;
+    Collection& operator = (const Collection&) = default;
+    Collection& operator=(Collection&&) = default;
+    Collection(Collection&&) = default;
+    virtual ~Collection()
     {
-        this->name = collection.getName();
-        this->desc = collection.getDescription();
-        this->id = collection.getID();
-        this->intro = collection.getIntro();
-        this->photo = collection.getPhoto();
-    }
-
-    Collection& operator = (const Collection &collection)
-    {
-        this->name = collection.getName();
-        this->desc = collection.getDescription();
-        this->id = collection.getID();
-        this->museum = collection.getMuseum();
-        this->intro = collection.getIntro();
-        this->photo = collection.getPhoto();
-        return *this;
-    }
-
-    ~Collection(){
-
     }
 
     std::string getName() const
@@ -144,6 +133,16 @@ public:
     bool empty() const
     {
         return name == "";
+    }
+
+    std::string toString() const
+    {
+        return "Collection(name : "+ this->name + ", "
+                        "id: " + std::to_string(this->id) + ", "
+                        "introduction: " + this->intro + ", "
+                        "description: " + this->desc + ", "
+                        "museum: " + this->museum.toString() + ", "
+                        "photoURL: " + this->photo + ")";
     }
 
 private:

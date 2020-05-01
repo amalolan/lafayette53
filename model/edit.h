@@ -45,21 +45,17 @@ public:
         this->id = id;
     }
 
-    ~Edit(){
-
-    }
-
-    Edit& operator = (const Edit &edit)
+    Edit(const Edit &) = default;
+    Edit& operator = (const Edit&) = default;
+    Edit& operator=(Edit&&) = default;
+    Edit(Edit&&) = default;
+    virtual ~Edit()
     {
-        this->object = edit.getObject();
-        this->user = edit.getEditor();
-        this->kind = edit.getKind();
-        this->status = edit.getStatus();
-        return *this;
     }
 
     T getObject() const
     {
+        std::cout << "Works In getObject." <<std::endl;
         return object;
     }
 
