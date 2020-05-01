@@ -22,6 +22,7 @@ using json = nlohmann::json;
 
 class LoginException : public std::exception
 {
+
 public:
     virtual const char * what () const noexcept override
     {
@@ -32,6 +33,12 @@ public:
 
 class Util
 {
+private:
+    template<typename T>
+    static T* ptr(T & obj) { return &obj; } //turn reference into pointer!
+
+    template<typename T>
+    static T* ptr(T * obj) { return obj; } //obj is already pointer, return it!
 public:
     Util();
 
@@ -64,10 +71,10 @@ public:
 
     template<typename T>
     static json getObjectWithKeys(T t, std::vector<std::string> keys) {
-        json tJSON = t.toJSON();
+        json tJSON = Util::ptr(t)->toJSON();
         //std::cout<<"Museum object "<<tJSON.dump(3)<<std::endl;
         Util::validateJSON(tJSON, keys);
-        json object;
+        json object = json::object();
         for (std::string key : keys) {
             object[key] = tJSON[key];
         }

@@ -2,11 +2,21 @@
 #define UTILTEST_H
 #include "../../backend/util.h"
 #include "../../model/modelclass.h"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <../../nlohmann/json.hpp>
 
 using namespace std;
 using json = nlohmann::json;
+using ::testing::InSequence;
+using ::testing::Return;
+using ::testing::Throw;
+
+class MockObject {
+public:
+    MockObject(){}
+    MOCK_METHOD0(toJSON, json());
+};
 
 class UtilTest : public ::testing::Test {
 protected:
@@ -31,6 +41,7 @@ protected:
     }
 
 };
+
 
 
 #endif // UTILTEST_H
