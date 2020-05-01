@@ -386,7 +386,8 @@ void Handler::addCollection(web::http::http_request message) {
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Collection added successfully."));
         } else{
             ucout << "not the owner\n";
-            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You are not the owner of the museum!"));
+            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You are not "
+                                                                                       "the owner of the museum!"));
 
             //TODO not owner add to request thing.
         }
@@ -485,7 +486,8 @@ void Handler::addArtifact(http_request message){
         } else {
             //TODO add to edit list.
             ucout << "not authorized\n";
-            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You re not authorized to add artifact."));
+            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You re not "
+                                                                                       "authorized to add artifact."));
         }
 
     }).then([=](pplx::task<void> t){
@@ -503,7 +505,9 @@ void Handler::addUser(http_request message){
         ucout << "success add user\n";
         return message.reply(status_codes::OK, Util::getSuccessJsonStr("User registered."));
     }).then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "User could not be registered. There might already exist an account with the same username/email.");
+        this->handle_error(message, t, "User could not be registered. "
+                                       "There might already exist an "
+                                       "account with the same username/email.");
     });
     return;
 };
@@ -523,9 +527,8 @@ void Handler::getUserProfile(http_request message){
         json userJSON = Util::getObjectWithKeys<User>(u, {"username", "email", "id"});
 
         //editList
-        ucout << userJSON["id"] << '\n';
         std::vector<Edit<Artifact>> eList = this->model->getArtifactEdits((int)userJSON["id"]);
-        ucout << eList.size() << '\n';
+        //ucout << eList.size() << '\n';
         json editList = Util::arrayFromVector<Edit<Artifact>>(eList,{"id", "type", "category", "artifact",
                                                                      "collection", "approvalStatus"});
         //museums
@@ -533,11 +536,28 @@ void Handler::getUserProfile(http_request message){
         json museumsJSON = Util::arrayFromVector(museums,{"id", "name", "description",
                                                           "introduction", "userID", "image"});
         //TODO output["actionsList"]
+        std::vector<Edit<Artifact>> actionsVector;
+        for(Museum m : museums)
+        {
+            ucout << m.getMuseumID() << ' ';
+            std::vector<Edit<Artifact>>  aList = this->model->getArtifactActions(m.getMuseumID());
+            ucout << aList.size() << '\n';
+            for (auto a : aList)
+            {
+                actionsVector.push_back(a);
+                ucout << a.toJSON().dump(3) << '\n';
+            }
+        }
 
+        json actionsList = Util::arrayFromVector<Edit<Artifact>>(actionsVector, {"id", "type", "category",
+                                                                                "collection", "artifact"});
         json output;
+
         output["user"] = userJSON;
         output["editsList"] = editList;
         output["museumList"] = museumsJSON;
+        output["actionsList"] = actionsList;
+
         ucout << output.dump(3);
         return message.reply(status_codes::OK, output.dump(3));
 

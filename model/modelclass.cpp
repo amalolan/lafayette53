@@ -669,7 +669,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactEdits(int userID){
         rowList.push_back(query.value(7).toString().toStdString());
         rowList.push_back(query.value(8).toString().toStdString());
         rowList.push_back(query.value(9).toString().toStdString());
-
+        queryList.push_back(rowList);
     }while (query.next());
 
     for (std::vector<std::string> row : queryList)
@@ -809,7 +809,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
         rowList.push_back(query.value(7).toString().toStdString());
         rowList.push_back(query.value(8).toString().toStdString());
         rowList.push_back(query.value(9).toString().toStdString());
-
+        queryList.push_back(rowList);
     }while (query.next());
 
     for (std::vector<std::string> row : queryList)
