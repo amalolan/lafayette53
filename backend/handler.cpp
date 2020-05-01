@@ -597,7 +597,7 @@ void Handler::getUserProfile(http_request message){
 void Handler::handle_put(http_request message)
 {
     ucout << "PUT " << message.relative_uri().to_string() << "\n";
-    message.reply(status_codes::NotFound,Util::getFailureJsonStr("No PUT methods implemented."));
+    message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
     return;
 };
 
@@ -608,12 +608,46 @@ void Handler::handle_put(http_request message)
 void Handler::handle_delete(http_request message)
 {
     ucout <<  message.to_string() << std::endl;
-    message.reply(status_codes::NotFound, Util::getFailureJsonStr("No DELETE methods implemented"));
+    auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
+    if(paths.size() == 3 && paths[0] == "request")
+    {
+        //URL: requst/museum/[id]
+        if(paths[1] == "museum")
+        {
+            deleteMuseum(paths[1],stoi(paths[2]));
+            return;
+        }
+    }
+    message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
     return;
 };
 
-//
-// Helpers that use <T>
-//
+void Handler::deleteMuseum(http_request message, int museumID)
+{
+    message.extract_string(false).then([=](utility::string_t s){
+        json data =json::parse(s);
+        Util::validateJSON(data,{"username", "password"});
+        User editor = Util::checkLogin(data,this->model);
+        Museum museum = this->model->getMuseumObject(museumID);
 
+        bool isCurator = (editor.getUserID() == museum.getUser().getUserID());
+
+        if ( isCurator )
+        {
+            this->model->removeMuseumFromDB(museum);
+            ucout << "museum deleted.\n";
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Museum successfuly deleted."));
+        } else
+        {
+            ucout << "not the curator\n";
+            return message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("You are not autorized"
+                                                                                     " to remove this museum."));
+        }
+
+
+
+    }).then([=](pplx::task<void> t){
+        this->handle_error(message, t, "Delete unsuccessful.");
+    });
+}
 
