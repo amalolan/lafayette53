@@ -93,9 +93,9 @@ private:
     void returnFrontendFile(http_request);
     void returnWildCard(http_request);
     void returnMuseumList(http_request);
-    void returnMuseumById(http_request,int);
-    void returnCollectionById(http_request, int);
-    void returnArtifactById(http_request, int);
+    void returnMuseumByID(http_request,int);
+    void returnCollectionByID(http_request, int);
+    void returnArtifactByID(http_request, int);
 
     void validateLogin(http_request);
     void getUserProfile(http_request);
