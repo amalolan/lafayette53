@@ -293,6 +293,7 @@ void Handler::handle_post(http_request message)
             editArtifact(message);
             return;
         }
+        // URL: /request/review-edit
     }
 
     message.extract_string(false).then([](utility::string_t s){
@@ -484,10 +485,18 @@ void Handler::addArtifact(http_request message){
             delete artifact;
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact saved to database."));
         } else {
-            //TODO add to edit list.
-            ucout << "not authorized\n";
-            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You re not "
-                                                                                       "authorized to add artifact."));
+            Artifact a(data["artifact"]["name"], data["artifact"]["description"],
+                    data["artifact"]["introduction"], data["artifact"]["image"], m);
+            std::vector<Collection> collections;
+            for(auto item : collectionList.items())
+            {
+                Collection col("", "", "", "", m, item.value());
+                collections.push_back(col);
+            }
+            Edit<Artifact> edit(a,Edit<Artifact>::add, u, collections);
+            this->model->saveEditToDB(edit);
+            ucout << "Edit saved to database.\n";
+            return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Edit added to review list."));
         }
 
     }).then([=](pplx::task<void> t){
@@ -519,7 +528,6 @@ void Handler::getUserProfile(http_request message){
         Util::validateJSON(data, {"username", "password"});
         Util::checkLogin(data,  this->model);
         ucout << "Authorized.\n";
-
         ucout << data.dump(3) << '\n';
 
         User u = this->model->getUserObject(std::string(data["username"]));
@@ -527,16 +535,29 @@ void Handler::getUserProfile(http_request message){
         json userJSON = Util::getObjectWithKeys<User>(u, {"username", "email", "id"});
 
         //editList
+        json editList;
         std::vector<Edit<Artifact>> eList = this->model->getArtifactEdits((int)userJSON["id"]);
-        //ucout << eList.size() << '\n';
-        json editList = Util::arrayFromVector<Edit<Artifact>>(eList,{"id", "type", "category", "artifact",
-                                                                     "collection", "approvalStatus"});
+
+        for(auto e : eList)
+        {
+            json eJSON = Util::getObjectWithKeys<Edit<Artifact>>(e,{"id", "type", "category",
+                                                                    "collection", "approvalStatus"});
+            json artifact;
+            artifact["artifact"] =  Util::getObjectWithKeys<Artifact>(e.getObject(),
+            {"id", "name", "description", "introduction", "image"});
+            artifact["museum"]["id"] = e.getObject().getMuseum().getMuseumID();
+            eJSON["artifact"] = artifact;
+            editList.push_back(eJSON);
+        }
+
         //museums
         std::vector<Museum> museums = this->model->getMuseumByCurator(userJSON["id"]);
         json museumsJSON = Util::arrayFromVector(museums,{"id", "name", "description",
                                                           "introduction", "userID", "image"});
         //TODO output["actionsList"]
         std::vector<Edit<Artifact>> actionsVector;
+        json actionsList = json::array();
+
         for(Museum m : museums)
         {
             ucout << m.getMuseumID() << ' ';
@@ -544,21 +565,23 @@ void Handler::getUserProfile(http_request message){
             ucout << aList.size() << '\n';
             for (auto a : aList)
             {
-                actionsVector.push_back(a);
-                ucout << a.toJSON().dump(3) << '\n';
+                json aJSON = Util::getObjectWithKeys<Edit<Artifact>>(a,{"id", "type", "category",
+                                                                        "collection"});
+                json artifact;
+                artifact["artifact"] =  Util::getObjectWithKeys<Artifact>(a.getObject(),
+                {"id", "name", "description", "introduction", "image"});
+                artifact["museum"]["id"] = a.getObject().getMuseum().getMuseumID();
+                aJSON["artifact"] = artifact;
+                actionsList.push_back(aJSON);
             }
         }
 
-        json actionsList = Util::arrayFromVector<Edit<Artifact>>(actionsVector, {"id", "type", "category",
-                                                                                "collection", "artifact"});
         json output;
-
         output["user"] = userJSON;
         output["editsList"] = editList;
         output["museumList"] = museumsJSON;
         output["actionsList"] = actionsList;
 
-        ucout << output.dump(3);
         return message.reply(status_codes::OK, output.dump(3));
 
     }).then([=] (pplx::task<void> t) {
@@ -574,11 +597,6 @@ void Handler::getUserProfile(http_request message){
 void Handler::handle_put(http_request message)
 {
     ucout << "PUT " << message.relative_uri().to_string() << "\n";
-    //TODO removed after frontend sends POST request
-    if (message.relative_uri().to_string() == "/request/user-profile") {
-        getUserProfile(message);
-        return;
-    }
     message.reply(status_codes::NotFound,Util::getFailureJsonStr("No PUT methods implemented."));
     return;
 };
