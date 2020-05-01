@@ -293,6 +293,12 @@ void Handler::handle_post(http_request message)
             editArtifact(message);
             return;
         }
+        // URL: /requst/review-edit
+        else if(paths[1] == "review-edi" && paths.size() == 2)
+        {
+            reviewEdit(message);
+            return;
+        }
         //delete requests.
     } else if ( paths.size() == 3 && paths[0] == "request" )
     {
@@ -597,7 +603,19 @@ void Handler::getUserProfile(http_request message){
     });
     return;
 }
-
+//FIXME
+void Handler::reviewEdit(http_request message)
+{
+    message.extract_string(false).then([=](utility::string_t s){
+        json data = json::parse(s);
+        Util::validateJSON(data, {"user", "editID", "action"});
+        Util::validateJSON(data["user"], {"username", "password"});
+        User u = Util::checkLogin(data["user"], this->model);
+        //retrieve edit.
+    }).then([=](pplx::task<void> t){
+        handle_error(message, t, "review unsuccesful");
+    });
+}
 void Handler::deleteMuseum(http_request message, int museumID)
 {
     message.extract_string(false).then([=](utility::string_t s){

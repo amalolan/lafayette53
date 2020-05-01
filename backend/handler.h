@@ -106,10 +106,12 @@ private:
     void addCollection(http_request);
     void addArtifact(http_request);
     void editArtifact(http_request);
+    void reviewEdit(http_request);
+    void deleteMuseum(http_request,int);
 
     void handle_put(http_request);
     void handle_delete(http_request);
-    void deleteMuseum(http_request,int);
+
     void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
 };
 
