@@ -293,7 +293,21 @@ void Handler::handle_post(http_request message)
             editArtifact(message);
             return;
         }
-        // URL: /request/review-edit
+        // URL: /requst/review-edit
+        else if(paths[1] == "review-edi" && paths.size() == 2)
+        {
+            reviewEdit(message);
+            return;
+        }
+        //delete requests.
+    } else if ( paths.size() == 3 && paths[0] == "request" )
+    {
+        //URL: request/delete-museum/[id]
+        if ( paths[1] == "delete-museum" )
+        {
+            deleteMuseum(message, std::stoi(paths[2]));
+            return;
+        }
     }
 
     message.extract_string(false).then([](utility::string_t s){
@@ -589,42 +603,23 @@ void Handler::getUserProfile(http_request message){
     });
     return;
 }
-
-//
-// A PUT request
-//
-
-void Handler::handle_put(http_request message)
+//FIXME
+void Handler::reviewEdit(http_request message)
 {
-    ucout << "PUT " << message.relative_uri().to_string() << "\n";
-    message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
-    return;
-};
-
-//
-// A DELETE request
-//
-
-void Handler::handle_delete(http_request message)
-{
-    ucout <<  message.to_string() << std::endl;
-    auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
-    if(paths.size() == 3 && paths[0] == "request")
-    {
-        //URL: requst/museum/[id]
-        if(paths[1] == "museum")
-        {
-            deleteMuseum(paths[1],stoi(paths[2]));
-            return;
-        }
-    }
-    message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
-    return;
-};
-
+    message.extract_string(false).then([=](utility::string_t s){
+        json data = json::parse(s);
+        Util::validateJSON(data, {"user", "editID", "action"});
+        Util::validateJSON(data["user"], {"username", "password"});
+        User u = Util::checkLogin(data["user"], this->model);
+        //retrieve edit.
+    }).then([=](pplx::task<void> t){
+        handle_error(message, t, "review unsuccesful");
+    });
+}
 void Handler::deleteMuseum(http_request message, int museumID)
 {
     message.extract_string(false).then([=](utility::string_t s){
+        ucout << s << std::endl;
         json data =json::parse(s);
         Util::validateJSON(data,{"username", "password"});
         User editor = Util::checkLogin(data,this->model);
@@ -632,6 +627,7 @@ void Handler::deleteMuseum(http_request message, int museumID)
 
         bool isCurator = (editor.getUserID() == museum.getUser().getUserID());
 
+        ucout << isCurator << "\n" ;
         if ( isCurator )
         {
             this->model->removeMuseumFromDB(museum);
@@ -650,4 +646,29 @@ void Handler::deleteMuseum(http_request message, int museumID)
         this->handle_error(message, t, "Delete unsuccessful.");
     });
 }
+
+//
+// A PUT request
+//
+
+void Handler::handle_put(http_request message)
+{
+    ucout << "PUT " << message.relative_uri().to_string() << "\n";
+    message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
+    return;
+};
+
+//
+// A DELETE request
+//
+
+void Handler::handle_delete(http_request message)
+{
+    ucout <<"Delete " << message.relative_uri().to_string() << std::endl;
+
+    message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
+    return;
+};
+
+
 
