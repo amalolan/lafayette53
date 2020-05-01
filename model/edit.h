@@ -107,6 +107,50 @@ public:
         this->status = reject;
     }
 
+
+    json toJSON() const
+    {
+        json output;
+
+        //artifact/collection
+        if (std::is_same<T, Artifact>::value)
+        {
+            output["artifact"] = this->object.toJSON();
+            output["category"] = "artifact";
+        }
+        if (std::is_same<T, Collection>::value)
+        {
+            output["collection"] = this->object.toJSON();
+            output["category"] = "collection";
+        }
+        //id
+        output["id"] = this->id;
+        //status
+        if (status == 1)
+        {
+            output["approvalStatus"] = "Approved";
+        } else if (status == 0)
+        {
+            output["approvalStatus"] = "Under review";
+        } else if (status == -1)
+        {
+            output["approvalStatus"] = "Denied";
+        }
+        //kind
+        if (kind == 1)
+        {
+            output["type"] = "add";
+        } else if (kind == 0)
+        {
+            output["type"] = "edit";
+        } else if (kind == -1)
+        {
+            output["type"] = "del";
+        }
+
+        return output;
+    }
+
     const static int add = 1;
     const static int del = -1;
     const static int edit = 0;

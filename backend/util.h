@@ -65,6 +65,8 @@ public:
     template<typename T>
     static json getObjectWithKeys(T t, std::vector<std::string> keys) {
         json tJSON = t.toJSON();
+        //std::cout<<"Museum object "<<tJSON.dump(3)<<std::endl;
+        Util::validateJSON(tJSON, keys);
         json object;
         for (std::string key : keys) {
             object[key] = tJSON[key];
