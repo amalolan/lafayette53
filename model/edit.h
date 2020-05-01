@@ -117,9 +117,11 @@ public:
         {
             output["artifact"] = this->object.toJSON();
             output["category"] = "artifact";
+            output["collection"] = "";
         }
         if (std::is_same<T, Collection>::value)
         {
+            output["artifact"] = "";
             output["collection"] = this->object.toJSON();
             output["category"] = "collection";
         }
