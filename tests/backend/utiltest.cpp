@@ -19,14 +19,14 @@
 TEST_F(UtilTest, validateJSON) {
     json obj =  json::object();
     ASSERT_NO_THROW(Util::validateJSON(obj, {})); /**< Case 1 */
-    EXPECT_THROW(Util::validateJSON(obj, {"a", "b", "c"}), std::exception); /**< Case 2 */
+    EXPECT_THROW(Util::validateJSON(obj, {"a", "b", "c"}), json::other_error); /**< Case 2 */
 
 
     obj = {{"a", true}};
     ASSERT_NO_THROW(Util::validateJSON(obj, {"a"}));     /**< Case 3 */
     ASSERT_NO_THROW(Util::validateJSON(obj, {}));     /**< Case 4 */
-    EXPECT_THROW(Util::validateJSON(obj, {"aa"}), std::exception);     /**< Case 5 */
-    EXPECT_THROW(Util::validateJSON(obj, {"a", "b", "c"}), std::exception);     /**< Case 6 */
+    EXPECT_THROW(Util::validateJSON(obj, {"aa"}), json::other_error);     /**< Case 5 */
+    EXPECT_THROW(Util::validateJSON(obj, {"a", "b", "c"}), json::other_error);     /**< Case 6 */
 
 
     obj = {
@@ -41,9 +41,9 @@ TEST_F(UtilTest, validateJSON) {
     ASSERT_NO_THROW(Util::validateJSON(obj, {"1", "31", "keya", "extra"}));     /**< Case 7 */
     ASSERT_NO_THROW(Util::validateJSON(obj, {"1", "31", "keya"}));     /**< Case 8 */
     ASSERT_NO_THROW(Util::validateJSON(obj, {}));     /**< Case 9 */
-    EXPECT_THROW(Util::validateJSON(obj, {"11", "31", "keya", "extra"}), std::exception);     /**< Case 10 */
-    EXPECT_THROW(Util::validateJSON(obj, {"1", "31", "keya", "extra", "e231"}), std::exception);     /**< Case 11 */
-    EXPECT_THROW(Util::validateJSON(obj, {"1", "31", "keya","b", "extra"}), std::exception);     /**< Case 12 */
+    EXPECT_THROW(Util::validateJSON(obj, {"11", "31", "keya", "extra"}), json::other_error);     /**< Case 10 */
+    EXPECT_THROW(Util::validateJSON(obj, {"1", "31", "keya", "extra", "e231"}), json::other_error);     /**< Case 11 */
+    EXPECT_THROW(Util::validateJSON(obj, {"1", "31", "keya","b", "extra"}), json::other_error);     /**< Case 12 */
 
 
 }
@@ -76,7 +76,7 @@ TEST_F(UtilTest, getObjectWithKeys) {
                 .WillRepeatedly(Return(objectJSON))
                 .RetiresOnSaturation();
         ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {}), expectation); /**< Case 1 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"a", "b", "c"}), std::exception); /**< Case 2 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"a", "b", "c"}), json::other_error); /**< Case 2 */
 
         /**< Singleton T.toJSON() */
         objectJSON = {{"a", true}};
@@ -88,8 +88,8 @@ TEST_F(UtilTest, getObjectWithKeys) {
         ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {}), expectation); /**< Case 3 */
         expectation = {{"a", true}};
         ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {"a"}), expectation); /**< Case 4 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"aa"}), std::exception); /**< Case 5 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"a", "b", "c"}), std::exception); /**< Case 6 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"aa"}), json::other_error); /**< Case 5 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"a", "b", "c"}), json::other_error); /**< Case 6 */
 
         /**< Non-singleton T.toJSON() */
         objectJSON = {
@@ -122,28 +122,28 @@ TEST_F(UtilTest, getObjectWithKeys) {
         ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31"}), expectation); /**< Case 8 */
         expectation = json::object();
         ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {}), expectation); /**< Case 9 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"11", "31", "keya", "extra"}), std::exception);     /**< Case 10 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya", "extra", "e231"}), std::exception);     /**< Case 11 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya","b", "extra"}), std::exception);     /**< Case 12 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"11", "31", "keya", "extra"}), json::other_error);     /**< Case 10 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya", "extra", "e231"}), json::other_error);     /**< Case 11 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya","b", "extra"}), json::other_error);     /**< Case 12 */
     }
     delete mock;
 }
 
 /**
  * @brief TEST_F Tests Util::arrayFromVector()
- * Test Cases
+ * 8 Test Cases:
  */
 TEST_F(UtilTest, arrayFromVector) {
     vector<MockObject*> mockList;
     json objectJSON = json::object();
     json expectation = json::array();
+    /**< Empty vector<T> */
     json result = Util::arrayFromVector<MockObject*>(mockList, {});
     ASSERT_EQ(result, expectation); /**< Case 1 */
     result = Util::arrayFromVector<MockObject*>(mockList, {"1", "2"});
     ASSERT_EQ(result, expectation); /**< Case 2 */
 
     /**< Non-empty vector<T> */
-
     objectJSON = {
         {"1", 3},
         {"31",  "12"},
@@ -156,17 +156,17 @@ TEST_F(UtilTest, arrayFromVector) {
         mockList.push_back(new MockObject());
         expectation.push_back(objectJSON);
     }
-    EXPECT_CALL(*(mockList).at(0), toJSON()) /**< Will be called for all cases 7 - 12 */
+    EXPECT_CALL(*(mockList).at(0), toJSON()) /**< Will be called for all cases 3 - 8 */
             .Times(6)
             .WillRepeatedly(Return(objectJSON));
     for (int i = 1; i < 4; i++) {
         EXPECT_CALL(*(mockList.at(i)), toJSON())
-            .Times(3) /**< Will be called only for cases 7 - 9 */
+            .Times(3) /**< Will be called only for cases 3 - 5 */
             .WillRepeatedly(Return(objectJSON));
 
     }
     result = Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya", "extra"});
-    ASSERT_EQ(result, expectation); /**< Case 7 */
+    ASSERT_EQ(result, expectation); /**< Case 3 */
 
     expectation = json::array();
     for (int i = 0; i < 4; i++) {
@@ -175,28 +175,75 @@ TEST_F(UtilTest, arrayFromVector) {
                                   {"31",  "12"},
                               });
     }
-    ASSERT_EQ(Util::arrayFromVector<MockObject*>(mockList, {"1", "31"}), expectation); /**< Case 8 */
+    ASSERT_EQ(Util::arrayFromVector<MockObject*>(mockList, {"1", "31"}), expectation); /**< Case 4 */
 
     expectation = json::array();
-    for (auto mock: mockList) {
+    for (int i = 0; i < 4; i++) {
         expectation.push_back(json::object());
     }
-    ASSERT_EQ(Util::arrayFromVector<MockObject*>(mockList, {}), expectation); /**< Case 9 */
+    ASSERT_EQ(Util::arrayFromVector<MockObject*>(mockList, {}), expectation); /**< Case 5 */
 
-    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"11", "31", "keya", "extra"}), std::exception);     /**< Case 10 */
-    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya", "extra", "e231"}), std::exception);     /**< Case 11 */
-    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya","b", "extra"}), std::exception);     /**< Case 12 */
+    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"11", "31", "keya", "extra"}), json::other_error);     /**< Case 6 */
+    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya", "extra", "e231"}), json::other_error);     /**< Case 7 */
+    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya","b", "extra"}), json::other_error);     /**< Case 8 */
     for (MockObject* mock: mockList) {
         delete mock;
     }
 }
 
-
 /**
- * @brief TEST_F Tests Util::checkLogin()
+ * @brief TEST_F Tests Util::checkLogin() Helper test function to ensure log in actually works.
+ * Called by many POST request test functions.
+ * Validity of user JSON objects  are tested in model tests.
+ * Validity of Username, Password asserted on front-end.
+ * 4 Test Cases:
+ * 1. Invalid POST data (no username & password).
+ * 2. Valid data, Username not found in DB.
+ * 3. Valid data, Username Found, Password mismatch.
+ * 4. Valid data, Username Found, Password match.
+ * @param url The POST url to perform the login test on.
  */
 TEST_F(UtilTest, checkLogin) {
+    string username;
+    json data;
+    json expectation;
+    MockModelClass model;
+    {
+        InSequence s;
+        /**< Case 1 */
+        data = {
+            {"username",  "anfann12"},
+            {"passwor12d", "password~*?"}
+        };
+        EXPECT_THROW(Util::checkLogin(data, &model), json::other_error); /**< Case 1 */
 
+        /**< Case 2 */
+        data = {
+            {"username",  "anfann12"},
+            {"password", "password~*?"}
+        };
+        EXPECT_CALL(model, getUserObject((string) data["username"]))
+                .WillOnce(testing::Throw(ModelException("Can't find User")))
+                .RetiresOnSaturation();
+
+        EXPECT_THROW(Util::checkLogin(data, &model), ModelException); /**< Case 2 */
+
+        /**< Case 3 */
+        User user(data["username"],"email@example.com", "realpassword", 12);
+        EXPECT_CALL(model, getUserObject((string) data["username"]))
+                .WillOnce(testing::Return(user))
+                .RetiresOnSaturation();
+        EXPECT_THROW(Util::checkLogin(data, &model), LoginException); /**< Case 3 */
+
+        /**< Case 4 */
+        data["password"] = "realpassword";
+        EXPECT_CALL(model, getUserObject((string) data["username"]))
+                .Times(testing::AtLeast(1))
+                .WillOnce(testing::Return(user))
+                .RetiresOnSaturation();
+
+        ASSERT_EQ(user, Util::checkLogin(data, &model)); /**< Case 4 */
+    }
 }
 
 /**

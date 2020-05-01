@@ -40,7 +40,6 @@ public:
 //class MockUser: public User {
 //public:
 //    MockUser(): User("", "", "") {};
-//    MockUser(const MockUser &u) : User("", "", "") {};
 //    MOCK_CONST_METHOD0(toJSON, json());
 //    MOCK_CONST_METHOD0(getPassword, string());
 //};

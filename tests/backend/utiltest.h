@@ -5,6 +5,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <../../nlohmann/json.hpp>
+#include "mockmodelclass.h"
 
 using namespace std;
 using json = nlohmann::json;

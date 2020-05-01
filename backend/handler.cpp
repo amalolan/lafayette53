@@ -643,9 +643,6 @@ void Handler::deleteMuseum(http_request message, int museumID)
             return message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("You are not autorized"
                                                                                      " to remove this museum."));
         }
-
-
-
     }).then([=](pplx::task<void> t){
         this->handle_error(message, t, "Delete unsuccessful.");
     });
