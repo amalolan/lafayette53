@@ -109,6 +109,7 @@ private:
 
     void handle_put(http_request);
     void handle_delete(http_request);
+    void deleteMuseum(http_request,int);
     void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
 };
 
