@@ -6,17 +6,17 @@
     #define CODE_BASE_DIRECTORY "/../../../lafayette53/"
 #endif
 #define BOOST_ASIO_HAS_STD_ATOMIC
-// Cpprestsdk
-#include <cpprest/http_client.h>
-#include <cpprest/filestream.h>
-#include <cpprest/json.h>
-// Other libraries
-#include <iostream>
-#include "../nlohmann/json.hpp"
 // GTest related includes
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "mockmodelclass.h"
+// Cpprestsdk
+#include <cpprest/http_client.h>
+#include <cpprest/filestream.h>
+// Other libraries
+#include <iostream>
+#include "../nlohmann/json.hpp"
+
 // Backend
 #include "../../backend/modelclassext.h"
 #include "../../backend/controller.h"
