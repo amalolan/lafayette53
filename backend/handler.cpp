@@ -599,12 +599,12 @@ void Handler::deleteMuseum(http_request message, int museumID)
         Util::validateJSON(data,{"username", "password"});
         User editor = Util::checkLogin(data,this->model);
         Museum museum = this->model->getMuseumObject(museumID);
+        User headCurator = this->model->getHeadCurator();
 
         bool isCurator = (editor.getUserID() == museum.getUser().getUserID());
-        // TODO Head Curator
-        bool headCurator = false;
-        ucout << isCurator << "\n" ;
-        if ( isCurator || headCurator)
+        bool isHeadCurator = (editor.getUserID() == headCurator.getUserID());
+        ucout << "Is curator "<< isCurator << "\n" ;
+        if ( isCurator || isHeadCurator)
         {
             this->model->removeMuseumFromDB(museum);
             ucout << "museum deleted.\n";

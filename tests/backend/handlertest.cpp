@@ -1581,7 +1581,7 @@ TEST_F(HandlerTest, editArtifact) {
  * 5. Logged in. Museum not in DB
  * 6. Logged in. Not curator.
  * 7. Logged in. Curator. Museum in DB.
- * 8. Logged in. Head Curator. TODO
+ * 8. Logged in. Head Curator.
  */
 TEST_F(HandlerTest, deleteMuseum) {
     int sleeptime = 300;
@@ -1667,6 +1667,9 @@ TEST_F(HandlerTest, deleteMuseum) {
         EXPECT_CALL(this->model, getMuseumObject(stoi(museumID)))
                 .WillOnce(Return(otherMuseum))
                 .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getHeadCurator())
+                .WillOnce(Return(User("","","", 0)))
+                .RetiresOnSaturation();
 
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url + museumID, data);
@@ -1680,6 +1683,9 @@ TEST_F(HandlerTest, deleteMuseum) {
                 .RetiresOnSaturation();
         EXPECT_CALL(this->model, getMuseumObject(stoi(museumID)))
                 .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getHeadCurator())
+                .WillOnce(Return(User("","","", 0)))
                 .RetiresOnSaturation();
         EXPECT_CALL(this->model, removeMuseumFromDB(museum))
                 .Times(1)
@@ -1697,6 +1703,9 @@ TEST_F(HandlerTest, deleteMuseum) {
                 .RetiresOnSaturation();
         EXPECT_CALL(this->model, getMuseumObject(stoi(museumID)))
                 .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getHeadCurator())
+                .WillOnce(Return(user))
                 .RetiresOnSaturation();
         EXPECT_CALL(this->model, removeMuseumFromDB(museum))
                 .Times(1)

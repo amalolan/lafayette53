@@ -18,12 +18,13 @@ using namespace std;
 /**
  * @brief The MockModelClass class Mocks ModelClass using GMock.
  */
-class MockModelClass: public  ModelClass {
+class MockModelClass: public  ModelClassExt {
 public:
-    MockModelClass() : ModelClass("") {}
+    MockModelClass() : ModelClassExt("") {}
     /**< User */
     MOCK_METHOD1(getUserObject, User(string));
     MOCK_METHOD1(saveUserToDB, void(User&));
+    MOCK_METHOD0(getHeadCurator, User());
 
     /**< Museum */
     MOCK_METHOD0(getMuseumList, vector<Museum>());
