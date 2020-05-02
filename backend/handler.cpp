@@ -54,12 +54,10 @@ void Handler::editArtifact(http_request message){
                 artifactJSON["image"], m, (int) artifactJSON["id"]);
         //collections
         std::vector<Collection> collections;
-        json collectionList = artifactJSON["collectionList"];
+        json collectionList = data["collection"];
         for(auto item : collectionList.items())
         {
-            json c = item.value();
-            Util::validateJSON(c, {"id","name"});
-            collections.push_back(this->model->getCollectionObject(c["id"]));
+            collections.push_back(this->model->getCollectionObject(item.value()));
         }
 
         bool isCurator = (m.getUser().getUserID() == editor.getUserID());
@@ -89,7 +87,7 @@ void Handler::addArtifact(http_request message){
         //validate JSON
         Util::validateJSON(data, {"collection", "artifact", "user", "museum"});
         Util::validateJSON(data["artifact"], {"name", "description", "image", "introduction"});
-        json collectionList = data["artifact"]["collection"];
+        json collectionList = data["collection"];
         //retrieve data from database. Check login info.
         User u = Util::checkLogin(data["user"], this->model);
         Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
@@ -103,8 +101,7 @@ void Handler::addArtifact(http_request message){
         std::vector<Collection> collections;
         for(auto item : collectionList.items())
         {
-            Collection col = this->model->getCollectionObject(item.value()["id"]);
-            collections.push_back(col);
+            collections.push_back(this->model->getCollectionObject(item.value()));
         }
         bool isCuratorOfMuseum = (m.getUser().getUserID() == u.getUserID());
 

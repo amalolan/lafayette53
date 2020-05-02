@@ -65,7 +65,23 @@ protected:
         delete c;
     }
 
+    /**
+     * @brief HandlerTest::make_task_request Makes a task object to be used to make an HTTP call. Helper function for requestTask()
+     * @param mtd The HTTP Method Called (GET, POST, etc.)
+     * @param uri the uri to send the request  to
+     * @param jvalue if POST, PUT, DEL, the data as a json object to send with the request
+     * @return the task which can then make the request on callback
+     */
     pplx::task<http_response> make_task_request(method mtd, std::string uri, json const & jvalue);
+
+    /**
+     * @brief HandlerTest::requestTask The task object made by make_task_reqeust()
+     * @param mtd The HTTP Method Called (GET, POST, etc.)
+     * @param uri the uri to send the request to
+     * @param jvalue if POST, PUT, DEL, the data as a json object to send with the request
+     * @return a Response object,  containing the body of the response message from the server as a string,
+     * the status_code object, and the content_type as a string.
+     */
     Response requestTask(method mtd, std::string uri, json const & jvalue = json());
 
     void loginTest(string url, json data);
