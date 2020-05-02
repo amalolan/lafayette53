@@ -1044,6 +1044,22 @@ TEST_F(HandlerTest, addCollection) {
     }
 }
 
+/**
+ * @brief TEST_F Tests HTTP POST /request/add-artifact and POST /request/edit-artifact
+ * @see HandlerTest::loginTest()
+ * Needs login. Tested by helper function loginTest()
+ * 11 Test Cases:
+ * 1. Invalid POST data (no user/museum/collection).
+ * 2. Invalid collection POST data (bad collection nested object).
+ * 3. Invalid museum POST data (no id in nested museum object).
+ * 4. Invalid user POST data (no username/password).
+ * 5. Valid data, Username not found in DB.
+ * 6. Valid data, Username Found, Password mismatch.
+ * 7. Valid data, Logged in, curator actor, Museum not in DB.
+ * 8. Valid data, Logged in, curator actor, Museum found, Collection already exists in DB.
+ * 9. Valid data, Logged in, curator actor, Museum found, Collection not in DB.
+ * 10. Valid data, Logged in, non-curator actor, Museum found, Collection not in DB.
+ */
 TEST_F(HandlerTest, addEditArtifact) {
     int sleeptime = 300;
     string addURL = "/request/add-artifact";
@@ -1300,10 +1316,12 @@ TEST_F(HandlerTest, addEditArtifact) {
         EXPECT_CALL(this->model, updateArtifactInDB(editArtifact))
                 .Times(1)
                 .RetiresOnSaturation();
-        // TODO
-//        EXPECT_CALL(this->model, addArtifactCollection(addArtifact, testing::_))
-//                .Times(3)
-//                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, removeArtifactCollection(editArtifact))
+                .Times(testing::AtLeast(1))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, addArtifactCollection(editArtifact, testing::_))
+                .Times(3)
+                .RetiresOnSaturation();
 
         usleep(sleeptime);
         r = this->requestTask(methods::POST, editURL, data);
@@ -1361,6 +1379,201 @@ TEST_F(HandlerTest, addEditArtifact) {
     }
 }
 
+
+TEST_F(HandlerTest, editArtifact) {
+    int sleeptime = 300;
+    string url = "/request/edit-artifact";
+    Response r;
+    json data;
+    json expectation;
+    {
+        InSequence s;
+        /**< Case 1 */
+        data = json::object();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        data =
+        {
+            {"collection", json::array()},
+            {"museum", {{"i12d", 123}}},
+            {"artifact", {
+                 {"nam1e",   "col1"},
+                 {"desc2ription", ""}
+             }},
+            {"user", {
+                 {"username", "testing123"},
+                 {"password", "realpassword"}
+             }}
+        };
+
+        /**< Case 2 */
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Cases 3- */
+        data["artifact"] = {
+            {"name", "aName"},
+            {"description", "aDescription"},
+            {"introduction", "aIntroduction"},
+            {"image",  ""},
+            {"id", 32},
+        };
+
+        /**< Case 3 */
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+
+        /**< Cases 4- */
+        data["museum"] = {
+            {"id", 121}
+        };
+
+        /**< Cases 4-6 */
+        this->loginTest(url, data);
+        cout<<"Finished loginTest"<<endl;
+
+        User user(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
+
+        /**< Cases 7- */
+        Museum museum("","","","", user, data["museum"]["id"]);
+
+        /**< Case 7 */
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Throw(ModelException("Museum not in DB")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+
+        /**< Case 8 */
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 9 */
+        data["collection"]  = json::array({132,3144,76543});
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getCollectionObject(testing::_))
+                .WillOnce(Throw(ModelException("Collection doesn't exist")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 10 Edit no artifact*/
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getCollectionObject(testing::_))
+                .WillRepeatedly(Return(Collection("", "", museum)))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getArtifact((int)data["artifact"]["id"]))
+                .WillOnce(Throw(ModelException("Artifact doesn't exist")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 11- */
+        Artifact artifact(data["artifact"]["name"], data["artifact"]["description"], data["artifact"]["introduction"],
+                data["artifact"]["image"], museum, data["artifact"]["id"]);
+
+        /**< Case 12 Curator successful edit TODO*/
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getCollectionObject(testing::_))
+                .WillRepeatedly(Return(Collection("", "", museum)))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getArtifact((int) data["artifact"]["id"]))
+                .WillRepeatedly(Return(artifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateArtifactInDB(artifact))
+                .Times(1)
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, removeArtifactCollection(artifact))
+                .Times(testing::AtLeast(1))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, addArtifactCollection(artifact, testing::_))
+                .Times(3)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+
+        /**< Case 14 Non-curator edit*/
+        User curator("curator", "curator@example.com", "1234", 22);
+        Museum otherMuseum("","","","", curator, data["museum"]["id"]);
+        Edit<Artifact> edit(artifact, Edit<Artifact>::edit, user, {Collection("", "", otherMuseum), Collection("", "", otherMuseum), Collection("", "", otherMuseum)});
+
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(otherMuseum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getCollectionObject(testing::_))
+                .WillRepeatedly(Return(Collection("", "", otherMuseum)))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getArtifact((int) data["artifact"]["id"]))
+                .WillRepeatedly(Return(artifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, saveEditToDB(testing::_)) // TODO
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+    }
+}
 //TEST_F(HandlerTest, getUserProfile) {
 //    EXPECT_CALL(this->model, getUserObject(testing::_));
 //    EXPECT_CALL(this->model, getUserObject(testing::_));

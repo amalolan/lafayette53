@@ -45,7 +45,8 @@ public:
     MOCK_METHOD1(updateArtifactInDB, void(Artifact &));
 
     /**< Edit  */
-    MOCK_METHOD1(saveEditToDB, void(Edit<Artifact>));
+    MOCK_METHOD1(saveEditToDB, void(Edit<Artifact> &));
+    MOCK_METHOD1(removeArtifactCollection, void(Artifact const &));
 
 };
 

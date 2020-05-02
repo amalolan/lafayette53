@@ -394,29 +394,24 @@ void Handler::addCollection(web::http::http_request message) {
 void Handler::addEditArtifact(http_request message, int kind) {
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
-        //general data.
+        // Validation
         ucout << data.dump(3) << std::endl;
         Util::validateJSON(data, {"artifact", "collection", "museum", "user"});
-        //editor
-        User user = Util::checkLogin(data["user"], this->model);
-        //museum
+        json artifactJSON = data["artifact"];
+        Util::validateJSON(artifactJSON, {"name","description", "introduction", "image"});
         Util::validateJSON(data["museum"], {"id"});
+        User user = Util::checkLogin(data["user"], this->model);
         Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
-        //collections
-        std::vector<Collection> collections;
         json collectionList = data["collection"];
-        //check if artifact has at least one collection associated.
-        if(collectionList.size() == 0) {
+        if (collectionList.size() == 0) {
             return message.reply(status_codes::Conflict, Util::getFailureJsonStr("Artifact has to be associated with"
                                                                                  " at least one collection."));
         }
-        for(auto item : collectionList.items())
+        std::vector<Collection> collections;
+        for (auto item : collectionList.items())
         {
             collections.push_back(this->model->getCollectionObject(item.value()));
         }
-        //artifact
-        json artifactJSON = data["artifact"];
-        Util::validateJSON(artifactJSON, {"name","description", "introduction", "image"});
         Artifact artifact(data["artifact"]["name"], data["artifact"]["description"],
                 data["artifact"]["introduction"], data["artifact"]["image"], m);
         if (kind == Edit<Artifact>::edit) {
@@ -549,8 +544,6 @@ void Handler::reviewEdit(http_request message)
             {
                 if(edit.getKind() == Edit<Artifact>::edit)
                 {
-
-
                     Artifact artifact = edit.getObject();
                     this->model->updateArtifactInDB(artifact);
                     this->model->removeArtifactCollection(artifact);
@@ -575,7 +568,6 @@ void Handler::reviewEdit(http_request message)
                     ucout << "edit approved and artifact added!\n";
                     return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edut Approved!"));
                 }
-
             } else
             {
                 edit.rejectEdit();
