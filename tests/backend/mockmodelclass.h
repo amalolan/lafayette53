@@ -16,11 +16,11 @@
 
 using namespace std;
 /**
- * @brief The MockModelClass class Mocks ModelClassExt using GMock.
+ * @brief The MockModelClass class Mocks ModelClass using GMock.
  */
-class MockModelClass: public  ModelClassExt {
+class MockModelClass: public  ModelClass {
 public:
-    MockModelClass() : ModelClassExt("") {}
+    MockModelClass() : ModelClass("") {}
     /**< User */
     MOCK_METHOD1(getUserObject, User(string));
     MOCK_METHOD1(saveUserToDB, void(User&));
