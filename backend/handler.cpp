@@ -233,7 +233,6 @@ void Handler::returnArtifactByID(http_request message, int artifactID) {
 //
 // A POST request
 //
-
 void Handler::handle_post(http_request message)
 {
     //ucout <<  message.to_string() << std::endl;
@@ -293,10 +292,18 @@ void Handler::handle_post(http_request message)
         //delete requests.
     } else if ( paths.size() == 3 && paths[0] == "request" )
     {
+        int id;
+        try {
+            id  =  std::stoi(paths[2]);
+        } catch(std::exception &e) {
+            message.reply(status_codes::InternalError,
+                          Util::getFailureJsonStr("ID could not be converted to an integer."));
+            return;
+        }
         //URL: request/delete-museum/[id]
         if ( paths[1] == "delete-museum" )
-        {
-            deleteMuseum(message, std::stoi(paths[2]));
+        { 
+            deleteMuseum(message, id);
             return;
         }
     }
@@ -484,8 +491,7 @@ void Handler::getUserProfile(http_request message){
 
         //museums
         std::vector<Museum> museums = this->model->getMuseumByCurator(userJSON["id"]);
-        json museumsJSON = Util::arrayFromVector(museums,{"id", "name", "description",
-                                                          "introduction", "userID", "image"});
+        json museumsJSON = Util::arrayFromVector(museums,{"id", "name"});
         std::vector<Edit<Artifact>> actionsVector;
         json actionsList = json::array();
 
@@ -595,16 +601,18 @@ void Handler::deleteMuseum(http_request message, int museumID)
         Museum museum = this->model->getMuseumObject(museumID);
 
         bool isCurator = (editor.getUserID() == museum.getUser().getUserID());
-
+        // TODO Head Curator
+        bool headCurator = false;
         ucout << isCurator << "\n" ;
-        if ( isCurator )
+        if ( isCurator || headCurator)
         {
             this->model->removeMuseumFromDB(museum);
             ucout << "museum deleted.\n";
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Museum successfuly deleted."));
-        } else
+        }
+        else
         {
-            ucout << "not the curator\n";
+            ucout << "not the curator/head curator \n";
             return message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("You are not autorized"
                                                                                      " to remove this museum."));
         }

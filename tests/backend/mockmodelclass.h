@@ -29,6 +29,7 @@ public:
     MOCK_METHOD0(getMuseumList, vector<Museum>());
     MOCK_METHOD1(getMuseumObject, Museum(int));
     MOCK_METHOD1(saveMuseumToDB, void(Museum&));
+    MOCK_METHOD1(removeMuseumFromDB, void(Museum&));
 
     /**< Collection */
     MOCK_METHOD1(getCollectionListByMuseumID, vector<Collection>(int));
