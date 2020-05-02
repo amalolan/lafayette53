@@ -683,7 +683,7 @@ void Handler::deleteArtifact(http_request message, int artifactID)
             Edit<Artifact> edit(art, Edit<Artifact>::del, editor, {});
             ucout << "artifact saved to DB\n";
             this->model->saveEditToDB(edit);
-            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact saved to DB!"));
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Delete request saved to review list!"));
         }
 
     }).then([=](pplx::task<void> t){
