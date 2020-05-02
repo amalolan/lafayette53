@@ -2,7 +2,6 @@
 
 void Handler::addCollection(web::http::http_request message) {
     message.extract_string(false).then([=](utility::string_t s){
-
         //parses user and museum objects from stirng.
         json data = json::parse(s);
         ucout << data.dump(3) << '\n';
@@ -11,27 +10,15 @@ void Handler::addCollection(web::http::http_request message) {
         Util::validateJSON(data, {"museum", "collection", "user"});
         Util::validateJSON(data["museum"], {"id"});
         Util::validateJSON(data["collection"], {"description", "name", "introduction"});
-        json userJSON = data["user"];
-        User user = Util::checkLogin(userJSON, this->model);
-
+        User user = Util::checkLogin(data["user"], this->model);
         //gets museum and user objects.
         Museum museum = this->model->getMuseumObject((int) data["museum"]["id"]);
-        //ucout << museumJson.dump(3) << '\n';
 
         int curatorID = museum.getUser().getUserID();
-
         bool isCuratorOfMuseum = (user.getUserID()  == curatorID);
-
         if(isCuratorOfMuseum){
-            Collection *collection = new Collection
-                    (
-                    data["collection"]["name"],
-                    data["collection"]["description"],
-                    data["collection"]["introduction"],
-                    data["collection"]["image"],
-                    museum
-                    );
-
+            Collection *collection = new Collection(data["collection"]["name"], data["collection"]["description"],
+                    data["collection"]["introduction"], data["collection"]["image"], museum);
             this->model->saveCollectionToDB(*collection);
             ucout << "saved to database\n";
             delete collection;
@@ -65,11 +52,10 @@ void Handler::editArtifact(http_request message){
         Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
         //artifact
         json artifactJSON = data["artifact"];
-        Util::validateJSON(artifactJSON, {"id", "name","description", "introduction", "collectionList"});
-        Artifact artifact(artifactJSON["name"], artifactJSON["description"],
-                          artifactJSON["introduction"], m);
-        artifact.setID(artifactJSON["id"]);
-        //collctions
+        Util::validateJSON(artifactJSON, {"id", "name","description", "introduction", "image", "collectionList"});
+        Artifact artifact(artifactJSON["name"], artifactJSON["description"], artifactJSON["introduction"],
+                artifactJSON["image"], m, (int) artifactJSON["id"]);
+        //collections
         std::vector<Collection> collections;
         json collectionList = artifactJSON["collectionList"];
         for(auto item : collectionList.items())
@@ -155,7 +141,6 @@ void Handler::addArtifact(http_request message){
 }
 
 
-
 void Handler::getUserProfile(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
@@ -223,6 +208,7 @@ void Handler::getUserProfile(http_request message){
     });
     return;
 }
+
 //FIXME
 void Handler::reviewEdit(http_request message)
 {
