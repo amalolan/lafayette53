@@ -105,7 +105,7 @@ private:
     void handle_post(http_request);
     void addMuseum(http_request);
     void addUser(http_request);
-    void addCollection(http_request);
+    void addEditCollection(http_request, int kind);
     void reviewEdit(http_request);
     void deleteMuseum(http_request,int);
 
