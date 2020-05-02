@@ -98,6 +98,13 @@ void Handler::handle_get(http_request message)
                 returnArtifactByID(message, id);
                 return;
             }
+            // URL: /request/edit/[editID/
+            else if(paths[1] == "edit" && paths.size() == 3)
+            {
+                std::string editID = paths[2];
+                returnEditByID(message, stoi(editID));
+                return;
+            }
         }
     }
     // URL: /???
@@ -229,6 +236,28 @@ void Handler::returnArtifactByID(http_request message, int artifactID) {
     });
 }
 
+void Handler::returnEditByID(http_request message, int editID)
+{
+    message.extract_string(false).then([=](utility::string_t s){
+        Edit<Artifact> edit = this->model->getEditArtifactObject(editID);
+        json editJSON = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "collection",
+                                                                "approvalStatus"});
+        json artifact;
+        artifact["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
+                                                {"id", "name", "description", "introduction", "image"});
+
+        artifact["museum"]["id"] = edit.getObject().getMuseum().getMuseumID();
+        artifact["collectionList"] = Util::arrayFromVector<Collection>(edit.getCollectionList(), {"id","name"});
+
+        editJSON["artifact"] = artifact;
+
+        ucout << editJSON.dump(3) << '\n';
+        return message.reply(status_codes::OK, editJSON.dump(3));
+    }).then([=](pplx::task<void> t){
+        handle_error(message, t, "Edit could not be returned");
+    });
+
+}
 
 //
 // A POST request
@@ -296,6 +325,13 @@ void Handler::handle_post(http_request message)
         //URL: request/delete-museum/[id]
         if ( paths[1] == "delete-museum" )
         {
+            try {
+                std::stoi(paths[2]);
+            } catch (std::exception &e) {
+                message.reply(status_codes::InternalError,
+                              Util::getFailureJsonStr("ID could not be converted to an integer."));
+                return;
+            }
             deleteMuseum(message, std::stoi(paths[2]));
             return;
         }

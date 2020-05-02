@@ -97,6 +97,7 @@ private:
     void returnMuseumByID(http_request,int);
     void returnCollectionByID(http_request, int);
     void returnArtifactByID(http_request, int);
+    void returnEditByID(http_request, int);
 
     void validateLogin(http_request);
     void getUserProfile(http_request);
