@@ -332,13 +332,29 @@ void Handler::validateLogin(http_request message){
     return;
 };
 
+void Handler::addUser(http_request message){
+    message.extract_string(false).then([=](utility::string_t s){
+        json userJSON = json::parse(s);
+        Util::validateJSON(userJSON, {"username", "email", "password"});
+        User *user = new User(userJSON["username"], userJSON["email"], userJSON["password"]);
+        this->model->saveUserToDB(*user);
+        delete user;
+        ucout << "success add user\n";
+        return message.reply(status_codes::OK, Util::getSuccessJsonStr("User registered."));
+    }).then([=] (pplx::task<void> t) {
+        this->handle_error(message, t, "User could not be registered. "
+                                       "There might already exist an "
+                                       "account with the same username/email.");
+    });
+    return;
+};
 
 void Handler::addMuseum(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
         Util::validateJSON(data, {"museum", "user"});
-        Util::validateJSON(data["museum"], {"name", "description", "introduction"});
-        Util::checkLogin(data["user"],  this->model);
+        Util::validateJSON(data["museum"], {"name", "description", "introduction", "image"});
+        Util::checkLogin(data["user"], this->model);
         ucout << data.dump(3);
 
         User museumCurator =  this->model->getUserObject(std::string(data["user"]["username"]));
@@ -420,16 +436,15 @@ void Handler::editArtifact(http_request message){
         json data = json::parse(s);
         ucout << data.dump(3) << std::endl;
         Util::validateJSON(data, {"artifact", "collection", "museum", "user"});
-        json artifactJSON = data["artifact"];
+        //editor
+        Util::checkLogin(data["user"], this->model);
+        User editor = this->model->getUserObject((std::string)data["user"]["username"]);
         //museum
         Util::validateJSON(data["museum"], {"id"});
         Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
-        //editor
-        Util::validateJSON(data["user"], {"username", "password"});
-        Util::checkLogin(data["user"], this->model);
-        User editor = this->model->getUserObject((std::string)data["user"]["username"]);
         //artifact
-        Util::validateJSON(artifactJSON, {"name","description", "introduction", "collectionList"});
+        json artifactJSON = data["artifact"];
+        Util::validateJSON(artifactJSON, {"id", "name","description", "introduction", "collectionList"});
         Artifact artifact(artifactJSON["name"], artifactJSON["description"],
                           artifactJSON["introduction"], m);
         artifact.setID(artifactJSON["id"]);
@@ -512,28 +527,12 @@ void Handler::addArtifact(http_request message){
             ucout << "Edit saved to database.\n";
             return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Edit added to review list."));
         }
-
     }).then([=](pplx::task<void> t){
         this->handle_error(message, t, "Artifact addition incomplete.");
     });
 
 }
-void Handler::addUser(http_request message){
-    message.extract_string(false).then([=](utility::string_t s){
-        json userJSON = json::parse(s);
-        Util::validateJSON(userJSON, {"username", "email", "password"});
-        User *user = new User(userJSON["username"], userJSON["email"], userJSON["password"]);
-        this->model->saveUserToDB(*user);
-        delete user;
-        ucout << "success add user\n";
-        return message.reply(status_codes::OK, Util::getSuccessJsonStr("User registered."));
-    }).then([=] (pplx::task<void> t) {
-        this->handle_error(message, t, "User could not be registered. "
-                                       "There might already exist an "
-                                       "account with the same username/email.");
-    });
-    return;
-};
+
 
 
 void Handler::getUserProfile(http_request message){
@@ -609,13 +608,13 @@ void Handler::reviewEdit(http_request message)
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
         Util::validateJSON(data, {"user", "editID", "action"});
-        Util::validateJSON(data["user"], {"username", "password"});
         User u = Util::checkLogin(data["user"], this->model);
         //retrieve edit.
     }).then([=](pplx::task<void> t){
         handle_error(message, t, "review unsuccesful");
     });
 }
+
 void Handler::deleteMuseum(http_request message, int museumID)
 {
     message.extract_string(false).then([=](utility::string_t s){

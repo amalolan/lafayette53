@@ -5,7 +5,6 @@
 #include "../model/collection.h"
 #include "../nlohmann/json.hpp"
 #include "../model/artifact.h"
-//#include "handler.h"
 #include <vector>
 using json=nlohmann::json;
 

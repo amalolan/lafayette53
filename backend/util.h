@@ -5,7 +5,7 @@
 #include "../nlohmann/json.hpp"
 
 #include "../model/ModelException.h"
-#include "modelclassext.h"
+#include "../model/modelclass.h"
 
 using json = nlohmann::json;
 

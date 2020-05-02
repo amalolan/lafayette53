@@ -551,20 +551,83 @@ TEST_F(HandlerTest, returnArtifactByID) {
 }
 
 /**
- * @brief HandlerTest::loginTest Helper test function to ensure log in actually works.
+ * @brief HandlerTest::loginTest Helper test function to ensure log in actually denies unauthorized users.
  * Called by many POST request test functions.
  * Validity of user JSON objects are tested in model tests.
  * Validity of Username, Password asserted on front-end.
- * 4 Test Cases:
+ * 3/4 Test Cases for logging in:
+ * <b>[0. Invalid POST object (no user object). Not here. Present in POST request tests]</b>
+ * 1. Invalid POST data (no username & password).
+ * 2. Valid data, Username not found in DB.
+ * 3. Valid data, Username Found, Password mismatch.
+ * <b>[4. Valid data, Username Found, Password match. Not here. Present POST request tests]</b>
+ * @param url The POST url to perform the login test on.
+ * @param data The data to send with the POST url. data["user"] must be a valid object of exactly
+ * data["user"] = {
+ *     "username":  string,
+ * }
+ */
+void HandlerTest::loginTest(string url, json data) {
+    int sleeptime = 300;
+    string username = data["user"]["username"];
+    Response r;
+    {
+        InSequence s;
+        /**< Case 1 */
+        data["user"] = {
+            {"username",  username},
+            {"passwefd", "password~*?"}
+        };
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 2 */
+        data["user"] = {
+            {"username",  username},
+            {"password", "password~*?"}
+        };
+        User user(username,"email@example.com", "realpassword", 12);
+        /**< Case 1 */
+        EXPECT_CALL(this->model, getUserObject(username))
+                .WillOnce(testing::Throw(ModelException("Can't find User")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 3 */
+        EXPECT_CALL(this->model, getUserObject(username))
+                .WillOnce(Return(user))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        usleep(sleeptime);
+        ASSERT_EQ(r.status, status_codes::Unauthorized);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+    }
+}
+
+
+/**
+ * @brief TEST_F Tests HTTP POST request at /request/login
+ * Validity of user JSON objects are tested in model tests.
+ * Validity of Username, Password asserted on front-end form validation.
+ * 4 Test Cases for logging in:
  * 1. Invalid POST data (no username & password).
  * 2. Valid data, Username not found in DB.
  * 3. Valid data, Username Found, Password mismatch.
  * 4. Valid data, Username Found, Password match.
- * @param url The POST url to perform the login test on.
  */
-void HandlerTest::loginTest(string url) {
+TEST_F(HandlerTest, validateLogin) {
     int sleeptime = 200;
     string username;
+    string url = "/request/login";
     Response r;
     json data;
     json expectation;
@@ -622,56 +685,286 @@ void HandlerTest::loginTest(string url) {
     }
 }
 
-
 /**
- * @brief TEST_F Tests HTTP POST request at /request/login
- * @see HandlerTest::loginTest()
- * Calls the login helper function loginTest()
+ * @brief TEST_F Tests HTTP POST request at /request/register
+ * Validity of Username, Password, email asserted on front-end form validation.
+ * Test Cases:
+ * 1. Invalid POST data (no data).
+ * 2. Invalid POST data (no username/password/email).
+ * 3. Valid data, User in DB.
+ * 4. Valid data, User not in DB.
  */
-TEST_F(HandlerTest, validateLogin) {
-    this->loginTest("/request/login");
+TEST_F(HandlerTest, addUser) {
+    int sleeptime = 200;
+    string url = "/request/register";
+    Response r;
+    json data;
+    json expectation;
+    {
+        InSequence s;
+        /**< Case 1 */
+        data = json::object();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        data = {
+            {"username", "aa"},
+            {"password", "Bb"},
+            {"email12121", 12}
+        };
+
+        /**< Case 2 */
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Cases 3- */
+        data = {
+            {"username", "test1234"},
+            {"password", "pass"},
+            {"email", "test@gmail.com"}
+        };
+        User user(data["username"], data["email"], data["password"], -1);
+
+
+        /**< Case 3 */
+        EXPECT_CALL(this->model, saveUserToDB(user))
+                .WillOnce(Throw(ModelException("User in DB")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 4 */
+        EXPECT_CALL(this->model, saveUserToDB(user))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+    }
 }
 
-//TEST_F(HandlerTest, addUser) {
-//    EXPECT_CALL(this->model, saveUserToDB(testing::_));
-//}
+
+/**
+ * @brief TEST_F Tests HTTP POST request at /request/add-museum/
+ * @see HandlerTest::loginTest()
+ * Needs login. Tested by helper function loginTest()
+ * Test Cases:
+ * 1. Invalid POST data (no user/museum).
+ * 2. Invalid museum POST data (bad museum nested object).
+ * 1. Invalid user POST data (no username/password).
+ * 2. Valid data, Username not found in DB.
+ * 3. Valid data, Username Found, Password mismatch.
+ * 4. [The following will be a valid login test case]. Invalid Museum POST data.
+ * 5. Valid Museum data, Museum already in DB.
+ * 6. Valid Museum data, Museum not in DB.
+ */
+TEST_F(HandlerTest, addMuseum) {
+    int sleeptime = 200;
+    string url = "/request/add-museum";
+    Response r;
+    json data;
+    json expectation;
+    {
+        InSequence s;
+        /**< Case 1 */
+        data = json::object();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        data = {
+            {"museum", {
+                 {"n3ame", "museumName"},
+                 {"descrip124tion", "museumDescription"},
+                 {"in21troduction", "museumIntroduction"},
+             }},
+            {"user", {
+                 {"username", "testing123"},
+                 {"password", "realpassword"}
+             }}
+        };
+
+        /**< Case 2 */
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Cases 3- */
+        data["museum"] = {
+            {"name", "museumName"},
+            {"description", "museumDescription"},
+            {"introduction", "museumIntroduction"},
+            {"image",  ""}
+        };
+
+        /**< Cases 3-5 */
+        this->loginTest(url, data);
+        cout<<"Finished loginTest"<<endl;
+        User user(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
+
+        /**< Cases 6- */
+        Museum m(data["museum"]["name"],data["museum"]["description"],
+                data["museum"]["introduction"], data["museum"]["image"], user);
+
+        /**< Case 6 */
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, saveMuseumToDB(m))
+                .WillOnce(Throw(ModelException("Museum in DB")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 7 */
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+
+        EXPECT_CALL(this->model, saveMuseumToDB(m))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+    }
+}
 
 
-//TEST_F(HandlerTest, user) {
-//    json user =
-//    {
-//        {"username",  "malolan12345"},
-//        {"password", "123"},
-//        {"email",  "malo@gmail.com324332"}
-//    };
-//    User obj("malolan12345", user["email"],user["password"]);
-//    EXPECT_CALL(this->model, saveUserToDB(obj));
-//    string result = this->requestTask(methods::POST, "/request/register", user);
-//    cout<<result;
-//}
+TEST_F(HandlerTest, addCollection) {
+    int sleeptime = 200;
+    string url = "/request/add-collection";
+    Response r;
+    json data;
+    json expectation;
+    {
+        InSequence s;
+        /**< Case 1 */
+        data = json::object();
 
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
 
+        data = {
+            {"museum", {
+                 {"i12d", 123}
+             }},
+            {"collection", {
+                 {"nam1e", "col1"},
+                 {"desc2ription", ""}
+             }},
+            {"user", {
+                 {"username", "testing123"},
+                 {"password", "realpassword"}
+             }}
+        };
 
-///**
-// * @brief TEST_F Tests HTTP POST request at /request/add-museum/
-// * @see HandlerTest::loginTest()
-// * Needs login. Tested by helper function loginTest()
-// *
-// */
-//TEST_F(HandlerTest, addMuseum) {
-//    EXPECT_CALL(this->model, getUserObject(testing::_));
-//    EXPECT_CALL(this->model, getUserObject(testing::_));
-//    EXPECT_CALL(this->model, saveMuseumToDB(testing::_));
-//}
+        /**< Case 2 */
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
 
+        /**< Cases 3- */
+        data["collection"] = {
+            {"name", "colName"},
+            {"description", "colDescription"},
+            {"introduction", "colIntroduction"},
+            {"image",  ""}
+        };
 
-//TEST_F(HandlerTest, addCollection) {
-//    EXPECT_CALL(this->model, getUserObject(testing::_));
-//    EXPECT_CALL(this->model, getMuseumObject(testing::_));
-//    // if  curator
-//    EXPECT_CALL(this->model, saveCollectionToDB(testing::_));
-//    // else
-//}
+        /**< Case 3 */
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Cases 4- */
+        data["museum"] = {
+            {"id", 121}
+        };
+
+        /**< Cases 4-6 */
+        this->loginTest(url, data);
+        cout<<"Finished loginTest"<<endl;
+        User user(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
+
+        /**< Cases 7- */
+        Museum m(data["museum"]["name"],data["museum"]["description"],
+                data["museum"]["introduction"], data["museum"]["image"], user);
+        Collection c(data["collection"]["name"],data["collection"]["description"],
+                data["collection"]["introduction"], data["collection"]["image"], m);
+
+        /**< Case 7 */
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(ModelException("Museum not in DB")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 8 */
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(m))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, saveCollectionToDB(c))
+                .WillOnce(Throw(ModelException("Collection in DB")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 9 */
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+
+        EXPECT_CALL(this->model, saveMuseumToDB(m))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+    }
+    // else
+}
 
 //TEST_F(HandlerTest, addArtifact) {
 //    EXPECT_CALL(this->model, getUserObject(testing::_));

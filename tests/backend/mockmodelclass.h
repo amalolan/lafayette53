@@ -1,7 +1,12 @@
 #ifndef MOCKMODELCLASS_H
 #define MOCKMODELCLASS_H
+// Other Libraries
+#include <vector>
+// GTest related includes
 #include "gmock/gmock.h"
+// Backend
 #include "../../backend/modelclassext.h"
+// Model
 #include "../../model/modelclass.h"
 #include "../../model/ModelException.h"
 #include "../../model/collection.h"
@@ -9,68 +14,34 @@
 #include "../../model/museum.h"
 #include "../../model/artifact.h"
 
-#include <vector>
 using namespace std;
+/**
+ * @brief The MockModelClass class Mocks ModelClassExt using GMock.
+ */
 class MockModelClass: public  ModelClassExt {
 public:
     MockModelClass() : ModelClassExt("") {}
-    // User
+    /**< User */
     MOCK_METHOD1(getUserObject, User(string));
     MOCK_METHOD1(saveUserToDB, void(User&));
 
-    // Museum
+    /**< Museum */
     MOCK_METHOD0(getMuseumList, vector<Museum>());
     MOCK_METHOD1(getMuseumObject, Museum(int));
     MOCK_METHOD1(saveMuseumToDB, void(Museum&));
 
-    // Collection
+    /**< Collection */
     MOCK_METHOD1(getCollectionListByMuseumID, vector<Collection>(int));
     MOCK_METHOD1(getCollectionsByArtifact, vector<Collection>(int));
     MOCK_METHOD1(getCollectionObject, Collection(int));
     MOCK_METHOD1(saveCollectionToDB, void(Collection&));
 
-    // Artifact
+    /**< Artifact */
     MOCK_METHOD1(getArtifactsByMuseum, vector<Artifact>(int));
     MOCK_METHOD1(getArtifactsByCollection, vector<Artifact>(int));
     MOCK_METHOD2(addArtifactCollection, void(Artifact const &, Collection const & ));
     MOCK_METHOD1(saveArtifactToDB, void(Artifact&));
     MOCK_METHOD1(getArtifact, Artifact(int));
 };
-
-//class MockUser: public User {
-//public:
-//    MockUser(): User("", "", "") {};
-//    MOCK_CONST_METHOD0(toJSON, json());
-//    MOCK_CONST_METHOD0(getPassword, string());
-//};
-
-//class MockMuseum: public Museum {
-//public:
-//    MockUser* u;
-//    MockMuseum(MockUser *u): Museum("", "", *u){
-//        this->u = u;
-//    };
-//    MockMuseum(const MockMuseum &m) : Museum("", "", *m.u) {
-//        this->u = m.u;
-//    };
-
-//    MOCK_METHOD0(toJSON, json());
-////    MOCK_CONST_METHOD0(getUser, User());
-//};
-
-
-//class MockCollection:  public Collection {
-//public:
-//    MockMuseum* m;
-//    MockCollection(MockMuseum *m): Collection("", "", *m) {
-//        this->m = m;
-//    };
-//    MockCollection(const MockCollection &c) : Collection("", "", *c.m) {
-//        this->m = c.m;
-//    };
-
-//    MOCK_METHOD0(toJSON, json());
-//};
-
 
 #endif // MOCKMODELCLASS_H
