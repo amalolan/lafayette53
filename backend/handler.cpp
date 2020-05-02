@@ -62,38 +62,36 @@ void Handler::addEditArtifact(http_request message, int kind) {
         //artifact
         json artifactJSON = data["artifact"];
         Util::validateJSON(artifactJSON, {"name","description", "introduction", "image", "collectionList"});
-        Artifact *artifact;
+        Artifact artifact(data["artifact"]["name"], data["artifact"]["description"],
+                data["artifact"]["introduction"], data["artifact"]["image"], m);
         if (kind == Edit<Artifact>::edit) {
             Util::validateJSON(artifactJSON, {"id"});
-            artifact = new Artifact(this->model->getArtifact((int) artifactJSON["id"]));
-        } else  {
-            artifact = new Artifact(data["artifact"]["name"], data["artifact"]["description"],
-                            data["artifact"]["introduction"], data["artifact"]["image"], m);
+            this->model->getArtifact((int) artifactJSON["id"]);
+            artifact.setID(artifactJSON["id"]);
         }
         bool isCurator = (m.getUser().getUserID() == user.getUserID());
         std::string statusMessage;
         if (isCurator) {
             if (kind == Edit<Artifact>::edit) {
                 //TODO change collection stuff.
-                this->model->updateArtifactInDB(*artifact);
+                this->model->updateArtifactInDB(artifact);
                 ucout << "edit done.\n";
                 statusMessage = "Artifact has been successfully edited.";
             } else {
-                this->model->saveArtifactToDB(*artifact);
+                this->model->saveArtifactToDB(artifact);
                 for(Collection col : collections)
                 {
-                    this->model->addArtifactCollection(*artifact,col);
+                    this->model->addArtifactCollection(artifact,col);
                 }
                 ucout << "Artifact Saved to database.";
                 statusMessage = "Artifact saved to database.";
             }
         } else {
-            Edit<Artifact> edit(*artifact, kind, user, collections);
+            Edit<Artifact> edit(artifact, kind, user, collections);
             this->model->saveEditToDB(edit);
             ucout << "edit added to review list.\n";
             statusMessage = "Edits added to the review list.";
         }
-        delete artifact;
         return message.reply(status_codes::OK, Util::getSuccessJsonStr(statusMessage));
     }).then([=](pplx::task<void> t){
         this->handle_error(message,t,"Add/Edit unsuccessful.");
