@@ -42,6 +42,11 @@ public:
     MOCK_METHOD2(addArtifactCollection, void(Artifact const &, Collection const & ));
     MOCK_METHOD1(saveArtifactToDB, void(Artifact&));
     MOCK_METHOD1(getArtifact, Artifact(int));
+    MOCK_METHOD1(updateArtifactInDB, void(Artifact &));
+
+    /**< Edit  */
+    MOCK_METHOD1(saveEditToDB, void(Edit<Artifact>));
+
 };
 
 #endif // MOCKMODELCLASS_H

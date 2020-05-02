@@ -61,7 +61,7 @@ void Handler::addEditArtifact(http_request message, int kind) {
         }
         //artifact
         json artifactJSON = data["artifact"];
-        Util::validateJSON(artifactJSON, {"name","description", "introduction", "image", "collectionList"});
+        Util::validateJSON(artifactJSON, {"name","description", "introduction", "image"});
         Artifact artifact(data["artifact"]["name"], data["artifact"]["description"],
                 data["artifact"]["introduction"], data["artifact"]["image"], m);
         if (kind == Edit<Artifact>::edit) {
