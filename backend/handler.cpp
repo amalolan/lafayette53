@@ -74,7 +74,7 @@ void Handler::editArtifact(http_request message){
             Edit<Artifact> edit(artifact, Edit<Artifact>::edit, editor, collections);
             this->model->saveEditToDB(edit);
             ucout << "edit added to review list.\n";
-            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edis Successfully added to "
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edits Successfully added to "
                                                                            "the review list."));
         }
     }).then([=](pplx::task<void> t){
