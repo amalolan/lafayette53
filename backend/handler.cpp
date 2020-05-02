@@ -335,6 +335,12 @@ void Handler::handle_post(http_request message)
             deleteMuseum(message, id);
             return;
         }
+        //URL: request/delete-artifact/[id]
+        if ( paths[1] == "delete-artifact")
+        {
+            deleteArtifact(message, id);
+            return;
+        }
     }
 
     message.extract_string(false).then([](utility::string_t s){
@@ -576,7 +582,7 @@ void Handler::reviewEdit(http_request message)
             ucout << "permission granted!\n";
             if(action)
             {
-                if(edit.getKind() == Edit<Artifact>::edit)
+                if (edit.getKind() == Edit<Artifact>::edit)
                 {
                     Artifact artifact = edit.getObject();
                     this->model->updateArtifactInDB(artifact);
@@ -589,7 +595,7 @@ void Handler::reviewEdit(http_request message)
                     this->model->updateEditInDB(edit);
                     ucout << "edit approved and updated!\n";
                     return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edit Approved!"));
-                } else if(edit.getKind() == Edit<Artifact>::add)
+                } else if (edit.getKind() == Edit<Artifact>::add)
                 {
                     Artifact artifact = edit.getObject();
                     this->model->saveArtifactToDB(artifact);
@@ -600,7 +606,15 @@ void Handler::reviewEdit(http_request message)
                     edit.approveEdit();
                     this->model->updateEditInDB(edit);
                     ucout << "edit approved and artifact added!\n";
-                    return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edut Approved!"));
+                    return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edit Approved!"));
+                } else if (edit.getKind() == Edit<Artifact>::del)
+                {
+                    Artifact artifact = edit.getObject();
+                    this->model->removeArtifactInDB(artifact);
+                    edit.approveEdit();
+                    this->model->updateEditInDB(edit);
+                    ucout << "edit approved and artifact deleted!\n";
+                    return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edit Approved!"));
                 }
             } else
             {
@@ -647,6 +661,33 @@ void Handler::deleteMuseum(http_request message, int museumID)
         }
     }).then([=](pplx::task<void> t){
         this->handle_error(message, t, "Delete unsuccessful.");
+    });
+}
+
+void Handler::deleteArtifact(http_request message, int artifactID)
+{
+    message.extract_string(false).then([=](utility::string_t s){
+        json data = json::parse(s);
+        Util::validateJSON(data, {"username", "password"});
+        User editor = Util::checkLogin(data, this->model);
+        Artifact art = this->model->getArtifact(artifactID);
+
+        bool isCurator = (editor.getUserID() == art.getMuseum().getUser().getUserID());
+
+        if ( isCurator ) {
+            this->model->removeArtifactInDB(art);
+            ucout << "artifact deleted\n";
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact deleted!"));
+        } else
+        {
+            Edit<Artifact> edit(art, Edit<Artifact>::del, editor, {});
+            ucout << "artifact saved to DB\n";
+            this->model->saveEditToDB(edit);
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact saved to DB!"));
+        }
+
+    }).then([=](pplx::task<void> t){
+        handle_error(message, t, "Delete could not be processed.");
     });
 }
 

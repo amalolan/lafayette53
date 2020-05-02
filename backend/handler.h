@@ -107,8 +107,8 @@ private:
     void addUser(http_request);
     void addCollection(http_request);
     void reviewEdit(http_request);
-    void deleteMuseum(http_request,int);
-
+    void deleteMuseum(http_request, int);
+    void deleteArtifact(http_request, int);
     void handle_put(http_request);
     void handle_delete(http_request);
 
