@@ -35,97 +35,69 @@ void Handler::addCollection(web::http::http_request message) {
     });
 };
 
-void Handler::editArtifact(http_request message){
+void Handler::addEditArtifact(http_request message, int kind) {
     message.extract_string(false).then([=](utility::string_t s){
-        //general data.
         json data = json::parse(s);
+        //general data.
         ucout << data.dump(3) << std::endl;
         Util::validateJSON(data, {"artifact", "collection", "museum", "user"});
         //editor
         Util::checkLogin(data["user"], this->model);
-        User editor = this->model->getUserObject((std::string)data["user"]["username"]);
+        User user = this->model->getUserObject((std::string)data["user"]["username"]);
         //museum
         Util::validateJSON(data["museum"], {"id"});
         Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
-        //artifact
-        json artifactJSON = data["artifact"];
-        Util::validateJSON(artifactJSON, {"id", "name","description", "introduction", "image", "collectionList"});
-        Artifact artifact(artifactJSON["name"], artifactJSON["description"], artifactJSON["introduction"],
-                artifactJSON["image"], m, (int) artifactJSON["id"]);
         //collections
         std::vector<Collection> collections;
         json collectionList = data["collection"];
-        for(auto item : collectionList.items())
-        {
-            collections.push_back(this->model->getCollectionObject(item.value()));
-        }
-
-        bool isCurator = (m.getUser().getUserID() == editor.getUserID());
-
-        //TODO initialize edit object
-        if(isCurator){
-            //TODO change collection stuff.
-            this->model->updateArtifactInDB(artifact);
-            ucout << "edit done.\n";
-            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact in your museum updated!"));
-        } else{
-            Edit<Artifact> edit(artifact, Edit<Artifact>::edit, editor, collections);
-            this->model->saveEditToDB(edit);
-            ucout << "edit added to review list.\n";
-            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edits Successfully added to "
-                                                                           "the review list."));
-        }
-    }).then([=](pplx::task<void> t){
-        this->handle_error(message,t,"Edit unsuccessful.");
-    });
-}
-
-void Handler::addArtifact(http_request message){
-    message.extract_string(false).then([=](utility::string_t s){
-        json data = json::parse(s);
-        ucout << data.dump(4) << std::endl;
-        //validate JSON
-        Util::validateJSON(data, {"collection", "artifact", "user", "museum"});
-        Util::validateJSON(data["artifact"], {"name", "description", "image", "introduction"});
-        json collectionList = data["collection"];
-        //retrieve data from database. Check login info.
-        User u = Util::checkLogin(data["user"], this->model);
-        Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
-
         //check if artifact has at least one collection associated.
-        if(data["artifact"]["collectionList"].size() == 0) {
+        if(collectionList.size() == 0) {
             return message.reply(status_codes::Conflict, Util::getFailureJsonStr("Artifact has to be associated with"
                                                                                  " at least one collection."));
         }
-        // Collections
-        std::vector<Collection> collections;
         for(auto item : collectionList.items())
         {
             collections.push_back(this->model->getCollectionObject(item.value()));
         }
-        bool isCuratorOfMuseum = (m.getUser().getUserID() == u.getUserID());
-
-        Artifact* artifact  = new Artifact(data["artifact"]["name"], data["artifact"]["description"],
-                data["artifact"]["introduction"], data["artifact"]["image"], m);
-        if(isCuratorOfMuseum)
-        {
-            this->model->saveArtifactToDB(*artifact);
-            for(Collection col : collections)
-            {
-                this->model->addArtifactCollection(*artifact,col);
-            }
-            ucout << "Artifact Saved to database.";
-            delete artifact;
-            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact saved to database."));
+        //artifact
+        json artifactJSON = data["artifact"];
+        Util::validateJSON(artifactJSON, {"name","description", "introduction", "image", "collectionList"});
+        Artifact *artifact;
+        if (kind == Edit<Artifact>::edit) {
+            Util::validateJSON(artifactJSON, {"id"});
+            artifact = new Artifact(artifactJSON["name"], artifactJSON["description"], artifactJSON["introduction"],
+                    artifactJSON["image"], m, (int) artifactJSON["id"]);
         } else {
-            Edit<Artifact> edit(*artifact,Edit<Artifact>::add, u, collections);
-            this->model->saveEditToDB(edit);
-            ucout << "Edit saved to database.\n";
-            delete artifact;
-            return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Edit added to review list."));
+            artifact = new Artifact(data["artifact"]["name"], data["artifact"]["description"],
+                    data["artifact"]["introduction"], data["artifact"]["image"], m);
         }
+        bool isCurator = (m.getUser().getUserID() == user.getUserID());
+        std::string statusMessage;
+        if (isCurator) {
+            if (kind == Edit<Artifact>::edit) {
+                //TODO change collection stuff.
+                this->model->updateArtifactInDB(*artifact);
+                ucout << "edit done.\n";
+                statusMessage = "Artifact has been successfully edited.";
+            } else {
+                this->model->saveArtifactToDB(*artifact);
+                for(Collection col : collections)
+                {
+                    this->model->addArtifactCollection(*artifact,col);
+                }
+                ucout << "Artifact Saved to database.";
+                statusMessage = "Artifact saved to database.";
+            }
+        } else {
+            Edit<Artifact> edit(*artifact, kind, user, collections);
+            this->model->saveEditToDB(edit);
+            ucout << "edit added to review list.\n";
+            statusMessage = "Edits added to the review list.";
+        }
+        delete artifact;
+        return message.reply(status_codes::OK, Util::getSuccessJsonStr(statusMessage));
     }).then([=](pplx::task<void> t){
-        this->handle_error(message, t, "Artifact addition incomplete.");
+        this->handle_error(message,t,"Add/Edit unsuccessful.");
     });
 
 }
@@ -314,7 +286,7 @@ void Handler::handle_get(http_request message)
                 id  =  std::stoi(paths[2]);
             } catch(std::exception &e) {
                 message.reply(status_codes::InternalError,
-                                Util::getFailureJsonStr("ID could not be converted to an integer."));
+                              Util::getFailureJsonStr("ID could not be converted to an integer."));
                 return;
             }
             // URL: /request/museum/[id]
@@ -416,7 +388,7 @@ void Handler::returnMuseumByID(http_request message,int museumID){
         {"id", "name", "description", "introduction", "userID", "image"});
         output["collectionList"] = Util::arrayFromVector<Collection>(this->model->getCollectionListByMuseumID(museumID),
         {"id", "name", "description", "introduction", "image"});
-//        ucout << output.dump(3) << '\n';
+        //        ucout << output.dump(3) << '\n';
         message.reply(status_codes::OK, output.dump(4));
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Museum could not be found");
@@ -514,13 +486,13 @@ void Handler::handle_post(http_request message)
         // URL: /request/add-artifact
         else if (paths[1] == "add-artifact" && paths.size() == 2)
         {
-            addArtifact(message);
+            addEditArtifact(message, Edit<Artifact>::add);
             return;
         }
         // URL: /request/edit-artifact
         else if(paths[1] == "edit-artifact" && paths.size() == 2)
         {
-            editArtifact(message);
+            addEditArtifact(message, Edit<Artifact>::edit);
             return;
         }
         // URL: /requst/review-edit

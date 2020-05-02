@@ -1100,11 +1100,12 @@ TEST_F(HandlerTest, addArtifact) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
         /**< Cases 3- */
-        data["collection"] = {
-            {"name", "colName"},
-            {"description", "colDescription"},
-            {"introduction", "colIntroduction"},
-            {"image",  ""}
+        data["artifact"] = {
+            {"name", "aName"},
+            {"description", "aDescription"},
+            {"introduction", "aIntroduction"},
+            {"image",  ""},
+        {"collectionList", {{}}}
         };
 
         /**< Case 3 */
