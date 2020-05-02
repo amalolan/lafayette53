@@ -4,6 +4,11 @@
 class Artifact
 {
 public:
+    Artifact(Museum museum = Museum()):museum(museum)
+    {
+        this->id = -1;
+    }
+
     Artifact(std::string name, std::string desc, std::string intro, Museum museum):museum(museum)
     {
         this->name = name;
@@ -30,28 +35,12 @@ public:
         this->id = -1;
     }
 
-    ~Artifact()
+    Artifact(const Artifact &) = default;
+    Artifact& operator = (const Artifact&) = default;
+    Artifact& operator=(Artifact&&) = default;
+    Artifact(Artifact&&) = default;
+    virtual ~Artifact()
     {
-
-    }
-
-    Artifact(const Artifact &artifact):museum(artifact.getMuseum())
-    {
-        this->name = artifact.getName();
-        this->desc = artifact.getDescription();
-        this->id = artifact.getID();
-        this->intro = artifact.getIntro();
-        this->photo = artifact.getPhoto();
-    }
-
-    Artifact& operator = (const Artifact &artifact)
-    {
-        this->name = artifact.getName();
-        this->desc = artifact.getDescription();
-        this->id = artifact.getID();
-        this->intro = artifact.getIntro();
-        this->photo = artifact.getPhoto();
-        return *this;
     }
 
     std::string getName() const
@@ -135,6 +124,16 @@ public:
     bool empty() const
     {
         return name == "";
+    }
+
+    std::string toString() const
+    {
+        return "Artifact(name : "+ this->name + ", "
+                        "id: " + std::to_string(this->id) + ", "
+                        "introduction: " + this->intro + ", "
+                        "description: " + this->desc + ", "
+                        "museum: " + this->museum.toString() + ", "
+                        "photoURL: " + this->photo + ")";
     }
 
 private:

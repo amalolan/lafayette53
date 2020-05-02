@@ -12,6 +12,11 @@ using json = nlohmann::json;
 class Museum
 {
 public:
+    Museum(User user = User()):user(user)
+    {
+        this->museumID = -1;
+    }
+
     Museum(std::string name, std::string description, User user):user(user)
     {
         this->name = name;
@@ -45,29 +50,12 @@ public:
         this->museumID = museumID;
     }
 
-    Museum(const Museum &museum):user(museum.getUser())
+    Museum(const Museum &) = default;
+    Museum& operator = (const Museum&) = default;
+    Museum& operator=(Museum&&) = default;
+    Museum(Museum&&) = default;
+    virtual ~Museum()
     {
-        this->name = museum.getName();
-        this->description = museum.getDescription();
-        this->museumID = museum.getMuseumID();
-        this->intro = museum.getIntro();
-        this->photo = museum.getPhoto();
-    }
-
-    Museum& operator = (const Museum &museum)
-    {
-        this->user = museum.getUser();
-        this->name = museum.getName();
-        this->description = museum.getDescription();
-        this->museumID = museum.getMuseumID();
-        this->intro = museum.getIntro();
-        this->photo = museum.getPhoto();
-        return *this;
-    }
-
-    ~Museum()
-    {
-
     }
 
     friend std::ostream& operator<<(std::ostream &strm, const Museum &m) {
@@ -169,6 +157,15 @@ public:
     bool empty() const
     {
         return name == "";
+    }
+
+    std::string toString() const
+    {
+        return "Museum(name : "+ this->name + ", "
+                        "introduction: " + this->intro + ", "
+                        "description: " + this->description + ", "
+                        "user: " + this->user.toString() + ", "
+                        "photoURL: " + this->photo + ")";
     }
 
 private:
