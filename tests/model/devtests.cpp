@@ -275,5 +275,9 @@ TEST_F(DevTests, TestEditInput){
     EXPECT_EQ(edit3, this->model->getMuseumEdits(user.getUserID()).front());
     EXPECT_EQ(0, this->model->getMuseumActions(museum.getMuseumID()).size());
 
+    EXPECT_EQ(edit3, this->model->getEditMuseumObject(edit3.getID()));
+    EXPECT_EQ(edit2, this->model->getEditCollectionObject(edit2.getID()));
+    EXPECT_EQ(edit0, this->model->getEditArtifactObject(edit0.getID()));
+    EXPECT_EQ(edit, this->model->getEditArtifactObject(edit.getID()));
     this->model->removeUserFromDB(user);
 }

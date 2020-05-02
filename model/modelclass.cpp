@@ -989,7 +989,7 @@ Edit<Collection> ModelClass::getEditCollectionObject(int editID){
 Edit<Artifact> ModelClass::getEditArtifactObject(int editID){
     QString id = QString::fromStdString(std::to_string(editID));
     bool done = query.exec
-    ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, userID, list"
+    ("SELECT artifactID, name, description, photo, introduction, status, kind, museumID, userID, list"
      " FROM edit WHERE editID = "+id+" AND collectionID = -2 AND artifactID != -2;");
     if (!done)
     {
@@ -1015,7 +1015,7 @@ Edit<Artifact> ModelClass::getEditArtifactObject(int editID){
     rowList.push_back(query.value(8).toString().toStdString());
     rowList.push_back(query.value(9).toString().toStdString());
 
-    Artifact artifact("","","","", this->getMuseumObject(std::stoi(rowList.at(9))));
+    Artifact artifact("","","","", this->getMuseumObject(std::stoi(rowList.at(7))));
     artifact.setName(rowList.at(1));
     artifact.setDescription(rowList.at(2));
     artifact.setIntro(rowList.at(4));
@@ -1029,7 +1029,7 @@ Edit<Artifact> ModelClass::getEditArtifactObject(int editID){
     {
         list.push_back(this->getCollectionObject(std::stoi(token)));
     }
-    Edit<Artifact> edit(artifact, std::stoi(rowList.at(6)), user, list, std::stoi(rowList.at(5)), std::stoi(rowList.at(7)));
+    Edit<Artifact> edit(artifact, std::stoi(rowList.at(6)), user, list, std::stoi(rowList.at(5)), editID);
     return edit;
 }
 
