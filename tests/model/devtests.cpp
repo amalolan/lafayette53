@@ -127,7 +127,7 @@ TEST_F(DevTests, TestingUserMuseumExceptions){
     this->model->close();
 }
 
-TEST_F(DevTests, TestingArtifactInput){
+TEST_F(DevTests, TestingArtifactInputAndOutput){
     User user("sena", "s@lafayette.edu", "password");
     ASSERT_NO_THROW(this->model->saveUserToDB(user));
     Museum museum("museum", "desc", "intro", user);
@@ -279,5 +279,21 @@ TEST_F(DevTests, TestEditInput){
     EXPECT_EQ(edit2, this->model->getEditCollectionObject(edit2.getID()));
     EXPECT_EQ(edit0, this->model->getEditArtifactObject(edit0.getID()));
     EXPECT_EQ(edit, this->model->getEditArtifactObject(edit.getID()));
+
+    ASSERT_NO_THROW(this->model->removeEditInDB(edit3));
+    std::vector<Edit<Museum>> array0 = this->model->getMuseumEdits(user.getUserID());
+    EXPECT_FALSE(std::find(array0.begin(), array0.end(), edit3)!=array0.end());
+    ASSERT_NO_THROW(this->model->removeEditInDB(edit2));
+    std::vector<Edit<Collection>> array1 = this->model->getCollectionEdits(user.getUserID());
+    EXPECT_FALSE(std::find(array1.begin(), array1.end(), edit2)!=array1.end());
+    ASSERT_NO_THROW(this->model->removeEditInDB(edit));
+    ASSERT_NO_THROW(this->model->removeEditInDB(edit0));
+    array = this->model->getArtifactEdits(user.getUserID());
+    EXPECT_FALSE(std::find(array.begin(), array.end(), edit0)!= array.end());
+    EXPECT_FALSE(std::find(array.begin(), array.end(), edit)!= array.end());
+    EXPECT_THROW(this->model->removeEditInDB(edit3), ModelException);
+    EXPECT_THROW(this->model->removeEditInDB(edit2), ModelException);
+    EXPECT_THROW(this->model->removeEditInDB(edit0), ModelException);
+    EXPECT_THROW(this->model->removeEditInDB(edit), ModelException);
     this->model->removeUserFromDB(user);
 }

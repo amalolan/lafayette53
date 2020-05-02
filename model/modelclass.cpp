@@ -580,6 +580,7 @@ void ModelClass::removeEditInDB(Edit<Collection> & edit){
         throw ModelException("Deleting museum object failed. Reason: "+err);
         throw ModelException(err);
     }
+    edit.setID(-1);
 }
 
 void ModelClass::removeEditInDB(Edit<Artifact> & edit){
@@ -597,6 +598,7 @@ void ModelClass::removeEditInDB(Edit<Artifact> & edit){
         throw ModelException("Deleting museum object failed. Reason: "+err);
         throw ModelException(err);
     }
+    edit.setID(-1);
 }
 
 void ModelClass::removeEditInDB(Edit<Museum> & edit){
@@ -614,6 +616,7 @@ void ModelClass::removeEditInDB(Edit<Museum> & edit){
         throw ModelException("Deleting museum object failed. Reason: "+err);
         throw ModelException(err);
     }
+    edit.setID(-1);
 }
 
 std::vector<Edit<Museum>> ModelClass::getMuseumEdits(int userID){
