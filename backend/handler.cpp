@@ -133,7 +133,6 @@ void Handler::addArtifact(http_request message){
 
 }
 
-
 void Handler::getUserProfile(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);

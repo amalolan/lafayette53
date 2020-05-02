@@ -39,7 +39,7 @@
 #include "../model/museum.h"
 #include "../model/artifact.h"
 
-//#include "modelclassext.h"
+#include "modelclassext.h"
 #include "util.h"
 
 #include "../nlohmann/json.hpp"
