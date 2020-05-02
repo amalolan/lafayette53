@@ -486,7 +486,6 @@ void Handler::getUserProfile(http_request message){
         std::vector<Museum> museums = this->model->getMuseumByCurator(userJSON["id"]);
         json museumsJSON = Util::arrayFromVector(museums,{"id", "name", "description",
                                                           "introduction", "userID", "image"});
-        //TODO output["actionsList"]
         std::vector<Edit<Artifact>> actionsVector;
         json actionsList = json::array();
 

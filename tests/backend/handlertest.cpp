@@ -249,7 +249,6 @@ TEST_F(HandlerTest, handlePOST) {
 }
 
 //amalolan
-//password: "ba3253876aed6bc22d4a6ff53d8406c6ad864195ed144ab5c87621b6c233b548baeae6956df346ec8c17f5ea10f35ee3cbc514797ed7ddd3145464e2a0bab413"
 
 /**
  * @brief TEST_F Tests HTTP GET request at /request/museum-list
@@ -897,10 +896,10 @@ TEST_F(HandlerTest, addMuseum) {
  * 4. Invalid user POST data (no username/password).
  * 5. Valid data, Username not found in DB.
  * 6. Valid data, Username Found, Password mismatch.
- * 7. Valid data, Logged in, curator actor, Museum not in DB.
+ * 7. Valid data, Logged in, Museum not in DB.
  * 8. Valid data, Logged in, curator actor, Museum found, Collection already exists in DB.
  * 9. Valid data, Logged in, curator actor, Museum found, Collection not in DB.
- * 10. Valid data, Logged in, non-curator actor, Museum found, Collection not in DB.
+ * 10. Valid data, Logged in, non-curator actor, Museum found.
  */
 TEST_F(HandlerTest, addCollection) {
     int sleeptime = 200;
@@ -1051,17 +1050,19 @@ TEST_F(HandlerTest, addCollection) {
  * @brief TEST_F Tests HTTP POST /request/add-artifact
  * @see HandlerTest::loginTest()
  * Needs login. Tested by helper function loginTest()
- * 13 Test Cases:
+ * 12 Test Cases:
  * 1. Invalid POST data (no user/museum/artifact).
  * 2. Invalid artifact POST data (bad artifact nested object).
  * 3. Invalid museum POST data (no id in nested museum object).
  * 4. Invalid user POST data (no username/password).
  * 5. Valid data, Username not found in DB.
  * 6. Valid data, Username Found, Password mismatch.
- * 7. Valid data, Logged in, curator actor, Museum not in DB.
- * 8. Valid data, Logged in, curator actor, Museum found, Collection already exists in DB.
- * 9. Valid data, Logged in, curator actor, Museum found, Collection not in DB.
- * 10. Valid data, Logged in, non-curator actor, Museum found, Collection not in DB.
+ * 7. Valid data, Logged in, Museum not in DB.
+ * 8. Valid data, Logged in, Museum found, Collection List empty.
+ * 9. Valid data, Logged in, Museum found, Collection List not empty, one of the collections not in DB.
+ * 10. Valid data, Logged in, Curator actor, Museum, Collections, and Artifact in DB.
+ * 11. Valid data, Logged in, Curator actor, Museum and Collections in DB, Artifact not in DB.
+ * 12. Valid data, Logged in, Non-curator actor, Museum and Collections in DB.
  */
 TEST_F(HandlerTest, addArtifact) {
     int sleeptime = 300;
@@ -1183,7 +1184,7 @@ TEST_F(HandlerTest, addArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 10 Curator add*/
+        /**< Case 10 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1204,7 +1205,7 @@ TEST_F(HandlerTest, addArtifact) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
         cout<<"Reached Curator add"<<endl;
-        /**< Case 11 Curator successful add */
+        /**< Case 11 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1227,7 +1228,7 @@ TEST_F(HandlerTest, addArtifact) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 13 Non-curator add*/
+        /**< Case 12  */
 
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
@@ -1250,7 +1251,25 @@ TEST_F(HandlerTest, addArtifact) {
     }
 }
 
-
+/**
+ * @brief TEST_F Tests HTTP POST /request/edit-artifact
+ * @see HandlerTest::loginTest()
+ * Needs login. Tested by helper function loginTest()
+ * 12 Test Cases:
+ * 1. Invalid POST data (no user/museum/artifact).
+ * 2. Invalid artifact POST data (bad artifact nested object).
+ * 3. Invalid museum POST data (no id in nested museum object).
+ * 4. Invalid user POST data (no username/password).
+ * 5. Valid data, Username not found in DB.
+ * 6. Valid data, Username Found, Password mismatch.
+ * 7. Valid data, Logged in, Museum not in DB.
+ * 8. Valid data, Logged in, Museum found, Collection List empty.
+ * 9. Valid data, Logged in, Museum found, Collection List not empty, one of the collections not in DB.
+ * 10. Valid data, Logged in, Museum and Collections in DB, Artifact not in DB.
+ * 11. Valid data, Logged in, Curator actor, Museum and Collections, Artifact and Updated Artifact in DB.
+ * 12. Valid data, Logged in, Curator actor, Museum, Collections, and Artifact in DB, Updated not in DB.
+ * 13. Valid data, Logged in, Non-curator actor, Museum found, Collections in DB, Artifact in DB.
+ */
 TEST_F(HandlerTest, editArtifact) {
     int sleeptime = 300;
     string url = "/request/edit-artifact";
@@ -1321,7 +1340,8 @@ TEST_F(HandlerTest, editArtifact) {
             data["artifact"]["image"], museum, data["artifact"]["id"]);
     User curator("curator", "curator@example.com", "1234", 22);
     Museum otherMuseum("","","","", curator, data["museum"]["id"]);
-    Edit<Artifact> edit(artifact, Edit<Artifact>::edit, user, {Collection("", "", otherMuseum), Collection("", "", otherMuseum), Collection("", "", otherMuseum)});
+    Edit<Artifact> edit(artifact, Edit<Artifact>::edit, user,
+    {Collection("", "", otherMuseum), Collection("", "", otherMuseum), Collection("", "", otherMuseum)});
     {
         InSequence s;
         /**< Case 7 */
@@ -1371,7 +1391,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 10 Edit no artifact*/
+        /**< Case 10 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1391,7 +1411,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 12 Curator edited artifact already in DB */
+        /**< Case 11 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1415,7 +1435,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 12 Curator successful edit */
+        /**< Case 12 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1444,7 +1464,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 13 Non-curator edit*/
+        /**< Case 13 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1468,7 +1488,79 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_TRUE(json::parse(r.content)["success"]);
     }
 }
-//TEST_F(HandlerTest, getUserProfile) {
-//    EXPECT_CALL(this->model, getUserObject(testing::_));
-//    EXPECT_CALL(this->model, getUserObject(testing::_));
-//}
+
+/**
+ * @brief TEST_F
+ * 4 Test Cases:
+ * 1. Invalid POST data (no data).
+ * 2. Invalid POST data (no username/password).
+ * 3. Valid data, User not in DB.
+ * 4. Valid data, User in DB, password mismatch.
+ * 5. Logged in.
+ */
+TEST_F(HandlerTest, getUserProfile) {
+    int sleeptime = 300;
+    string url = "/request/user-profile";
+    Response r;
+    json data;
+    json expectation;
+    {
+        InSequence s;
+        /**< Case 1 */
+        data = json::object();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        data = {
+            {"username", "aa"},
+            {"password12", "Bb"},
+        };
+
+        /**< Case 2 */
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Cases 3- */
+        data = {
+            {"username", "test1234"},
+            {"password", "pass"},
+        };
+
+        /**< Case 3 */
+        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                .WillOnce(Throw(ModelException("User not in DB")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        User user(data["username"], data["email"], "realpassword", 12);
+
+        /**< Case 4 */
+        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                .WillOnce(Return(user))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Unauthorized);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 4 */
+        data["password"] = "realpassword";
+        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+
+
+
+    }
+}
