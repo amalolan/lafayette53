@@ -19,6 +19,10 @@ public:
     }
     static ModelClassExt* singleInstance;
     static ModelClassExt* getInstance(std::string);
+
+    virtual User getHeadCurator() {
+        return User("Prof Pfaffmann", "pfaffman@lafayette.edu", "123456", 0);
+    }
 };
 
 

@@ -38,7 +38,7 @@ public:
      * @param address string [usually "http://127.0.0.1:5300" ]
      * @param model The database/ModelClass object associated with this Controller object.
      */
-    Controller(const string_t& address, ModelClass *model, std::string codeBaseDirectory)  {
+    Controller(const string_t& address, ModelClassExt *model, std::string codeBaseDirectory)  {
         uri_builder uri(address);
         auto addr = uri.to_uri().to_string();
         this->g_httpHandler = new Handler(addr, model, codeBaseDirectory);
