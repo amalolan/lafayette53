@@ -172,18 +172,54 @@ TEST_F(DevTests, TestingArtifactCollectionInput){
     ASSERT_NO_THROW(this->model->saveUserToDB(user));
     Museum museum("museum", "desc", "intro", user);
     ASSERT_NO_THROW(this->model->saveMuseumToDB(museum));
+
     Collection collection("artifact", "desc", "intro", "photo", museum);
     ASSERT_NO_THROW(this->model->saveCollectionToDB(collection));
     EXPECT_TRUE(collection.indb());
+    Collection collection0("collection0", "desc", "intro", "photo", museum);
+    ASSERT_NO_THROW(this->model->saveCollectionToDB(collection0));
+    EXPECT_TRUE(collection0.indb());
+
     Artifact artifact("artifact", "desc", "intro", "photo", museum);
+    Artifact artifact0("artifact0", "desc", "intro", "photo", museum);
     ASSERT_NO_THROW(this->model->saveArtifactToDB(artifact));
     EXPECT_TRUE(artifact.indb());
+    ASSERT_NO_THROW(this->model->saveArtifactToDB(artifact0));
+    EXPECT_TRUE(artifact0.indb());
+
     ASSERT_NO_THROW(this->model->addArtifactCollection(artifact, collection));
+    ASSERT_NO_THROW(this->model->addArtifactCollection(artifact, collection0));
+    ASSERT_NO_THROW(this->model->addArtifactCollection(artifact0, collection));
+    ASSERT_NO_THROW(this->model->addArtifactCollection(artifact0, collection0));
+
     ASSERT_THROW(this->model->addArtifactCollection(artifact, collection), ModelException);
-    EXPECT_EQ(1, this->model->getCollectionsByArtifact(artifact.getID()).size());
-    EXPECT_EQ(collection, this->model->getCollectionsByArtifact(artifact.getID()).front());
-    EXPECT_EQ(artifact, this->model->getArtifactsByCollection(collection.getID()).front());
+    ASSERT_THROW(this->model->addArtifactCollection(collection0, artifact0), ModelException);
+
+    EXPECT_EQ(2, this->model->getCollectionsByArtifact(artifact.getID()).size());
+    std::vector<Collection> array = this->model->getCollectionsByArtifact(artifact.getID());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), collection)!= array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), collection0)!= array.end());
+
+    EXPECT_EQ(2, this->model->getArtifactsByCollection(collection0.getID()).size());
+    std::vector<Artifact> array0 = this->model->getArtifactsByCollection(collection0.getID());
+    EXPECT_TRUE(std::find(array0.begin(), array0.end(), artifact)!= array0.end());
+    EXPECT_TRUE(std::find(array0.begin(), array0.end(), artifact0)!= array0.end());
+
+    ASSERT_NO_THROW(this->model->removeArtifactCollection(artifact));
+    EXPECT_EQ(0, this->model->getCollectionsByArtifact(artifact.getID()).size());
+    array = this->model->getCollectionsByArtifact(artifact.getID());
+    EXPECT_FALSE(std::find(array.begin(), array.end(), collection)!= array.end());
+    EXPECT_FALSE(std::find(array.begin(), array.end(), collection0)!= array.end());
+
+    ASSERT_NO_THROW(this->model->removeArtifactCollection(collection0));
+    EXPECT_EQ(0, this->model->getArtifactsByCollection(collection0.getID()).size());
+    array0 = this->model->getArtifactsByCollection(collection0.getID());
+    EXPECT_FALSE(std::find(array0.begin(), array0.end(), artifact)!= array0.end());
+    EXPECT_FALSE(std::find(array0.begin(), array0.end(), artifact0)!= array0.end());
+
+    EXPECT_EQ(1, this->model->getCollectionsByArtifact(artifact0.getID()).size());
     EXPECT_EQ(1, this->model->getArtifactsByCollection(collection.getID()).size());
+    ASSERT_NO_THROW(this->model->removeArtifactCollection(collection, artifact0));
     this->model->removeUserFromDB(user);
 }
 
