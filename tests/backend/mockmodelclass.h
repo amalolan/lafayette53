@@ -37,7 +37,41 @@ public:
     MOCK_METHOD1(getArtifact, Artifact(int));
 };
 
+//class MockUser: public User {
+//public:
+//    MockUser(): User("", "", "") {};
+//    MockUser(const MockUser &u) : User("", "", "") {};
+//    MOCK_CONST_METHOD0(toJSON, json());
+//    MOCK_CONST_METHOD0(getPassword, string());
+//};
 
+//class MockMuseum: public Museum {
+//public:
+//    MockUser* u;
+//    MockMuseum(MockUser *u): Museum("", "", *u){
+//        this->u = u;
+//    };
+//    MockMuseum(const MockMuseum &m) : Museum("", "", *m.u) {
+//        this->u = m.u;
+//    };
+
+//    MOCK_METHOD0(toJSON, json());
+////    MOCK_CONST_METHOD0(getUser, User());
+//};
+
+
+//class MockCollection:  public Collection {
+//public:
+//    MockMuseum* m;
+//    MockCollection(MockMuseum *m): Collection("", "", *m) {
+//        this->m = m;
+//    };
+//    MockCollection(const MockCollection &c) : Collection("", "", *c.m) {
+//        this->m = c.m;
+//    };
+
+//    MOCK_METHOD0(toJSON, json());
+//};
 
 
 #endif // MOCKMODELCLASS_H

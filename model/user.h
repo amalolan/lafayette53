@@ -98,7 +98,7 @@ public:
         json output  =  {
             {"username", this->getName()},
             {"email", this->getEmail()},
-            {"userID", this->getUserID()},
+            {"id", this->getUserID()},
             {"passowrd", this->getPassword()}
         };
         return output;

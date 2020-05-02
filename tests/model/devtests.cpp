@@ -205,10 +205,28 @@ TEST_F(DevTests, TestEditInput){
     artifact.setIntro("newIntro");
     Edit<Artifact> edit(artifact, Edit<Artifact>::edit, user, this->model->getCollectionsByArtifact(artifact.getID()));
     ASSERT_NO_THROW(this->model->saveEditToDB(edit));
-    ASSERT_NO_THROW(this->model->getArtifactActions(user.getUserID()));
-    Artifact returned(this->model->getArtifactActions(user.getUserID()).front().getObject());
-    std::cout << returned.toString() << " : " << artifact.toString() << std::endl;
-//    EXPECT_EQ(edit.getKind(), this->model->getArtifactActions(user.getUserID()).front().getKind());
-//    EXPECT_EQ(edit.getStatus(), this->model->getArtifactActions(user.getUserID()).front().getStatus());
+    ASSERT_NO_THROW(this->model->getArtifactEdits(user.getUserID()));
+
+    EXPECT_EQ(1, this->model->getArtifactEdits(user.getUserID()).size());
+    EXPECT_EQ(artifact, this->model->getArtifactEdits(user.getUserID()).front().getObject());
+    EXPECT_EQ(user, this->model->getArtifactEdits(user.getUserID()).front().getEditor());
+    EXPECT_EQ(Edit<Artifact>::pending, this->model->getArtifactEdits(user.getUserID()).front().getStatus());
+    EXPECT_EQ(Edit<Artifact>::edit, this->model->getArtifactEdits(user.getUserID()).front().getKind());
+    EXPECT_EQ(1, this->model->getArtifactActions(museum.getMuseumID()).size());
+    EXPECT_EQ(artifact, this->model->getArtifactActions(museum.getMuseumID()).front().getObject());
+    EXPECT_EQ(user, this->model->getArtifactActions(museum.getMuseumID()).front().getEditor());
+    EXPECT_EQ(Edit<Artifact>::pending, this->model->getArtifactEdits(user.getUserID()).front().getStatus());
+    EXPECT_EQ(Edit<Artifact>::edit, this->model->getArtifactEdits(user.getUserID()).front().getKind());
+
+    edit.rejectEdit();
+    EXPECT_EQ(Edit<Artifact>::reject, edit.getStatus());
+    this->model->updateEditInDB(edit);
+    EXPECT_EQ(1, this->model->getArtifactEdits(user.getUserID()).size());
+    EXPECT_EQ(artifact, this->model->getArtifactEdits(user.getUserID()).front().getObject());
+    EXPECT_EQ(user, this->model->getArtifactEdits(user.getUserID()).front().getEditor());
+    EXPECT_EQ(Edit<Artifact>::reject, this->model->getArtifactEdits(user.getUserID()).front().getStatus());
+    EXPECT_EQ(Edit<Artifact>::edit, this->model->getArtifactEdits(user.getUserID()).front().getKind());
+
+    EXPECT_EQ(0, this->model->getArtifactActions(museum.getMuseumID()).size());
     this->model->removeUserFromDB(user);
 }

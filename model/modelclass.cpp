@@ -253,7 +253,7 @@ void ModelClass::createTables(){
 void ModelClass::artifactCheck(const Artifact & artifact){
     if(!artifact.indb())
     {
-        throw ModelException("Artifact not in database");
+        throw ModelException("Artifact does not exists in database");
     }
     else if (!artifact.getMuseum().indb())
     {
@@ -374,7 +374,7 @@ void ModelClass::museumCheck(const Museum & museum){
     }
 }
 
-void ModelClass::saveEditToDB(Edit<Museum> edit){
+void ModelClass::saveEditToDB(Edit<Museum> & edit){
     if (edit.indb())
     {
         throw ModelException("Edit object already in database");
@@ -408,7 +408,7 @@ void ModelClass::saveEditToDB(Edit<Museum> edit){
     query.finish();
 }
 
-void ModelClass::saveEditToDB(Edit<Collection> edit){
+void ModelClass::saveEditToDB(Edit<Collection> & edit){
     if (edit.indb())
     {
         throw ModelException("Edit object already in database");
@@ -442,11 +442,12 @@ void ModelClass::saveEditToDB(Edit<Collection> edit){
     query.finish();
 }
 
-void ModelClass::saveEditToDB(Edit<Artifact> edit){
+void ModelClass::saveEditToDB(Edit<Artifact> & edit){
     if (edit.indb())
     {
         throw ModelException("Edit object already in database");
     }
+    //TODO those have to be fixed some typos.
     else if (edit.getKind() != Edit<Artifact>::add){
         artifactCheck(edit.getObject());
     }
@@ -458,6 +459,7 @@ void ModelClass::saveEditToDB(Edit<Artifact> edit){
     int seed = std::chrono::steady_clock::now().time_since_epoch().count();
     std::default_random_engine eng(seed);
     int nextEditIndex = eng();
+    QString editID = QString::fromStdString(std::to_string(nextEditIndex));
     QString artifactID = QString::fromStdString(std::to_string(edit.getObject().getID()));
     QString museumID = QString::fromStdString(std::to_string(edit.getObject().getMuseum().getMuseumID()));
     QString description = QString::fromStdString(edit.getObject().getDescription());
@@ -480,8 +482,8 @@ void ModelClass::saveEditToDB(Edit<Artifact> edit){
     }
     QString list = QString::fromStdString(stdList);
     bool done =
-    query.exec("INSERT INTO edit(museumID, userID, artifactID, name, description, photo, introduction, kind, status, list)"
-               " VALUES ("+museumID+", "+userID+", "+artifactID+", '"+name+"', '"+description+"', '"+photo+"', "
+    query.exec("INSERT INTO edit(editID, museumID, userID, artifactID, name, description, photo, introduction, kind, status, list)"
+               " VALUES ("+editID+", "+museumID+", "+userID+", "+artifactID+", '"+name+"', '"+description+"', '"+photo+"', "
                  "'"+intro+"', "+kind+", "+status+", '"+list+"')");
 
     if(!done)
@@ -494,7 +496,7 @@ void ModelClass::saveEditToDB(Edit<Artifact> edit){
     query.finish();
 }
 
-void ModelClass::updateEditInDB(Edit<Collection> edit){
+void ModelClass::updateEditInDB(Edit<Collection> & edit){
     if (!edit.indb())
     {
         throw ModelException("Edit object not in database");
@@ -515,18 +517,18 @@ void ModelClass::updateEditInDB(Edit<Collection> edit){
     query.finish();
 }
 
-void ModelClass::updateEditInDB(Edit<Artifact> edit){
+void ModelClass::updateEditInDB(Edit<Artifact> & edit){
     if (!edit.indb())
     {
         throw ModelException("Edit object not in database");
     }
     artifactCheck(edit.getObject());
     query.exec("PRAGMA foreign_keys = OFF;");
+    qDebug() << query.lastError();
     QString status = QString::fromStdString(std::to_string(edit.getStatus()));
     QString id = QString::fromStdString(std::to_string(edit.getID()));
-    bool done =
-    query.exec("UPDATE edit SET status = "+status+" WHERE editID = "+id+";");
-
+    QString cmd("UPDATE edit SET status = "+status+" WHERE editID = "+id+";");
+    bool done = query.exec(cmd);
     if(!done)
     {
         std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
@@ -536,7 +538,7 @@ void ModelClass::updateEditInDB(Edit<Artifact> edit){
     query.finish();
 }
 
-void ModelClass::updateEditInDB(Edit<Museum> edit){
+void ModelClass::updateEditInDB(Edit<Museum> & edit){
     if (!edit.indb())
     {
         throw ModelException("Edit object not in database");
@@ -545,8 +547,7 @@ void ModelClass::updateEditInDB(Edit<Museum> edit){
     query.exec("PRAGMA foreign_keys = OFF;");
     QString status = QString::fromStdString(std::to_string(edit.getStatus()));
     QString id = QString::fromStdString(std::to_string(edit.getID()));
-    bool done =
-    query.exec("UPDATE edit SET status = "+status+" WHERE editID = "+id+";");
+    bool done = query.exec("UPDATE edit SET status = "+status+" WHERE editID = "+id+";");
 
     if(!done)
     {
@@ -557,13 +558,18 @@ void ModelClass::updateEditInDB(Edit<Museum> edit){
     query.finish();
 }
 
-std::vector<Edit<Museum>> ModelClass::getMuseumActions(int userID){
+std::vector<Edit<Museum>> ModelClass::getMuseumEdits(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
     User user = this->getUserObject(userID);
-    query.exec
+    bool done = query.exec
     ("SELECT museumID, name, description, photo, introduction, status, kind, editID"
      " FROM edit WHERE userID = "+id+" AND collectionID = -2 AND artifactID = -2;");
-
+    if (!done)
+    {
+        throw ModelException
+        ("Failure retrieving data from db. Reason: "+query.lastError().databaseText().toStdString()
+         +" Cause: "+query.lastError().driverText().toStdString());
+    }
     std::vector<Edit<Museum>> output;
     query.next();
     if (!query.isValid())
@@ -598,13 +604,19 @@ std::vector<Edit<Museum>> ModelClass::getMuseumActions(int userID){
     return output;
 }
 
-std::vector<Edit<Collection>> ModelClass::getCollectionActions(int userID){
+std::vector<Edit<Collection>> ModelClass::getCollectionEdits(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
     User user = this->getUserObject(userID);
-    query.exec
+    bool done = query.exec
     ("SELECT collectionID, name, description, photo, introduction, status, kind, editID"
      " FROM edit WHERE userID = "+id+" AND collectionID != -2;");
 
+    if (!done)
+    {
+        throw ModelException
+        ("Failure retrieving data from db. Reason: "+query.lastError().databaseText().toStdString()
+         +" Cause: "+query.lastError().driverText().toStdString());
+    }
     std::vector<Edit<Collection>> output;
     query.next();
     if (!query.isValid())
@@ -640,20 +652,24 @@ std::vector<Edit<Collection>> ModelClass::getCollectionActions(int userID){
     return output;
 }
 
-std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int userID){
+std::vector<Edit<Artifact>> ModelClass::getArtifactEdits(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
     User user = this->getUserObject(userID);
-    query.exec
+    bool done = query.exec
     ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, list, museumID"
      " FROM edit WHERE userID = "+id+" AND artifactID != -2;");
-
+    if (!done)
+    {
+        throw ModelException
+        ("Failure retrieving data from db. Reason: "+query.lastError().databaseText().toStdString()
+         +" Cause: "+query.lastError().driverText().toStdString());
+    }
     std::vector<Edit<Artifact>> output;
     query.next();
     if (!query.isValid())
     {
         return output;
     }
-
     std::vector<std::vector<std::string>> queryList;
     do
     {
@@ -668,7 +684,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int userID){
         rowList.push_back(query.value(7).toString().toStdString());
         rowList.push_back(query.value(8).toString().toStdString());
         rowList.push_back(query.value(9).toString().toStdString());
-
+        queryList.push_back(rowList);
     }while (query.next());
 
     for (std::vector<std::string> row : queryList)
@@ -692,7 +708,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int userID){
     return output;
 }
 
-std::vector<Edit<Museum>> ModelClass::getMuseumChanges(int museumID){
+std::vector<Edit<Museum>> ModelClass::getMuseumActions(int museumID){
     this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
     query.exec
@@ -735,13 +751,19 @@ std::vector<Edit<Museum>> ModelClass::getMuseumChanges(int museumID){
     return output;
 }
 
-std::vector<Edit<Collection>> ModelClass::getCollectionChanges(int museumID){
+std::vector<Edit<Collection>> ModelClass::getCollectionActions(int museumID){
     this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
-    query.exec
+    bool done = query.exec
     ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, userID"
      " FROM edit WHERE museumID = "+id+" AND collectionID != -2 AND status = 0;");
 
+    if (!done)
+    {
+        throw ModelException
+        ("Failure retrieving data from db. Reason: "+query.lastError().databaseText().toStdString()
+         +" Cause: "+query.lastError().driverText().toStdString());
+    }
     std::vector<Edit<Collection>> output;
     query.next();
     if (!query.isValid())
@@ -778,13 +800,18 @@ std::vector<Edit<Collection>> ModelClass::getCollectionChanges(int museumID){
     return output;
 }
 
-std::vector<Edit<Artifact>> ModelClass::getArtifactChanges(int museumID){
+std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
     Museum museum = this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
-    query.exec
+    bool done = query.exec
     ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, userID, list"
      " FROM edit WHERE museumID = "+id+" AND artifactID != -2 AND status = 0;");
-
+    if (!done)
+    {
+        throw ModelException
+        ("Failure retrieving data from db. Reason: "+query.lastError().databaseText().toStdString()
+         +" Cause: "+query.lastError().driverText().toStdString());
+    }
     std::vector<Edit<Artifact>> output;
     query.next();
     if (!query.isValid())
@@ -805,7 +832,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactChanges(int museumID){
         rowList.push_back(query.value(7).toString().toStdString());
         rowList.push_back(query.value(8).toString().toStdString());
         rowList.push_back(query.value(9).toString().toStdString());
-
+        queryList.push_back(rowList);
     }while (query.next());
 
     for (std::vector<std::string> row : queryList)
