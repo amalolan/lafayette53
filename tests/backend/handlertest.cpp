@@ -910,12 +910,11 @@ TEST_F(HandlerTest, addCollection) {
         this->loginTest(url, data);
         cout<<"Finished loginTest"<<endl;
         User user(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
-
+        User otherUser("otherboi", "21", "@1", 93);
         /**< Cases 7- */
-        Museum m(data["museum"]["name"],data["museum"]["description"],
+        Museum museum(data["museum"]["name"],data["museum"]["description"],
                 data["museum"]["introduction"], data["museum"]["image"], user);
-        Collection c(data["collection"]["name"],data["collection"]["description"],
-                data["collection"]["introduction"], data["collection"]["image"], m);
+        Museum museumOther("abc", "def","dfw", "", otherUser);
 
         /**< Case 7 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -931,15 +930,18 @@ TEST_F(HandlerTest, addCollection) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
+        /**< Cases 8-9 */
+        Collection collection(data["collection"]["name"],data["collection"]["description"],
+                data["collection"]["introduction"], data["collection"]["image"], museum);
         /**< Case 8 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
                 .RetiresOnSaturation();
         EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
-                .WillOnce(Return(m))
+                .WillOnce(Return(museum))
                 .RetiresOnSaturation();
-        EXPECT_CALL(this->model, saveCollectionToDB(c))
+        EXPECT_CALL(this->model, saveCollectionToDB(collection))
                 .WillOnce(Throw(ModelException("Collection in DB")))
                 .RetiresOnSaturation();
 
@@ -953,15 +955,39 @@ TEST_F(HandlerTest, addCollection) {
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
                 .RetiresOnSaturation();
-
-        EXPECT_CALL(this->model, saveMuseumToDB(m))
-                .Times(1)
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, saveCollectionToDB(collection))
+                .WillOnce(Return(collection))
                 .RetiresOnSaturation();
 
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
+
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(museumOther))
+                .RetiresOnSaturation();
+
+        /**< Cases 10- */
+        Collection collectionOther(data["collection"]["name"],data["collection"]["description"],
+                data["collection"]["introduction"], data["collection"]["image"], museumOther);
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getMuseumObject((int) data["museum"]["id"]))
+                .WillOnce(Return(museum))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, saveCollectionToDB(collection))
+                .WillOnce(Throw(ModelException("Collection in DB")))
+                .RetiresOnSaturation();
     }
     // else
 }
