@@ -28,11 +28,13 @@ public:
 
     virtual void saveEditToDB(Edit<Collection>&);
     virtual void updateEditInDB(Edit<Collection>&);
+    virtual void removeEditInDB(Edit<Collection>&);
     virtual void saveEditToDB(Edit<Artifact>&);
     virtual void updateEditInDB(Edit<Artifact>&);
+    virtual void removeEditInDB(Edit<Artifact>&);
     virtual void saveEditToDB(Edit<Museum>&);
     virtual void updateEditInDB(Edit<Museum>&);
-
+    virtual void removeEditInDB(Edit<Museum>&);
 
     virtual std::vector<Edit<Museum>> getMuseumEdits(int userID);
     virtual std::vector<Edit<Collection>> getCollectionEdits(int userID);
@@ -41,6 +43,10 @@ public:
     virtual std::vector<Edit<Museum>> getMuseumActions(int museumID);
     virtual std::vector<Edit<Collection>> getCollectionActions(int museumID);
     virtual std::vector<Edit<Artifact>> getArtifactActions(int museumID);
+
+    virtual Edit<Museum> getEditMuseumObject(int editID);
+    virtual Edit<Collection> getEditCollectionObject(int editID);
+    virtual Edit<Artifact> getEditArtifactObject(int editID);
 
     virtual Artifact getArtifact(int artifactID);
     virtual void saveArtifactToDB(Artifact &);
@@ -52,6 +58,10 @@ public:
     virtual std::vector<Artifact> getArtifactsByCollection(int collectionID);
     virtual void addArtifactCollection(const Collection & collection, const Artifact & artifact);
     virtual void addArtifactCollection(const Artifact & artifact, const Collection & collection);
+    virtual void removeArtifactCollection(const Collection & collection, const Artifact & artifact);
+    virtual void removeArtifactCollection(const Artifact & artifact, const Collection & collection);
+    virtual void removeArtifactCollection(const Artifact & artifact);
+    virtual void removeArtifactCollection(const Collection & collection);
 
     virtual Collection getCollectionObject(int collectionID);
     virtual std::vector<Collection> getCollectionListByMuseumID(int museumID);

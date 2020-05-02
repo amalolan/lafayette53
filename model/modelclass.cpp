@@ -384,6 +384,7 @@ void ModelClass::saveEditToDB(Edit<Museum> & edit){
     int seed = std::chrono::steady_clock::now().time_since_epoch().count();
     std::default_random_engine eng(seed);
     int nextEditIndex = eng();
+    QString editID = QString::fromStdString(std::to_string(nextEditIndex));
     QString museumID = QString::fromStdString(std::to_string(edit.getObject().getMuseumID()));
     QString description = QString::fromStdString(edit.getObject().getDescription());
     QString intro = QString::fromStdString(edit.getObject().getIntro());
@@ -395,7 +396,7 @@ void ModelClass::saveEditToDB(Edit<Museum> & edit){
 
     bool done =
     query.exec("INSERT INTO edit(museumID, userID, name, description, photo, introduction, kind, status)"
-               " VALUES ("+museumID+", "+userID+", '"+name+"', '"+description+"', '"+photo+"', "
+               " VALUES ("+editID+", "+museumID+", "+userID+", '"+name+"', '"+description+"', '"+photo+"', "
                  "'"+intro+"', "+kind+", "+status+")");
 
     if(!done)
@@ -418,6 +419,7 @@ void ModelClass::saveEditToDB(Edit<Collection> & edit){
     int seed = std::chrono::steady_clock::now().time_since_epoch().count();
     std::default_random_engine eng(seed);
     int nextEditIndex = eng();
+    QString editID = QString::fromStdString(std::to_string(nextEditIndex));
     QString collectionID = QString::fromStdString(std::to_string(edit.getObject().getID()));
     QString museumID = QString::fromStdString(std::to_string(edit.getObject().getMuseum().getMuseumID()));
     QString description = QString::fromStdString(edit.getObject().getDescription());
@@ -429,7 +431,7 @@ void ModelClass::saveEditToDB(Edit<Collection> & edit){
     QString userID = QString::fromStdString(std::to_string(edit.getEditor().getUserID()));
     bool done =
     query.exec("INSERT INTO edit(museumID, userID, collectionID, name, description, photo, introduction, kind, status)"
-               " VALUES ("+museumID+", "+userID+", "+collectionID+", '"+name+"', '"+description+"', '"+photo+"', "
+               " VALUES ("+editID+", "+museumID+", "+userID+", "+collectionID+", '"+name+"', '"+description+"', '"+photo+"', "
                  "'"+intro+"', "+kind+", "+status+")");
 
     if(!done)
@@ -556,6 +558,57 @@ void ModelClass::updateEditInDB(Edit<Museum> & edit){
     }
     query.exec("PRAGMA foreign_keys = ON;");
     query.finish();
+}
+
+void ModelClass::removeEditInDB(Edit<Collection> & edit){
+    if (!edit.indb())
+    {
+        throw ModelException("Edit object not in database");
+    }
+    QString id = QString::fromStdString(std::to_string(edit.getID()));
+    query.exec("DELETE FROM edit WHERE editID = "+id+";");
+    bool done = query.numRowsAffected() == 1;
+
+    if (!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting museum object failed. Reason: "+err);
+        throw ModelException(err);
+    }
+}
+
+void ModelClass::removeEditInDB(Edit<Artifact> & edit){
+    if (!edit.indb())
+    {
+        throw ModelException("Edit object not in database");
+    }
+    QString id = QString::fromStdString(std::to_string(edit.getID()));
+    query.exec("DELETE FROM edit WHERE editID = "+id+";");
+    bool done = query.numRowsAffected() == 1;
+
+    if (!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting museum object failed. Reason: "+err);
+        throw ModelException(err);
+    }
+}
+
+void ModelClass::removeEditInDB(Edit<Museum> & edit){
+    if (!edit.indb())
+    {
+        throw ModelException("Edit object not in database");
+    }
+    QString id = QString::fromStdString(std::to_string(edit.getID()));
+    query.exec("DELETE FROM edit WHERE editID = "+id+";");
+    bool done = query.numRowsAffected() == 1;
+
+    if (!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting museum object failed. Reason: "+err);
+        throw ModelException(err);
+    }
 }
 
 std::vector<Edit<Museum>> ModelClass::getMuseumEdits(int userID){
@@ -837,15 +890,12 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
 
     for (std::vector<std::string> row : queryList)
     {
-        Artifact artifact("","","","", museum);
-        if (std::stoi(row.at(6)) != Edit<Artifact>::add)
-        {
-            artifact = this->getArtifact(std::stoi(row.at(0)));
-        }
+        Artifact artifact("","","","", this->getMuseumObject(std::stoi(row.at(9))));
         artifact.setName(row.at(1));
         artifact.setDescription(row.at(2));
         artifact.setIntro(row.at(4));
         artifact.setPhoto(row.at(3));
+        artifact.setID(std::stoi(row.at(0)));
         User user = getUserObject(std::stoi(row.at(8)));
         std::vector<Collection> list;
         std::stringstream ss(row.at(9));
@@ -858,6 +908,125 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
         output.push_back(edit);
     }
     return output;
+}
+
+Edit<Museum> ModelClass::getEditMuseumObject(int editID){
+    QString id = QString::fromStdString(std::to_string(editID));
+    bool done = query.exec
+    ("SELECT museumID, name, description, photo, introduction, status, kind, editID, userID"
+     " FROM edit WHERE editID = "+id+" AND museumID != -2 AND collectionID = -2 AND artifactID = -2;");
+    if (!done)
+    {
+        throw ModelException
+        ("Failure retrieving data from db. Reason: "+query.lastError().databaseText().toStdString()
+         +" Cause: "+query.lastError().driverText().toStdString());
+    }
+    query.next();
+    if (!query.isValid())
+    {
+        throw ModelException("Edit<Museum> object does not exist in database");
+    }
+    std::vector<std::string> rowList;
+    rowList.push_back(query.value(0).toString().toStdString());
+    rowList.push_back(query.value(1).toString().toStdString());
+    rowList.push_back(query.value(2).toString().toStdString());
+    rowList.push_back(query.value(3).toString().toStdString());
+    rowList.push_back(query.value(4).toString().toStdString());
+    rowList.push_back(query.value(5).toString().toStdString());
+    rowList.push_back(query.value(6).toString().toStdString());
+    rowList.push_back(query.value(7).toString().toStdString());
+    rowList.push_back(query.value(8).toString().toStdString());
+    Museum museum = this->getMuseumObject(std::stoi(rowList.at(0)));
+    museum.setName(rowList.at(1));
+    museum.setDescription(rowList.at(2));
+    museum.setIntro(rowList.at(4));
+    museum.setPhoto(rowList.at(3));
+    User user = getUserObject(std::stoi(rowList.at(8)));
+    Edit<Museum> edit(museum, std::stoi(rowList.at(6)), user, std::stoi(rowList.at(5)), std::stoi(rowList.at(7)));
+    return edit;
+}
+
+Edit<Collection> ModelClass::getEditCollectionObject(int editID){
+    QString id = QString::fromStdString(std::to_string(editID));
+    bool done = query.exec
+    ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, userID, list"
+     " FROM edit WHERE editID = "+id+" AND artifactID = -2 AND collectionID != -2;");
+    if (!done)
+    {
+        throw ModelException
+        ("Failure retrieving data from db. Reason: "+query.lastError().databaseText().toStdString()
+         +" Cause: "+query.lastError().driverText().toStdString());
+    }
+    query.next();
+    if (!query.isValid())
+    {
+        throw ModelException("Edit<Collection> object does not exist in database");
+    }
+    std::vector<std::string> rowList;
+    rowList.push_back(query.value(0).toString().toStdString());
+    rowList.push_back(query.value(1).toString().toStdString());
+    rowList.push_back(query.value(2).toString().toStdString());
+    rowList.push_back(query.value(3).toString().toStdString());
+    rowList.push_back(query.value(4).toString().toStdString());
+    rowList.push_back(query.value(5).toString().toStdString());
+    rowList.push_back(query.value(6).toString().toStdString());
+    rowList.push_back(query.value(7).toString().toStdString());
+    rowList.push_back(query.value(8).toString().toStdString());
+    Collection collection = this->getCollectionObject(std::stoi(rowList.at(0)));
+    collection.setName(rowList.at(1));
+    collection.setDescription(rowList.at(2));
+    collection.setIntro(rowList.at(4));
+    collection.setPhoto(rowList.at(3));
+    User user = getUserObject(std::stoi(rowList.at(8)));
+    Edit<Collection> edit(collection, std::stoi(rowList.at(6)), user, std::stoi(rowList.at(5)), std::stoi(rowList.at(7)));
+    return edit;
+}
+
+Edit<Artifact> ModelClass::getEditArtifactObject(int editID){
+    QString id = QString::fromStdString(std::to_string(editID));
+    bool done = query.exec
+    ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, userID, list"
+     " FROM edit WHERE editID = "+id+" AND collectionID = -2 AND artifactID != -2;");
+    if (!done)
+    {
+        throw ModelException
+        ("Failure retrieving data from db. Reason: "+query.lastError().databaseText().toStdString()
+         +" Cause: "+query.lastError().driverText().toStdString());
+    }
+    query.next();
+    if (!query.isValid())
+    {
+        throw ModelException("Edit<Artifact> object does not exist in database");
+    }
+
+    std::vector<std::string> rowList;
+    rowList.push_back(query.value(0).toString().toStdString());
+    rowList.push_back(query.value(1).toString().toStdString());
+    rowList.push_back(query.value(2).toString().toStdString());
+    rowList.push_back(query.value(3).toString().toStdString());
+    rowList.push_back(query.value(4).toString().toStdString());
+    rowList.push_back(query.value(5).toString().toStdString());
+    rowList.push_back(query.value(6).toString().toStdString());
+    rowList.push_back(query.value(7).toString().toStdString());
+    rowList.push_back(query.value(8).toString().toStdString());
+    rowList.push_back(query.value(9).toString().toStdString());
+
+    Artifact artifact("","","","", this->getMuseumObject(std::stoi(rowList.at(9))));
+    artifact.setName(rowList.at(1));
+    artifact.setDescription(rowList.at(2));
+    artifact.setIntro(rowList.at(4));
+    artifact.setPhoto(rowList.at(3));
+    artifact.setID(std::stoi(rowList.at(0)));
+    User user = getUserObject(std::stoi(rowList.at(8)));
+    std::vector<Collection> list;
+    std::stringstream ss(rowList.at(9));
+    std::string token;
+    while (std::getline(ss, token, ' '))
+    {
+        list.push_back(this->getCollectionObject(std::stoi(token)));
+    }
+    Edit<Artifact> edit(artifact, std::stoi(rowList.at(6)), user, list, std::stoi(rowList.at(5)), std::stoi(rowList.at(7)));
+    return edit;
 }
 
 Artifact ModelClass::getArtifact(int artifactID){
@@ -1064,6 +1233,86 @@ void ModelClass::addArtifactCollection(const Artifact & artifact, const Collecti
         throw ModelException("Saving artifact-collection affliation failed. Reason: "+err);
     }
     query.finish();
+}
+
+void ModelClass::removeArtifactCollection(const Collection & collection, const Artifact & artifact){
+    ModelClass::artifactCheck(artifact);
+    ModelClass::collectionCheck(collection);
+
+    QString collectionID = QString::fromStdString(std::to_string(collection.getID()));
+    QString artifactID = QString::fromStdString(std::to_string(artifact.getID()));
+
+    bool done = query.exec("DELETE FROM artifactCollection WHERE "
+                  "artifactID = "+artifactID+" AND collectionID = "+collectionID+";");
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting artifact-collection affliation failed. Reason: "+err);
+    }
+    done = query.numRowsAffected() != 0;
+    if (!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting artifact-collection affliation failed. Reason: "+err);
+    }
+}
+
+void ModelClass::removeArtifactCollection(const Artifact & artifact, const Collection & collection){
+    ModelClass::artifactCheck(artifact);
+    ModelClass::collectionCheck(collection);
+
+    QString collectionID = QString::fromStdString(std::to_string(collection.getID()));
+    QString artifactID = QString::fromStdString(std::to_string(artifact.getID()));
+
+    bool done = query.exec("DELETE FROM artifactCollection WHERE "
+                  "artifactID = "+artifactID+" AND collectionID = "+collectionID+";");
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting artifact-collection affliation failed. Reason: "+err);
+    }
+    done = query.numRowsAffected() != 0;
+    if (!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting artifact-collection affliation failed. Reason: "+err);
+    }
+}
+
+void ModelClass::removeArtifactCollection(const Artifact & artifact){
+    ModelClass::artifactCheck(artifact);
+    QString artifactID = QString::fromStdString(std::to_string(artifact.getID()));
+    bool done = query.exec("DELETE FROM artifactCollection WHERE "
+                  "artifactID = "+artifactID+";");
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting artifact-collection affliation failed. Reason: "+err);
+    }
+    done = query.numRowsAffected() != 0;
+    if (!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting artifact-collection affliation failed. Reason: "+err);
+    }
+}
+
+void ModelClass::removeArtifactCollection(const Collection & collection){
+    ModelClass::collectionCheck(collection);
+    QString collectionID = QString::fromStdString(std::to_string(collection.getID()));
+    bool done = query.exec("DELETE FROM artifactCollection WHERE "
+                  "collectionID = "+collectionID+";");
+    if(!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting artifact-collection affliation failed. Reason: "+err);
+    }
+    done = query.numRowsAffected() != 0;
+    if (!done)
+    {
+        std::string err = query.lastError().databaseText().toStdString()+". Cause: "+query.lastError().driverText().toStdString();
+        throw ModelException("Deleting artifact-collection affliation failed. Reason: "+err);
+    }
 }
 
 Collection ModelClass::getCollectionObject(int collectionID){
