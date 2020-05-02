@@ -1,7 +1,5 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
-#include <iostream>
-#include "handler.h"
 #ifndef CODE_BASE_DIRECTORY
     #ifdef __APPLE__
         #define CODE_BASE_DIRECTORY "../../../../../lafayette53/"
@@ -10,11 +8,10 @@
     #endif
 #endif// CODE_BASE_DIRECTORY
 #define BOOST_ASIO_HAS_STD_ATOMIC
+#include <iostream>
+#include "handler.h"
 
-//using namespace web;
-using namespace web::http;
-using namespace utility;
-using namespace web::http::experimental::listener;
+using namespace std;
 
 /**
  * @brief The Controller class Is the Server. When initialized, it starts listening to
@@ -41,7 +38,7 @@ public:
      * @param address string [usually "http://127.0.0.1:5300" ]
      * @param model The database/ModelClass object associated with this Controller object.
      */
-    Controller(const string_t& address, ModelClassExt *model, std::string codeBaseDirectory)  {
+    Controller(const string_t& address, ModelClass *model, std::string codeBaseDirectory)  {
         uri_builder uri(address);
         auto addr = uri.to_uri().to_string();
         this->g_httpHandler = new Handler(addr, model, codeBaseDirectory);

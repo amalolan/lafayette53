@@ -31,25 +31,26 @@
 #include "cpprest/producerconsumerstream.h"
 #include <QDirIterator>
 //#include <execinfo.h>
-#include "../nlohmann/json.hpp"
 #include <exception>
-#include "modelclassext.h"
 //#include "../model/modelclass.h"
-#include "util.h"
 #include "../model/ModelException.h"
 #include "../model/collection.h"
 #include "../model/user.h"
 #include "../model/museum.h"
 #include "../model/artifact.h"
+
+#include "modelclassext.h"
+#include "util.h"
+
+#include "../nlohmann/json.hpp"
+using json = nlohmann::json;
+
 using namespace utility;                    // Common utilities like string conversions
 //using namespace web; // Common features like URIs.
-//using http_request = web::http_request;
-//using http = web::http;
 using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 using namespace web::http::experimental::listener;
-using json = nlohmann::json;
 
 
 class Handler
@@ -104,12 +105,13 @@ private:
     void addMuseum(http_request);
     void addUser(http_request);
     void addCollection(http_request);
-    void addArtifact(http_request);
-    void editArtifact(http_request);
+    void reviewEdit(http_request);
+    void deleteMuseum(http_request,int);
 
     void handle_put(http_request);
     void handle_delete(http_request);
-    void deleteMuseum(http_request,int);
+
+    void addEditArtifact(http_request message, int kind);
     void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
 };
 

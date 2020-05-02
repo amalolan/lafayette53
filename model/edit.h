@@ -45,17 +45,12 @@ public:
         this->id = id;
     }
 
-    ~Edit(){
-
-    }
-
-    Edit& operator = (const Edit &edit)
+    Edit(const Edit &) = default;
+    Edit& operator = (const Edit&) = default;
+    Edit& operator=(Edit&&) = default;
+    Edit(Edit&&) = default;
+    virtual ~Edit()
     {
-        this->object = edit.getObject();
-        this->user = edit.getEditor();
-        this->kind = edit.getKind();
-        this->status = edit.getStatus();
-        return *this;
     }
 
     T getObject() const
@@ -107,6 +102,17 @@ public:
         this->status = reject;
     }
 
+    bool compareList(const std::vector<Collection> list) const
+    {
+        for (Collection col : list)
+        {
+            if (std::find(collection.begin(), collection.end(), col)==collection.end())
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 
     json toJSON() const
     {
@@ -168,4 +174,36 @@ private:
     int id;
     std::vector<Collection> collection;
 };
+template <class T>
+const int Edit<T>::add;
+template <class T>
+const int Edit<T>::del;
+template <class T>
+const int Edit<T>::edit;
+template <class T>
+const int Edit<T>::approve;
+template <class T>
+const int Edit<T>::reject;
+template <class T>
+const int Edit<T>::pending;
+
+template <class T>
+inline bool operator==(const Edit<T>& lhs, const Edit<T>& rhs) {
+        return ((lhs.getObject() == rhs.getObject())
+                && (lhs.getID() == rhs.getID())
+                && (lhs.getKind() == rhs.getKind())
+                && (lhs.getStatus() == rhs.getStatus())
+                && (lhs.getEditor() == rhs.getEditor())
+                && (lhs.compareList(rhs.getCollectionList())));
+}
+
+template <class T>
+inline bool operator!=(const Edit<T>& lhs, const Edit<T>& rhs) {
+    return ((lhs.getObject() != rhs.getObject())
+            || (lhs.getID() != rhs.getID())
+            || (lhs.getKind() != rhs.getKind())
+            || (lhs.getStatus() != rhs.getStatus())
+            || (lhs.getEditor() != rhs.getEditor())
+            || !(lhs.compareList(rhs.getCollectionList())));
+}
 #endif // EDIT_H
