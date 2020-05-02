@@ -61,12 +61,13 @@ void Handler::addEditArtifact(http_request message, int kind) {
         }
         //artifact
         json artifactJSON = data["artifact"];
-        Util::validateJSON(artifactJSON, {"name","description", "introduction", "image", "collectionList"});
+        Util::validateJSON(artifactJSON, {"name","description", "introduction", "image"});
         Artifact artifact(data["artifact"]["name"], data["artifact"]["description"],
-                data["artifact"]["introduction"], data["artifact"]["image"], m);;
+                data["artifact"]["introduction"], data["artifact"]["image"], m);
         if (kind == Edit<Artifact>::edit) {
             Util::validateJSON(artifactJSON, {"id"});
-            artifact.setID((int) artifactJSON["id"]);
+            this->model->getArtifact((int) artifactJSON["id"]);
+            artifact.setID(artifactJSON["id"]);
         }
         bool isCurator = (m.getUser().getUserID() == user.getUserID());
         std::string statusMessage;
@@ -562,16 +563,6 @@ void Handler::addMuseum(http_request message){
         this->handle_error(message, t, "Error creating museum.");
     });
 }
-
-/*
-{
-"museum": {"id": 1 },
-"collection": {"description": "museum Description", "name": "museum title", "introduction": "intro"},
-"user": {"username": "testUser", "password": "test"}
-}
-
-*/
-
 
 //
 // A PUT request
