@@ -247,11 +247,12 @@ void Handler::returnEditByID(http_request message, int editID)
         artifact["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
                                                 {"id", "name", "description", "introduction", "image"});
 
-        artifact["museum"]["id"] = edit.getObject().getMuseum().getMuseumID();
+        Museum m = edit.getObject().getMuseum();
+        artifact["museum"] = Util::getObjectWithKeys<Museum>(m, {"id"});
         artifact["collectionList"] = Util::arrayFromVector<Collection>(edit.getCollectionList(), {"id","name"});
 
         editJSON["artifact"] = artifact;
-
+        editJSON["reviewer"] = Util::getObjectWithKeys<User>(m.getUser(), {"username"});
         ucout << editJSON.dump(3) << '\n';
         return message.reply(status_codes::OK, editJSON.dump(3));
     }).then([=](pplx::task<void> t){
@@ -418,21 +419,20 @@ void Handler::addEditCollection(web::http::http_request message, int kind) {
         Collection collection(data["collection"]["name"], data["collection"]["description"],
                 data["collection"]["introduction"], data["collection"]["image"], museum);
 
-        if (kind == Edit<Artifact>::edit) {
+        if (kind == Edit<Collection>::edit) {
             Util::validateJSON(data["collection"], {"id"});
             this->model->getCollectionObject((int) data["collection"]["id"]);
             collection.setID(data["collection"]["id"]);
         }
-        int curatorID = museum.getUser().getUserID();
-        bool isCuratorOfMuseum = (user.getUserID()  == curatorID);
+        bool isCuratorOfMuseum = (user.getUserID()  == museum.getUser().getUserID());
+        ucout<<"Is curator " << isCuratorOfMuseum << std::endl;
 
         std::string statusMessage;
         if(isCuratorOfMuseum){
-            if (kind == Edit<Artifact>::edit) {
-                //TODO change collection stuff.
+            if (kind == Edit<Collection>::edit) {
                 this->model->updateCollectionInDB(collection);
                 ucout << "edit done.\n";
-                statusMessage = "Artifact has been successfully edited.";
+                statusMessage = "Collection has been successfully edited.";
             } else {
                 this->model->saveCollectionToDB(collection);
                 ucout << "saved to database\n";
@@ -441,13 +441,13 @@ void Handler::addEditCollection(web::http::http_request message, int kind) {
         } else{
             Edit<Collection> edit(collection, kind, user);
             this->model->saveEditToDB(edit);
-            ucout << "edit collection added to review list.\n";
-            statusMessage = "Collection Edits added to the review list.";
-            //TODO not owner add to request thing.
+            ucout << "edit/add collection added to review list.\n";
+            statusMessage = "Your collection edit/addition will be published after review.";
         }
         return message.reply(status_codes::OK, Util::getSuccessJsonStr(statusMessage));
     }).then([=](pplx::task<void> t){
-        this->handle_error(message, t, "Error adding collection.");
+        this->handle_error(message, t, "Error adding/updating collection. Please ensure no other collection has"
+                                       "the same name.");
     });
 };
 
@@ -505,7 +505,7 @@ void Handler::addEditArtifact(http_request message, int kind) {
             Edit<Artifact> edit(artifact, kind, user, collections);
             this->model->saveEditToDB(edit);
             ucout << "edit artifact added to review list.\n";
-            statusMessage = "Artifact Edits added to the review list.";
+            statusMessage = "Your artifact edit/addition will be published after review.";
         }
         return message.reply(status_codes::OK, Util::getSuccessJsonStr(statusMessage));
     }).then([=](pplx::task<void> t){
