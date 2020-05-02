@@ -27,12 +27,9 @@ void Handler::addCollection(web::http::http_request message) {
             ucout << "not the owner\n";
             return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You are not "
                                                                                        "the owner of the museum!"));
-
             //TODO not owner add to request thing.
         }
         //return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Collection Addition Not Implemented"));
-
-
     }).then([=](pplx::task<void> t){
         this->handle_error(message, t, "Error adding collection.");
     });
@@ -62,11 +59,8 @@ void Handler::editArtifact(http_request message){
         {
             json c = item.value();
             Util::validateJSON(c, {"id","name"});
-            Collection col(c["name"], "", "", "", m, c["id"]);
-            collections.push_back(col);
+            collections.push_back(this->model->getCollectionObject(c["id"]));
         }
-
-        Edit<Artifact> edit(artifact, Edit<Artifact>::edit, editor, collections);
 
         bool isCurator = (m.getUser().getUserID() == editor.getUserID());
 
@@ -77,6 +71,7 @@ void Handler::editArtifact(http_request message){
             ucout << "edit done.\n";
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact in your museum updated!"));
         } else{
+            Edit<Artifact> edit(artifact, Edit<Artifact>::edit, editor, collections);
             this->model->saveEditToDB(edit);
             ucout << "edit added to review list.\n";
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edis Successfully added to "
@@ -89,13 +84,12 @@ void Handler::editArtifact(http_request message){
 
 void Handler::addArtifact(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
-
         json data = json::parse(s);
         ucout << data.dump(4) << std::endl;
         //validate JSON
         Util::validateJSON(data, {"collection", "artifact", "user", "museum"});
-        Util::validateJSON(data["artifact"], {"name", "description", "image", "collectionList","introduction"});
-        json collectionList = data["collection"];
+        Util::validateJSON(data["artifact"], {"name", "description", "image", "introduction"});
+        json collectionList = data["artifact"]["collection"];
         //retrieve data from database. Check login info.
         User u = Util::checkLogin(data["user"], this->model);
         Museum m = this->model->getMuseumObject((int)data["museum"]["id"]);
@@ -105,33 +99,32 @@ void Handler::addArtifact(http_request message){
             return message.reply(status_codes::Conflict, Util::getFailureJsonStr("Artifact has to be associated with"
                                                                                  " at least one collection."));
         }
-
+        // Collections
+        std::vector<Collection> collections;
+        for(auto item : collectionList.items())
+        {
+            Collection col = this->model->getCollectionObject(item.value()["id"]);
+            collections.push_back(col);
+        }
         bool isCuratorOfMuseum = (m.getUser().getUserID() == u.getUserID());
+
+        Artifact* artifact  = new Artifact(data["artifact"]["name"], data["artifact"]["description"],
+                data["artifact"]["introduction"], data["artifact"]["image"], m);
         if(isCuratorOfMuseum)
         {
-            Artifact* artifact  =  new Artifact(data["artifact"]["name"], data["artifact"]["description"],
-                    data["artifact"]["introduction"], data["artifact"]["image"], m);
             this->model->saveArtifactToDB(*artifact);
-            for(auto& item : collectionList.items())
+            for(Collection col : collections)
             {
-                Collection col = this->model->getCollectionObject(item.value());
                 this->model->addArtifactCollection(*artifact,col);
             }
             ucout << "Artifact Saved to database.";
             delete artifact;
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact saved to database."));
         } else {
-            Artifact a(data["artifact"]["name"], data["artifact"]["description"],
-                    data["artifact"]["introduction"], data["artifact"]["image"], m);
-            std::vector<Collection> collections;
-            for(auto item : collectionList.items())
-            {
-                Collection col("", "", "", "", m, item.value());
-                collections.push_back(col);
-            }
-            Edit<Artifact> edit(a,Edit<Artifact>::add, u, collections);
+            Edit<Artifact> edit(*artifact,Edit<Artifact>::add, u, collections);
             this->model->saveEditToDB(edit);
             ucout << "Edit saved to database.\n";
+            delete artifact;
             return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Edit added to review list."));
         }
     }).then([=](pplx::task<void> t){
@@ -195,12 +188,12 @@ void Handler::getUserProfile(http_request message){
             }
         }
 
-        json output;
-        output["user"] = userJSON;
-        output["editsList"] = editList;
-        output["museumList"] = museumsJSON;
-        output["actionsList"] = actionsList;
-
+        json output = {
+            {"user", userJSON},
+            {"editsList", editList},
+            {"museumList", museumsJSON},
+            {"actionsList", actionsList}
+        };
         return message.reply(status_codes::OK, output.dump(3));
 
     }).then([=] (pplx::task<void> t) {
