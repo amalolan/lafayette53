@@ -239,6 +239,7 @@ void Handler::returnArtifactByID(http_request message, int artifactID) {
 void Handler::returnEditByID(http_request message, int editID)
 {
     message.extract_string(false).then([=](utility::string_t s){
+        ucout<< s <<std::endl;
         Edit<Artifact> edit = this->model->getEditArtifactObject(editID);
         json editJSON = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "collection",
                                                                 "approvalStatus"});
@@ -291,8 +292,11 @@ void Handler::handle_post(http_request message)
         // URL: /request/add-collection
         else if(paths[1] == "add-collection")
         {
-            addCollection(message);
+            addEditCollection(message, Edit<Collection>::add);
             return;
+        }
+        else if (paths[1] == "edit-collection") {
+            addEditCollection(message, Edit<Collection>::edit);
         }
         // URL: /request/user-profile
         else if (paths[1] == "user-profile")
@@ -398,7 +402,7 @@ void Handler::addMuseum(http_request message){
     });
 }
 
-void Handler::addCollection(web::http::http_request message) {
+void Handler::addEditCollection(web::http::http_request message, int kind) {
     message.extract_string(false).then([=](utility::string_t s){
         //parses user and museum objects from stirng.
         json data = json::parse(s);
@@ -407,27 +411,41 @@ void Handler::addCollection(web::http::http_request message) {
         // nested object individually.
         Util::validateJSON(data, {"museum", "collection", "user"});
         Util::validateJSON(data["museum"], {"id"});
-        Util::validateJSON(data["collection"], {"description", "name", "introduction"});
+        Util::validateJSON(data["collection"], {"description", "name", "introduction", "image"});
         User user = Util::checkLogin(data["user"], this->model);
         //gets museum and user objects.
         Museum museum = this->model->getMuseumObject((int) data["museum"]["id"]);
+        Collection collection(data["collection"]["name"], data["collection"]["description"],
+                data["collection"]["introduction"], data["collection"]["image"], museum);
 
+        if (kind == Edit<Artifact>::edit) {
+            Util::validateJSON(data["collection"], {"id"});
+            this->model->getCollectionObject((int) data["collection"]["id"]);
+            collection.setID(data["collection"]["id"]);
+        }
         int curatorID = museum.getUser().getUserID();
         bool isCuratorOfMuseum = (user.getUserID()  == curatorID);
+
+        std::string statusMessage;
         if(isCuratorOfMuseum){
-            Collection *collection = new Collection(data["collection"]["name"], data["collection"]["description"],
-                    data["collection"]["introduction"], data["collection"]["image"], museum);
-            this->model->saveCollectionToDB(*collection);
-            ucout << "saved to database\n";
-            delete collection;
-            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Collection added successfully."));
+            if (kind == Edit<Artifact>::edit) {
+                //TODO change collection stuff.
+                this->model->updateCollectionInDB(collection);
+                ucout << "edit done.\n";
+                statusMessage = "Artifact has been successfully edited.";
+            } else {
+                this->model->saveCollectionToDB(collection);
+                ucout << "saved to database\n";
+                statusMessage =  "Collection added successfully.";
+            }
         } else{
-            ucout << "not the owner\n";
-            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You are not "
-                                                                                       "the owner of the museum!"));
+            Edit<Collection> edit(collection, kind, user);
+            this->model->saveEditToDB(edit);
+            ucout << "edit collection added to review list.\n";
+            statusMessage = "Collection Edits added to the review list.";
             //TODO not owner add to request thing.
         }
-        //return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Collection Addition Not Implemented"));
+        return message.reply(status_codes::OK, Util::getSuccessJsonStr(statusMessage));
     }).then([=](pplx::task<void> t){
         this->handle_error(message, t, "Error adding collection.");
     });
@@ -486,8 +504,8 @@ void Handler::addEditArtifact(http_request message, int kind) {
         } else {
             Edit<Artifact> edit(artifact, kind, user, collections);
             this->model->saveEditToDB(edit);
-            ucout << "edit added to review list.\n";
-            statusMessage = "Edits added to the review list.";
+            ucout << "edit artifact added to review list.\n";
+            statusMessage = "Artifact Edits added to the review list.";
         }
         return message.reply(status_codes::OK, Util::getSuccessJsonStr(statusMessage));
     }).then([=](pplx::task<void> t){
