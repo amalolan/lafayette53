@@ -1,7 +1,5 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
-#include <iostream>
-#include "handler.h"
 #ifndef CODE_BASE_DIRECTORY
     #ifdef __APPLE__
         #define CODE_BASE_DIRECTORY "../../../../../lafayette53/"
@@ -10,11 +8,10 @@
     #endif
 #endif// CODE_BASE_DIRECTORY
 #define BOOST_ASIO_HAS_STD_ATOMIC
+#include <iostream>
+#include "handler.h"
 
-//using namespace web;
-using namespace web::http;
-using namespace utility;
-using namespace web::http::experimental::listener;
+using namespace std;
 
 /**
  * @brief The Controller class Is the Server. When initialized, it starts listening to
