@@ -92,6 +92,8 @@ private:
     ModelClassExt* model;
     std::string codeBaseDirectory;
 
+    void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
+
     void handle_get(http_request);
     void returnFrontendFile(http_request);
     void returnWildCard(http_request);
@@ -114,11 +116,10 @@ private:
 
     void addEditCollection(http_request, int);
     void addEditArtifact(http_request, int);
-    void reviewEdit(http_request);
-    std::string reviewArtifactEdit(int, bool, User);
-    std::string reviewCollectionEdit(int, bool, User);
+    void actOnEdit(http_request);
+    template <typename T>
+    std::string reviewEdit(Edit<T>, bool, User);
 
-    void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
 };
 
 #endif // HANDLER_H

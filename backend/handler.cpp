@@ -320,7 +320,7 @@ void Handler::handle_post(http_request message)
         // URL: /requst/review-edit
         else if(paths[1] == "review-edit" && paths.size() == 2)
         {
-            reviewEdit(message);
+            actOnEdit(message);
             return;
         }
         //delete requests.
@@ -550,8 +550,7 @@ void Handler::getUserProfile(http_request message){
         }
 
         // TODO Headcurator
-        User headCurator = this->model->getHeadCurator();
-        bool isHeadCurator = (user.getUserID() == headCurator.getUserID());
+        bool isHeadCurator = this->model->checkHeadCurator(user);
 
         json output = {
             {"user", Util::getObjectWithKeys<User>(user, {"username", "email", "id"})},
@@ -569,82 +568,28 @@ void Handler::getUserProfile(http_request message){
     return;
 }
 
-std::string Handler::reviewArtifactEdit(int editID, bool approved, User user) {
-    Edit<Artifact> edit = this->model->getEditArtifactObject(editID);
-    Artifact artifact = edit.getObject();
-    bool isCurator = (artifact.getMuseum().getUser().getUserID() == user.getUserID());
+template <typename T>
+std::string Handler::reviewEdit(Edit<T> edit, bool approved, User user) {
+    T object = edit.getObject();
+    bool isCurator = (object.getMuseum().getUser().getUserID() == user.getUserID());
     if (! isCurator) {
         ucout << "permission denied!" << '\n';
         throw BackendException("Permission to act on edit denied!");
     }
     ucout << "permission granted!\n";
-    if (! approved) {
+    if (approved) {
+        edit.approveEdit();
+        this->model->updateEditInDB(edit);
+        return "Edit approved.";
+    } else {
         edit.rejectEdit();
         this->model->updateEditInDB(edit);
         ucout << "edit rejected and updated\n";
         return "Edit rejected.";
     }
-    if (edit.getKind() == Edit<Artifact>::edit)
-    {
-        this->model->updateArtifactInDB(artifact);
-        this->model->removeArtifactCollection(artifact);
-        for( Collection collection : edit.getCollectionList())  {
-            this->model->addArtifactCollection(collection, artifact);
-        }
-        ucout << "edit approved and updated\n";
-    } else if (edit.getKind() == Edit<Artifact>::add)
-    {
-        this->model->saveArtifactToDB(artifact);
-        for( Collection collection : edit.getCollectionList()) {
-            this->model->addArtifactCollection(collection, artifact);
-        }
-        ucout << "artifact added\n";
-    } else // kind is Edit::del
-    {
-        this->model->removeArtifactInDB(artifact);
-        ucout << "artifact deleted\n";
-    }
-    edit.approveEdit();
-    this->model->updateEditInDB(edit);
-    return "Edit approved.";
 }
 
-std::string Handler::reviewCollectionEdit(int editID, bool approved, User user) {
-    Edit<Collection> edit = this->model->getEditCollectionObject(editID);
-    Collection collection = edit.getObject();
-    bool isCurator = (collection.getMuseum().getUser().getUserID() == user.getUserID());
-    if (! isCurator) {
-        ucout << "permission denied!" << '\n';
-        throw BackendException("Permission to act on edit denied!");
-    }
-    ucout << "permission granted!\n";
-    if (! approved) {
-        edit.rejectEdit();
-        this->model->updateEditInDB(edit);
-        ucout << "edit rejected and updated\n";
-        return "Edit rejected.";
-    }
-    if (edit.getKind() == Edit<Artifact>::edit)
-    {
-        this->model->updateCollectionInDB(collection);
-        ucout << "collection edit approved and updated\n";
-    } else if (edit.getKind() == Edit<Artifact>::add)
-    {
-        this->model->saveCollectionToDB(collection);
-        ucout << "collection added\n";
-    } else // kind is Edit::del
-    {
-        throw BackendException("Deletion not implemented.");
-//        this->model->removeCollectionInDB(collection);
-        // TODO
-//        ucout << "collection deleted\n";
-    }
-    edit.approveEdit();
-    this->model->updateEditInDB(edit);
-    return "Edit approved.";
-}
-
-void Handler::reviewEdit(http_request message) {
+void Handler::actOnEdit(http_request message) {
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
         ucout << data.dump(3) << '\n';
@@ -652,9 +597,11 @@ void Handler::reviewEdit(http_request message) {
         User user = Util::checkLogin(data["user"], this->model);
         std::string statusMessage;
         if (data["category"] == "artifact") {
-            statusMessage = this->reviewArtifactEdit(data["editId"], data["action"], user);
+            statusMessage = this->reviewEdit(this->model->getEditArtifactObject(data["editId"]),
+                    data["action"], user);
         } else if (data["category"] == "collection") {
-            statusMessage =  this->reviewCollectionEdit(data["editId"], data["action"], user);
+            statusMessage =  this->reviewEdit(this->model->getEditCollectionObject(data["editId"]),
+                    data["action"], user);
         } else if (data["category"] == "museum"){
             return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Editing museums has not been implemented"));
         } else {
@@ -675,10 +622,9 @@ void Handler::deleteMuseum(http_request message, int museumID)
         Util::validateJSON(data,{"username", "password"});
         User editor = Util::checkLogin(data,this->model);
         Museum museum = this->model->getMuseumObject(museumID);
-        User headCurator = this->model->getHeadCurator();
 
         bool isCurator = (editor.getUserID() == museum.getUser().getUserID());
-        bool isHeadCurator = (editor.getUserID() == headCurator.getUserID());
+        bool isHeadCurator = this->model->checkHeadCurator(editor);
         ucout << "Is curator "<< isCurator << "\n" ;
         if ( isCurator || isHeadCurator)
         {
