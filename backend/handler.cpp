@@ -35,7 +35,6 @@ void Handler::handle_get(http_request message)
     auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
 
     ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
-    EVP_get_digestbyname("sha512");
 
     // URL: /
     //check for frontend files.
@@ -671,7 +670,8 @@ void Handler::deleteArtifact(http_request message, int artifactID)
             ucout << "artifact deleted\n";
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact deleted."));
         } else {
-            Edit<Artifact> edit(artifact, Edit<Artifact>::del, editor, {});
+            std::vector<Collection> collections = this->model->getCollectionsByArtifact(artifactID);
+            Edit<Artifact> edit(artifact, Edit<Artifact>::del, editor, collections);
             ucout << "artifact saved to DB\n";
             this->model->saveEditToDB(edit);
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact will be deleted after review."));
