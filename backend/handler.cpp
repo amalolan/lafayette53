@@ -35,7 +35,6 @@ void Handler::handle_get(http_request message)
     auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
 
     ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
-    EVP_get_digestbyname("sha512");
 
     // URL: /
     //check for frontend files.
@@ -324,6 +323,7 @@ void Handler::handle_post(http_request message)
             actOnEdit(message);
             return;
         }
+        // URL: /request/reset-password
         else if(paths[1] == "reset-password" && paths.size() == 2)
         {
             changePassword(message);
@@ -577,6 +577,8 @@ void Handler::getUserProfile(http_request message){
 template <typename T>
 std::string Handler::reviewEdit(Edit<T> edit, bool approved, User user) {
     T object = edit.getObject();
+    std::string email = edit.getEditor().getEmail();
+    std::string emailMessage = "Your edit on " + object.getName() + " has been ";
     bool isCurator = (object.getMuseum().getUser().getUserID() == user.getUserID());
     if (! isCurator) {
         ucout << "permission denied!" << '\n';
@@ -586,10 +588,15 @@ std::string Handler::reviewEdit(Edit<T> edit, bool approved, User user) {
     if (approved) {
         edit.approveEdit();
         this->model->updateEditInDB(edit);
+        emailMessage += "approved";
+        Util::sendEmail(email, "Your Edit has been approved.", emailMessage);
+        ucout << "edit approved and updated";
         return "Edit approved.";
     } else {
         edit.rejectEdit();
         this->model->updateEditInDB(edit);
+        emailMessage += "denied";
+        Util::sendEmail(email, "Your Edit has been denied.", emailMessage);
         ucout << "edit rejected and updated\n";
         return "Edit rejected.";
     }
@@ -663,7 +670,8 @@ void Handler::deleteArtifact(http_request message, int artifactID)
             ucout << "artifact deleted\n";
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact deleted."));
         } else {
-            Edit<Artifact> edit(artifact, Edit<Artifact>::del, editor, {});
+            std::vector<Collection> collections = this->model->getCollectionsByArtifact(artifactID);
+            Edit<Artifact> edit(artifact, Edit<Artifact>::del, editor, collections);
             ucout << "artifact saved to DB\n";
             this->model->saveEditToDB(edit);
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact will be deleted after review."));
@@ -681,12 +689,12 @@ void Handler::changePassword(http_request message)
         ucout << data.dump(3) << '\n';
         User u = this->model->getUserObject((std::string)data["username"]);
         //random password generator
-        int len = qrand() % 10 + 8;
+        int len = std::rand()% 10 + 8;
         QString pass;
         pass.resize(len);
         for (int s = 0; s < len ; ++s)
         {
-            pass[s] = QChar('A' + char(qrand() % ('Z' - 'A')));
+            pass[s] = QChar('A' + char(std::rand() % ('Z' - 'A')));
         }
         QByteArray result = QCryptographicHash::hash(pass.toUtf8(), QCryptographicHash::Sha512);
         QString inputHash = QLatin1String(result.toHex());
@@ -698,7 +706,7 @@ void Handler::changePassword(http_request message)
         Util::sendEmail(u.getEmail(),"Password Reset", body);
         return message.reply(status_codes::OK, Util::getSuccessJsonStr("Password sent to your email!"));
     }).then([=](pplx::task<void> t){
-        handle_error(message, t, "Could not reset password.");
+        handle_error(message, t, "User not found.");
     });
 }
 //

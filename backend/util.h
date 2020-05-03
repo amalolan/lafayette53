@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 #include "../nlohmann/json.hpp"
-#include <openssl/sha.h>
+
 #include "../model/ModelException.h"
 #include "../model/modelclass.h"
 #include <cpprest/http_client.h>
