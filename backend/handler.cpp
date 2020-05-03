@@ -706,7 +706,7 @@ void Handler::changePassword(http_request message)
         Util::sendEmail(u.getEmail(),"Password Reset", body);
         return message.reply(status_codes::OK, Util::getSuccessJsonStr("Password sent to your email!"));
     }).then([=](pplx::task<void> t){
-        handle_error(message, t, "Could not reset password.");
+        handle_error(message, t, "User not found.");
     });
 }
 //
