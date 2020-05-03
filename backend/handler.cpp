@@ -372,6 +372,9 @@ void Handler::addUser(http_request message){
         User *user = new User(userJSON["username"], userJSON["email"], userJSON["password"]);
         this->model->saveUserToDB(*user);
         delete user;
+        std::string welcomeMessage = (std::string)(userJSON["username"]) + " it is a pleasure having you on our platform!"
+                                                            "\nFor further information please contact head curator!";
+        Util::sendEmail(userJSON["email"], "Welcome to Museum Wikia!", welcomeMessage);
         ucout << "success add user\n";
         return message.reply(status_codes::OK, Util::getSuccessJsonStr("User registered."));
     }).then([=] (pplx::task<void> t) {

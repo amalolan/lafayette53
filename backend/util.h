@@ -6,7 +6,8 @@
 
 #include "../model/ModelException.h"
 #include "../model/modelclass.h"
-
+#include <cpprest/http_client.h>
+#include <cpprest/http_listener.h>
 using json = nlohmann::json;
 
 /**
@@ -242,6 +243,35 @@ public:
         output["collection"]["museum"] = Util::getObjectWithKeys<Museum>(m, {"id", "name"});
         output["reviewer"] = Util::getObjectWithKeys<User>(m.getUser(), {"username"});
         return output;
+    }
+    static void sendEmail(std::string to, std::string subject, std::string body)
+    {
+        json email = {
+            {"to", to},
+            {"subject", subject},
+            {"body", body}
+        };
+        web::http::client::http_client client("https://prod-111.westus.logic.azure.com:443"
+                                              "/workflows/b1743f93b23745e3a13a7a314c8ad913"
+                                              "/triggers/manual/paths/invoke?api-version=2"
+                                              "016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv="
+                                              "1.0&sig=guSYBmZIX7yxSkLH9d7fkeIaff7-GhQsjVVyzLVK3_U");
+        std::string message = email.dump();
+        web::http::http_request request(web::http::methods::POST);
+        request.headers().add("Content-Type", "application/json");
+        request.set_body(message);
+        pplx::task<void> task = client.request(request).then([](web::http::http_response resp){
+                resp.extract_string(false).then([](utility::string_t s)
+        {
+                std::cout << s << '\n';
+        });
+
+        });
+        try{
+            task.get();
+        } catch(std::exception &e){
+            std::cout << e.what() << '\n';
+        }
     }
 
 
