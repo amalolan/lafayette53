@@ -115,8 +115,8 @@ private:
     void reviewEdit(http_request);
     std::string reviewArtifactEdit(int, bool, User);
     std::string reviewCollectionEdit(int, bool, User);
-    json getArtifactEdit(int);
-    json getCollectionEdit(int);
+    json getArtifactEdit(Edit<Artifact>);
+    json getCollectionEdit(Edit<Collection>);
 
     void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
 };

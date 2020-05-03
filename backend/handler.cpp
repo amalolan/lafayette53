@@ -497,56 +497,48 @@ void Handler::getUserProfile(http_request message){
         User user = Util::checkLogin(data,  this->model);
         ucout << "Authorized.\n";
         ucout << data.dump(3) << '\n';
-
-        json userJSON = Util::getObjectWithKeys<User>(user, {"username", "email", "id"});
-
-        //editList
+        // All of the user's requested edits.
         json editList = json::array();
-        for(auto edit : this->model->getArtifactEdits((int)userJSON["id"]))
-        {
-            json editJSON = Util::getObjectWithKeys<Edit<Artifact>>(edit,{"id", "type", "category",
-                                                                    "collection", "approvalStatus"});
-            editJSON["artifact"]["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
-                {"id", "name", "description", "introduction", "image"});
-            editJSON["artifact"]["museum"] = Util::getObjectWithKeys<Museum>(edit.getObject().getMuseum(), {"id"});
-            editList.push_back(editJSON);
+        for(auto edit : this->model->getArtifactEdits(user.getUserID())) {
+            editList.push_back(this->getArtifactEdit(edit));
         }
-
-        //museums
-        std::vector<Museum> museums = this->model->getMuseumByCurator(userJSON["id"]);
-        json museumsJSON = Util::arrayFromVector(museums,{"id", "name"});
-
+        for (auto edit: this->model->getCollectionEdits(user.getUserID())) {
+            editList.push_back(this->getCollectionEdit(edit));
+        }
+        std::vector<Museum> museums = this->model->getMuseumByCurator(user.getUserID());
+        // All of other user's edits that are pending for the user's approval.
         json actionsList = json::array();
-        for(Museum museum : museums)
-        {
+        for(Museum museum : museums) {
             ucout << museum.getMuseumID() << ' ';
-            for (auto action : this->model->getArtifactActions(museum.getMuseumID()))
-            {
-                json actionJSON = Util::getObjectWithKeys<Edit<Artifact>>(action,{"id", "type", "category",
-                                                                        "collection"});
-                actionJSON["artifact"]["artifact"] =  Util::getObjectWithKeys<Artifact>(action.getObject(),
-                    {"id", "name", "description", "introduction", "image"});
-                actionJSON["artifact"]["museum"] = Util::getObjectWithKeys<Museum>(action.getObject().getMuseum(), {"id"});
-                actionsList.push_back(actionJSON);
+            for (auto action : this->model->getArtifactActions(museum.getMuseumID())) {
+                actionsList.push_back(this->getArtifactEdit(action));
+            }
+            for (auto action: this->model->getCollectionActions(museum.getMuseumID())) {
+                actionsList.push_back(this->getCollectionEdit(action));
             }
         }
 
+        // TODO Headcurator
+        User headCurator = this->model->getHeadCurator();
+        bool isHeadCurator = (user.getUserID() == headCurator.getUserID());
+
         json output = {
-            {"user", userJSON},
+            {"user", Util::getObjectWithKeys<User>(user, {"username", "email", "id"})},
+            {"museumList", Util::arrayFromVector(museums, {"id", "name"})},
             {"editsList", editList},
-            {"museumList", museumsJSON},
             {"actionsList", actionsList}
         };
+        if (isHeadCurator) {
+            output["headCuratorList"] = Util::arrayFromVector(this->model->getMuseumList(), {"id", "name"});
+        }
         return message.reply(status_codes::OK, output.dump(3));
-
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Get User Profile Error.");
     });
     return;
 }
 
-json Handler::getArtifactEdit(int editID) {
-    Edit<Artifact> edit = this->model->getEditArtifactObject(editID);
+json Handler::getArtifactEdit(Edit<Artifact> edit) {
     json output = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "collection",
                                                             "approvalStatus"});
     output["artifact"]["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
@@ -561,8 +553,7 @@ json Handler::getArtifactEdit(int editID) {
     return output;
 }
 
-json Handler::getCollectionEdit(int editID) {
-    Edit<Collection> edit = this->model->getEditCollectionObject(editID);
+json Handler::getCollectionEdit(Edit<Collection> edit) {
     json output = Util::getObjectWithKeys<Edit<Collection>>(edit, {"id", "type", "category", "artifact", "approvalStatus"});
     output["collection"] =  Util::getObjectWithKeys<Collection>(edit.getObject(),
                                             {"id", "name", "description", "introduction", "image"});
@@ -581,12 +572,14 @@ void Handler::returnEditByID(http_request message, int editID)
     message.extract_string(false).then([=](utility::string_t s){
         ucout<< s <<std::endl;
         try {
-            return message.reply(status_codes::OK, this->getArtifactEdit(editID).dump(4));
+            return message.reply(status_codes::OK,
+                                 this->getArtifactEdit(this->model->getEditArtifactObject(editID)).dump(4));
         } catch (ModelException &e) {
             ucout << e.what() << std::endl;
         }
         try {
-            return message.reply(status_codes::OK, this->getCollectionEdit(editID).dump(4));
+            return message.reply(status_codes::OK,
+                                 this->getCollectionEdit(this->model->getEditCollectionObject(editID)).dump(4));
         } catch (ModelException &e) {
             ucout << e.what() << std::endl;
         }
