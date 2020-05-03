@@ -527,7 +527,7 @@ void Handler::getUserProfile(http_request message){
                 actionJSON["artifact"]["artifact"] =  Util::getObjectWithKeys<Artifact>(action.getObject(),
                     {"id", "name", "description", "introduction", "image"});
                 actionJSON["artifact"]["museum"] = Util::getObjectWithKeys<Museum>(action.getObject().getMuseum(), {"id"});
-                editList.push_back(actionJSON);
+                actionsList.push_back(actionJSON);
             }
         }
 
