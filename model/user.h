@@ -42,6 +42,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream &strm, const User &u) {
       return strm << "User(name : "<< u.username <<", "
+                     "id: " << u.userID << ", "
                      "email: "<< u.email<< ")";
     }
 
