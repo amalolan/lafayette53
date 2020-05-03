@@ -677,7 +677,9 @@ void Handler::changePassword(http_request message)
 {
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
+        Util::validateJSON(data, {"username"});
         ucout << data.dump(3) << '\n';
+        User u = this->model->getUserObject((std::string)data["username"]);
         //random password generator
         int len = qrand() % 10 + 8;
         QString pass;
@@ -686,8 +688,9 @@ void Handler::changePassword(http_request message)
         {
             pass[s] = QChar('A' + char(qrand() % ('Z' - 'A')));
         }
-        User u = this->model->getUserObject((std::string)data["username"]);
-        std::string sha = sha512(pass.toStdString());
+        QByteArray result = QCryptographicHash::hash(pass.toUtf8(), QCryptographicHash::Sha512);
+        QString inputHash = QLatin1String(result.toHex());
+        std::string sha = inputHash.toStdString();
         u.setPassword(sha);
         this->model->updateUserInDB(u);
         std::string body = u.getName() + " your password has been reset."
