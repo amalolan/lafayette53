@@ -324,6 +324,7 @@ void Handler::handle_post(http_request message)
             actOnEdit(message);
             return;
         }
+        // URL: /request/reset-password
         else if(paths[1] == "reset-password" && paths.size() == 2)
         {
             changePassword(message);
@@ -577,6 +578,8 @@ void Handler::getUserProfile(http_request message){
 template <typename T>
 std::string Handler::reviewEdit(Edit<T> edit, bool approved, User user) {
     T object = edit.getObject();
+    std::string email = edit.getEditor().getEmail();
+    std::string emailMessage = "Your edit on " + object.getName() + " has been ";
     bool isCurator = (object.getMuseum().getUser().getUserID() == user.getUserID());
     if (! isCurator) {
         ucout << "permission denied!" << '\n';
@@ -586,10 +589,15 @@ std::string Handler::reviewEdit(Edit<T> edit, bool approved, User user) {
     if (approved) {
         edit.approveEdit();
         this->model->updateEditInDB(edit);
+        emailMessage += "approved";
+        Util::sendEmail(email, "Your Edit has been approved.", emailMessage);
+        ucout << "edit approved and updated";
         return "Edit approved.";
     } else {
         edit.rejectEdit();
         this->model->updateEditInDB(edit);
+        emailMessage += "denied";
+        Util::sendEmail(email, "Your Edit has been denied.", emailMessage);
         ucout << "edit rejected and updated\n";
         return "Edit rejected.";
     }
