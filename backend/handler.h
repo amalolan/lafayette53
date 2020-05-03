@@ -30,6 +30,7 @@
 #include "cpprest/containerstream.h"
 #include "cpprest/producerconsumerstream.h"
 #include <QDirIterator>
+#include <QCryptographicHash>
 //#include <execinfo.h>
 #include <exception>
 //#include "../model/modelclass.h"
@@ -111,9 +112,9 @@ private:
     void addUser(http_request);
     void deleteMuseum(http_request, int);
     void deleteArtifact(http_request, int);
+    void changePassword(http_request);
     void handle_put(http_request);
     void handle_delete(http_request);
-
     void addEditCollection(http_request, int);
     void addEditArtifact(http_request, int);
     void actOnEdit(http_request);

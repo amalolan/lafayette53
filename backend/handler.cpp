@@ -668,6 +668,34 @@ void Handler::deleteArtifact(http_request message, int artifactID)
     });
 }
 
+void Handler::changePassword(http_request message)
+{
+    message.extract_string(false).then([=](utility::string_t s){
+        json data = json::parse(s);
+        Util::validateJSON(data, {"username"});
+        ucout << data.dump(3) << '\n';
+        User u = this->model->getUserObject((std::string)data["username"]);
+        //random password generator
+        int len = qrand() % 10 + 8;
+        QString pass;
+        pass.resize(len);
+        for (int s = 0; s < len ; ++s)
+        {
+            pass[s] = QChar('A' + char(qrand() % ('Z' - 'A')));
+        }
+        QByteArray result = QCryptographicHash::hash(pass.toUtf8(), QCryptographicHash::Sha512);
+        QString inputHash = QLatin1String(result.toHex());
+        std::string sha = inputHash.toStdString();
+        u.setPassword(sha);
+        this->model->updateUserInDB(u);
+        std::string body = u.getName() + " your password has been reset."
+                                         " new pasword: " + pass.toStdString();
+        Util::sendEmail(u.getEmail(),"Password Reset", body);
+        return message.reply(status_codes::OK, Util::getSuccessJsonStr("Password sent to your email!"));
+    }).then([=](pplx::task<void> t){
+        handle_error(message, t, "Could not reset password.");
+    });
+}
 //
 // A PUT request
 //
