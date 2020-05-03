@@ -193,7 +193,7 @@ public:
      *     }
      * }
      */
-    static json getArtifactEdit(Edit<Artifact> edit) {
+    static json getArtifactEditJSON(Edit<Artifact> edit) {
         json output = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "approvalStatus"});
         output["artifact"]["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
                                                 {"id", "name", "description", "introduction", "image"});
@@ -233,7 +233,7 @@ public:
      *     }
      * }
      */
-    static json getCollectionEdit(Edit<Collection> edit) {
+    static json getCollectionEditJSON(Edit<Collection> edit) {
         json output = Util::getObjectWithKeys<Edit<Collection>>(edit, {"id", "type", "category", "approvalStatus"});
         output["collection"]["collection"] =  Util::getObjectWithKeys<Collection>(edit.getObject(),
                                                 {"id", "name", "description", "introduction", "image"});

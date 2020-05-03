@@ -592,6 +592,112 @@ TEST_F(HandlerTest, returnArtifactByID) {
     }
 }
 
+
+/**
+ * @brief TEST_F Tests HTTP GET request at /request/edit/[id]
+ * No ID is tested in handleGET() tests. Validity of artifact JSON objects are tested in model tests.
+ * 4 Test Cases:
+ * 1. Invalid IDs (string and greater than INT_MAX).
+ * 2. Valid ID, Edit<Artifact> and Edit<Collection> Object Not found in DB.
+ * 3. Valid ID, Found, Valid Edit<Artifact> Object, Single Collection Association.
+ * 4. Valid ID, Found, Valid Edit<Artifact> Object, Multiple Collection Associations.
+ * 5. Valid ID, Edit<Artifact> not found, Edit<Collection> Object found in DB.
+ */
+TEST_F(HandlerTest, returnEditByID) {
+    int sleeptime = 200;
+    string url = "/request/edit/";  // /request/edit/[id]
+    string id;
+    Response r;
+    json expectation;
+
+    /**< Case 1 */
+    id = "AB1";
+    usleep(sleeptime);
+    r = this->requestTask(methods::GET,  url + id);
+    ASSERT_EQ(r.status, status_codes::InternalError);
+    ASSERT_FALSE(json::parse(r.content)["success"]);
+
+    id = "91111111111111111111111111111111111111111111111";
+    usleep(sleeptime);
+    r = this->requestTask(methods::GET,  url + id);
+    ASSERT_EQ(r.status, status_codes::InternalError);
+    ASSERT_FALSE(json::parse(r.content)["success"]);
+    {
+        InSequence s;
+        /**< Case 2 */
+        id = to_string(INT_MAX);
+        EXPECT_CALL(this->model, getEditArtifactObject(stoi(id)))
+                .WillOnce(testing::Throw(ModelException("Can't find Edit Artifact")))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditCollectionObject(stoi(id)))
+                .WillOnce(testing::Throw(ModelException("Can't find Edit Collection")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET,  url + id);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        Museum museum("name", "description", "introduction",  "image",
+                      User("username", "email", "password", 1), 2);
+        Artifact artifact("artifactName", "artifactDescription",
+                          "artifactIntroduction", "artifactImage",
+                          museum, stoi(id));
+        Collection collection("1collectionName", "1collectionDescription",
+                              "1collectionIntroduction", "1collectionImage",
+                              museum, 12211);
+        /**< Case 3 */
+        vector<Collection> collectionList =  {collection};
+        Edit<Artifact> edit1(artifact, 0, User("a", "b@b.com", "pass"), collectionList, 1,  2134);
+        expectation =  Util::getArtifactEditJSON(edit1);
+
+        EXPECT_CALL(this->model, getEditArtifactObject(stoi(id)))
+                .WillOnce(Return(edit1))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET, url + id);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
+
+
+        /**< Case 4 */
+        collectionList.push_back(Collection("2collectionName", "2collectionDescription",
+                                            "2collectionIntroduction", "2collectionImage",
+                                            museum, 321));
+        collectionList.push_back(Collection("3collectionName", "3collectionDescription",
+                                            "3collectionIntroduction", "3collectionImage",
+                                            museum, 3211));
+        Edit<Artifact> edit2(artifact, 0, User("a", "b@b.com", "pass"), collectionList, 1,  2134);
+        expectation =  Util::getArtifactEditJSON(edit2);
+
+        EXPECT_CALL(this->model, getEditArtifactObject(stoi(id)))
+                .WillOnce(Return(edit2))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET, url + id);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
+
+        /**< Case 5 */
+        Edit<Collection> edit3(collection, 1, User("12a", "er@13", "af"), -1, 12);
+        expectation =  Util::getCollectionEditJSON(edit3);
+        EXPECT_CALL(this->model, getEditArtifactObject(stoi(id)))
+                .WillOnce(testing::Throw(ModelException("Can't find Edit Artifact")))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditCollectionObject(stoi(id)))
+                .WillOnce(Return(edit3))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::GET,  url + id);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_EQ(json::parse(r.content),  expectation);
+    }
+}
+
+
 /**
  * @brief HandlerTest::loginTest Helper test function to ensure log in actually denies unauthorized users.
  * Called by many POST request test functions.
@@ -1152,8 +1258,8 @@ TEST_F(HandlerTest, editCollection) {
 
         /**< Cases 4- */
         data["museum"] = {
-            {"id", 121}
-        };
+        {"id", 121}
+    };
 
         /**< Cases 4-6 */
         this->loginTest(url, data);
@@ -1563,7 +1669,7 @@ TEST_F(HandlerTest, editArtifact) {
     Artifact otherArtifact(data["artifact"]["name"], data["artifact"]["description"], data["artifact"]["introduction"],
             data["artifact"]["image"], otherMuseum, data["artifact"]["id"]);
     Edit<Artifact> edit(otherArtifact, Edit<Artifact>::edit, user,
-        {Collection("", "", otherMuseum), Collection("", "", otherMuseum), Collection("", "", otherMuseum)});
+    {Collection("", "", otherMuseum), Collection("", "", otherMuseum), Collection("", "", otherMuseum)});
     {
         InSequence s;
         /**< Case 7 */
@@ -1712,7 +1818,38 @@ TEST_F(HandlerTest, editArtifact) {
 }
 
 /**
- * @brief TEST_F
+ * @brief TEST_F Tests HTTP POST /request/delete-museum
+ * @see HandlerTest::loginTest()
+ * Needs login. Tested by helper function loginTest()
+ * 19 Test Cases:
+ * 1. Invalid POST data (no user/editId/category/action).
+ * 2. Invalid category POST data.
+ * 3. Invalid user POST data (no username/password).
+ * 4. Valid data, Username not found in DB.
+ * 5. Valid data, Username Found, Password mismatch.
+ * 6. Valid data, Logged in, edit not in DB.
+ * 7. Valid data, Logged in, edit found, already acted on.
+ * 8. Valid data, Logged in, edit found, not acted on, not curator.
+ * 9. Valid data, Logged in, edit found, not acted on, curator, reject add Artifact.
+ * 10. Valid data, Logged in, edit found, not acted on, curator, reject edit Collection.
+ * 11. Valid data, Logged in, edit found, not acted on, curator, reject delete Artifact.
+ * 12. Valid data, Logged in, edit found, not acted on, curator, approve add Artifact.
+ * 13. Valid data, Logged in, edit found, not acted on, curator, approve edit Artifact.
+ * 14. Valid data, Logged in, edit found, not acted on, curator, approve delete Artifact.
+ * 15. Valid data, Logged in, edit found, not acted on, curator, approve add Collection.
+ * 16. Valid data, Logged in, edit found, not acted on, curator, approve edit Artifact.
+ * 17. Valid data, Logged in, edit found, not acted on, curator, approve delete Artifact.
+ * 18. Valid data, Logged in, edit found, not acted on, curator, reject edit Museum.
+ * 19. Valid data, Logged in, edit found, not acted on, curator, approve delete Museum.
+ */
+TEST_F(HandlerTest, reviewEdit) {
+
+}
+
+
+
+/**
+ * @brief TEST_F Tests HTTP POST request at /request/user-profile
  * @see HandlerTest::loginTest()
  * 4 Test Cases:
  * 1. Invalid POST data (no data).
@@ -1737,17 +1874,18 @@ TEST_F(HandlerTest, getUserProfile) {
     // getMuseumByCurator
     // for each museum: getArtifactActions
     User user(data["username"], "email@example.com", data["password"], 21);
-//    {
-//        InSequence s;
+    //    {
+    //        InSequence s;
 
-//        /**< Case 5 */
-//        data["password"] = "realpassword";
-//        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
-//                .Times(testing::AtLeast(1))
-//                .WillRepeatedly(Return(user))
-//                .RetiresOnSaturation();
-//    }
+    //        /**< Case 5 */
+    //        data["password"] = "realpassword";
+    //        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+    //                .Times(testing::AtLeast(1))
+    //                .WillRepeatedly(Return(user))
+    //                .RetiresOnSaturation();
+    //    }
 }
+
 
 /**
  * @brief TEST_F Tests HTTP POST /request/delete-museum

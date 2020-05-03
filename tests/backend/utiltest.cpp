@@ -303,11 +303,11 @@ TEST_F(UtilTest, failureJSON) {
 }
 
 /**
- * @brief TEST_F Tests Util::getCollectionEdit()
+ * @brief TEST_F Tests Util::getCollectionEditJSON()
  * 1 Test Case
  * 1. Simple Edit::edit and Edit::pending
  */
-TEST_F(UtilTest, getCollectionEdit) {
+TEST_F(UtilTest, getCollectionEditJSON) {
     User user("curator", "email", "password", 3);
     Museum museum("museumName", "museumDescription", "museumIntroduction", "museumImage", user, 55);
     Collection collection("collectionName", "collectionDescription", "collectionIntroduction", "collectionImage", museum, 32);
@@ -333,19 +333,19 @@ TEST_F(UtilTest, getCollectionEdit) {
          }
         }
     };
-    json result = Util::getCollectionEdit(edit);
+    json result = Util::getCollectionEditJSON(edit);
     ASSERT_EQ(result, expectation); /**< Case 1 */
 }
 
 
 /**
- * @brief TEST_F Tests Util::getArtifactEdit()
+ * @brief TEST_F Tests Util::getArtifactEditJSON()
  * 3 Test Case
  * 1. Empty collection list, Edit::add and Edit::approve type.
  * 2. Singleton collection list, Edit::del and Edit::reject type.
  * 3. Non-singleton collection list, Edit::edit and Edit::approve type.
  */
-TEST_F(UtilTest, getArtifactEdit) {
+TEST_F(UtilTest, getArtifactEditJSON) {
     User user("curator", "email", "password", 3);
     Museum museum("museumName", "museumDescription", "museumIntroduction", "museumImage", user, 55);
     vector<Collection> collectionList = {
@@ -375,7 +375,7 @@ TEST_F(UtilTest, getArtifactEdit) {
          }
         }
     };
-    json result = Util::getArtifactEdit(edit1);
+    json result = Util::getArtifactEditJSON(edit1);
     cout<<result.dump(2)<<endl;
     cout<<expectation.dump(2)<<endl;
     ASSERT_EQ(result, expectation); /**< Case 1 */
@@ -408,7 +408,7 @@ TEST_F(UtilTest, getArtifactEdit) {
          }
         }
     };
-    result = Util::getArtifactEdit(edit2);
+    result = Util::getArtifactEditJSON(edit2);
     cout<<result.dump(2)<<endl;
     cout<<expectation.dump(2)<<endl;
     ASSERT_EQ(result, expectation); /**< Case 2 */
@@ -447,7 +447,7 @@ TEST_F(UtilTest, getArtifactEdit) {
          }
         }
     };
-    result = Util::getArtifactEdit(edit3);
+    result = Util::getArtifactEditJSON(edit3);
     ASSERT_EQ(result, expectation); /**< Case 3 */
 
 }

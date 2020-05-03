@@ -236,6 +236,30 @@ void Handler::returnArtifactByID(http_request message, int artifactID) {
     });
 }
 
+void Handler::returnEditByID(http_request message, int editID)
+{
+    message.extract_string(false).then([=](utility::string_t s){
+        ucout<< s <<std::endl;
+        try {
+            return message.reply(status_codes::OK,
+                                 Util::getArtifactEditJSON(this->model->getEditArtifactObject(editID)).dump(4));
+        } catch (ModelException &e) {
+            ucout << e.what() << std::endl;
+        }
+        try {
+            return message.reply(status_codes::OK,
+                                 Util::getCollectionEditJSON(this->model->getEditCollectionObject(editID)).dump(4));
+        } catch (ModelException &e) {
+            ucout << e.what() << std::endl;
+        }
+        throw ModelException("No edits found in DB.");
+//         TODO museum edit
+    }).then([=](pplx::task<void> t){
+        handle_error(message, t, "Edit could not be returned");
+    });
+
+}
+
 // A POST request
 //
 void Handler::handle_post(http_request message)
@@ -504,10 +528,10 @@ void Handler::getUserProfile(http_request message){
         // All of the user's requested edits.
         json editList = json::array();
         for(auto edit : this->model->getArtifactEdits(user.getUserID())) {
-            editList.push_back(Util::getArtifactEdit(edit));
+            editList.push_back(Util::getArtifactEditJSON(edit));
         }
         for (auto edit: this->model->getCollectionEdits(user.getUserID())) {
-            editList.push_back(Util::getCollectionEdit(edit));
+            editList.push_back(Util::getCollectionEditJSON(edit));
         }
         std::vector<Museum> museums = this->model->getMuseumByCurator(user.getUserID());
         // All of other user's edits that are pending for the user's approval.
@@ -515,10 +539,10 @@ void Handler::getUserProfile(http_request message){
         for(Museum museum : museums) {
             ucout << museum.getMuseumID() << ' ';
             for (auto action : this->model->getArtifactActions(museum.getMuseumID())) {
-                actionsList.push_back(Util::getArtifactEdit(action));
+                actionsList.push_back(Util::getArtifactEditJSON(action));
             }
             for (auto action: this->model->getCollectionActions(museum.getMuseumID())) {
-                actionsList.push_back(Util::getCollectionEdit(action));
+                actionsList.push_back(Util::getCollectionEditJSON(action));
             }
         }
 
@@ -542,32 +566,6 @@ void Handler::getUserProfile(http_request message){
     return;
 }
 
-
-
-void Handler::returnEditByID(http_request message, int editID)
-{
-    message.extract_string(false).then([=](utility::string_t s){
-        ucout<< s <<std::endl;
-        try {
-            return message.reply(status_codes::OK,
-                                 Util::getArtifactEdit(this->model->getEditArtifactObject(editID)).dump(4));
-        } catch (ModelException &e) {
-            ucout << e.what() << std::endl;
-        }
-        try {
-            return message.reply(status_codes::OK,
-                                 Util::getCollectionEdit(this->model->getEditCollectionObject(editID)).dump(4));
-        } catch (ModelException &e) {
-            ucout << e.what() << std::endl;
-        }
-        // TODO museum edit
-        return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Editing museums has not been implemented"));
-    }).then([=](pplx::task<void> t){
-        handle_error(message, t, "Edit could not be returned");
-    });
-
-}
-
 std::string Handler::reviewArtifactEdit(int editID, bool approved, User user) {
     Edit<Artifact> edit = this->model->getEditArtifactObject(editID);
     Artifact artifact = edit.getObject();
@@ -588,14 +586,14 @@ std::string Handler::reviewArtifactEdit(int editID, bool approved, User user) {
         this->model->updateArtifactInDB(artifact);
         this->model->removeArtifactCollection(artifact);
         for( Collection collection : edit.getCollectionList())  {
-            this->model->addArtifactCollection(collection,artifact);
+            this->model->addArtifactCollection(collection, artifact);
         }
         ucout << "edit approved and updated\n";
     } else if (edit.getKind() == Edit<Artifact>::add)
     {
         this->model->saveArtifactToDB(artifact);
         for( Collection collection : edit.getCollectionList()) {
-            this->model->addArtifactCollection(collection,artifact);
+            this->model->addArtifactCollection(collection, artifact);
         }
         ucout << "artifact added\n";
     } else // kind is Edit::del
