@@ -1823,27 +1823,361 @@ TEST_F(HandlerTest, editArtifact) {
  * Needs login. Tested by helper function loginTest()
  * 19 Test Cases:
  * 1. Invalid POST data (no user/editId/category/action).
- * 2. Invalid category POST data.
+ * 2. Invalid category POST data key.
  * 3. Invalid user POST data (no username/password).
  * 4. Valid data, Username not found in DB.
  * 5. Valid data, Username Found, Password mismatch.
- * 6. Valid data, Logged in, edit not in DB.
- * 7. Valid data, Logged in, edit found, already acted on.
- * 8. Valid data, Logged in, edit found, not acted on, not curator.
- * 9. Valid data, Logged in, edit found, not acted on, curator, reject add Artifact.
- * 10. Valid data, Logged in, edit found, not acted on, curator, reject edit Collection.
- * 11. Valid data, Logged in, edit found, not acted on, curator, reject delete Artifact.
- * 12. Valid data, Logged in, edit found, not acted on, curator, approve add Artifact.
- * 13. Valid data, Logged in, edit found, not acted on, curator, approve edit Artifact.
- * 14. Valid data, Logged in, edit found, not acted on, curator, approve delete Artifact.
- * 15. Valid data, Logged in, edit found, not acted on, curator, approve add Collection.
- * 16. Valid data, Logged in, edit found, not acted on, curator, approve edit Artifact.
- * 17. Valid data, Logged in, edit found, not acted on, curator, approve delete Artifact.
- * 18. Valid data, Logged in, edit found, not acted on, curator, reject edit Museum.
- * 19. Valid data, Logged in, edit found, not acted on, curator, approve delete Museum.
+ * 6. Valid data, Logged in, invalid category value.
+ * 7. Valid data, Logged in, museum category (Not supported).
+ * 8. Valid data, Logged in, edit not in DB.
+ * 9. Valid data, Logged in, edit found, already acted on.
+ * 10. Valid data, Logged in, edit found, not acted on, not curator.
+ * 11. Valid data, Logged in, edit found, not acted on, curator, reject add Artifact.
+ * 12. Valid data, Logged in, edit found, not acted on, curator, reject edit Collection.
+ * 13. Valid data, Logged in, edit found, not acted on, curator, reject delete Artifact.
+ * 14. Valid data, Logged in, edit found, not acted on, curator, approve add Artifact.
+ * 15. Valid data, Logged in, edit found, not acted on, curator, approve edit Artifact.
+ * 16. Valid data, Logged in, edit found, not acted on, curator, approve delete Artifact.
+ * 17. Valid data, Logged in, edit found, not acted on, curator, approve add Collection.
+ * 18. Valid data, Logged in, edit found, not acted on, curator, approve edit Collection.
+ * 19. Valid data, Logged in, edit found, not acted on, curator, approve delete Collection.
  */
 TEST_F(HandlerTest, reviewEdit) {
+    int sleeptime = 300;
+    string url = "/request/review-edit";
+    Response r;
+    json data;
+    /**< Cases 1-6 */
+    {
+        InSequence s;
+        /**< Case 1 */
+        data = json::object();
 
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        data = {
+            {"categ1ory", ""},
+            {"editId", 99},
+            {"action", true},
+            {"user", {
+                 {"username", "testing123"},
+                 {"password", "realpassword"}
+             }}
+        };
+
+        /**< Case 2 */
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Cases 3- */
+        data["category"] = "artifact";
+
+        /**< Cases 3-5 */
+        this->loginTest(url, data);
+        cout<<"Finished loginTest"<<endl;
+    }
+
+    /**< Cases 6- */
+    User curator(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
+    User user(data["user"]["username"], "user@example.com", data["user"]["password"], 22423);
+    Museum otherMuseum("","","","", curator, 653);
+    Artifact otherArtifactAdd("addArtifactName", "addArtifactDescription", "addArtifactIntroduction",
+            "addArtifactImage", otherMuseum);
+    Artifact otherArtifact("addArtifactName", "addArtifactDescription", "addArtifactIntroduction",
+            "addArtifactImage", otherMuseum, 8675);
+    Collection otherCollectionAdd("",  "", "","", otherMuseum);
+    Collection otherCollection("",  "", "","", otherMuseum, 537);
+    vector<Collection> collectionList = {
+        Collection("",  "", "","", otherMuseum, 3245), Collection("",  "", "","", otherMuseum, 5341),
+        Collection("",  "", "","", otherMuseum, 423)
+    };
+
+    Edit<Artifact> addArtifact(otherArtifactAdd, Edit<Artifact>::add, user, collectionList),
+            addArtifactRejected(otherArtifactAdd, Edit<Artifact>::add, user, collectionList),
+            addArtifactApproved(otherArtifactAdd, Edit<Artifact>::add, user, collectionList),
+            editArtifact(otherArtifact, Edit<Artifact>::edit, user, collectionList),
+            editArtifactRejected(otherArtifact, Edit<Artifact>::edit, user, collectionList),
+            editArtifactApproved(otherArtifact, Edit<Artifact>::edit, user, collectionList),
+            deleteArtifact(otherArtifact, Edit<Artifact>::del, user, collectionList),
+            deleteArtifactRejected(otherArtifact, Edit<Artifact>::del, user, collectionList),
+            deleteArtifactApproved(otherArtifact, Edit<Artifact>::del, user, collectionList);
+
+    Edit<Collection> addCollection(otherCollectionAdd, Edit<Collection>::add, user),
+            addCollectionApproved(otherCollectionAdd, Edit<Collection>::add, user),
+            addCollectionRejected(otherCollectionAdd, Edit<Collection>::add, user),
+            editCollection(otherCollection, Edit<Collection>::edit, user),
+            editCollectionApproved(otherCollection, Edit<Collection>::edit, user),
+            editCollectionRejected(otherCollection, Edit<Collection>::edit, user),
+            deleteCollection(otherCollection, Edit<Collection>::del, user),
+            deleteCollectionApproved(otherCollection, Edit<Collection>::del, user),
+            deleteCollectionRejected(otherCollection, Edit<Collection>::del, user);
+
+
+    addArtifactRejected.rejectEdit();
+    editArtifactRejected.rejectEdit();
+    deleteArtifactRejected.rejectEdit();
+    addCollectionRejected.rejectEdit();
+    editCollectionRejected.rejectEdit();
+    deleteCollectionRejected.rejectEdit();
+
+    addArtifactApproved.approveEdit();
+    editArtifactApproved.approveEdit();
+    deleteArtifactApproved.approveEdit();
+    addCollectionApproved.approveEdit();
+    editCollectionApproved.approveEdit();
+    deleteCollectionApproved.approveEdit();
+    {
+        InSequence s;
+        /**< Case 6 */
+        data["category"] = "muse32um";
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::InternalError);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+
+        /**< Case 7 */
+        data["category"] = "museum";
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::NotImplemented);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+
+        /**< Case 8 */
+        data["category"] = "collection";
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditCollectionObject((int) data["editId"]))
+                .WillOnce(Throw(ModelException("Collection Edit not in DB")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+
+        /**< Case 9 */
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditCollectionObject((int) data["editId"]))
+                .WillOnce(Return(addCollectionApproved))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+
+        /**< Case 10 */
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditCollectionObject((int) data["editId"]))
+                .WillOnce(Return(editCollection))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Unauthorized);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        sleeptime  = 2000;
+        /**< Case 11 */
+        data["category"] = "artifact";
+        data["action"] = false;
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditArtifactObject((int) data["editId"]))
+                .WillOnce(Return(addArtifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateEditInDB(addArtifactRejected))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+
+        /**< Case 12 */
+        data["category"] = "artifact";
+        data["action"] = false;
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditArtifactObject((int) data["editId"]))
+                .WillOnce(Return(deleteArtifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateEditInDB(deleteArtifactRejected))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+
+        /**< Case 13 */
+        data["category"] = "collection";
+        data["action"] = false;
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditCollectionObject((int) data["editId"]))
+                .WillOnce(Return(editCollection))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateEditInDB(editCollectionRejected))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+
+        /**< Case 14 */
+        data["category"] = "artifact";
+        data["action"] = true;
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditArtifactObject((int) data["editId"]))
+                .WillOnce(Return(addArtifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateEditInDB(addArtifactApproved))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+
+        /**< Case 15 */
+        data["category"] = "artifact";
+        data["action"] = true;
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditArtifactObject((int) data["editId"]))
+                .WillOnce(Return(editArtifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateEditInDB(editArtifactApproved))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+
+        /**< Case 16 */
+        data["category"] = "artifact";
+        data["action"] = true;
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditArtifactObject((int) data["editId"]))
+                .WillOnce(Return(deleteArtifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateEditInDB(deleteArtifactApproved))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+
+
+        /**< Case 17 */
+        data["category"] = "collection";
+        data["action"] = true;
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditCollectionObject((int) data["editId"]))
+                .WillOnce(Return(addCollection))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateEditInDB(addCollectionApproved))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+
+        /**< Case 18 */
+        data["category"] = "collection";
+        data["action"] = true;
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditCollectionObject((int) data["editId"]))
+                .WillOnce(Return(editCollection))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateEditInDB(editCollectionApproved))
+                .Times(1)
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
+
+        /**< Case 19 */
+        data["category"] = "collection";
+        data["action"] = true;
+        EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(curator))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getEditCollectionObject((int) data["editId"]))
+                .WillOnce(Return(deleteCollection))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateEditInDB(deleteCollectionApproved))
+                .WillOnce(Throw(ModelException("Collection deletion not implemented")))
+                .RetiresOnSaturation();
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+    }
 }
 
 
@@ -2085,3 +2419,55 @@ TEST_F(HandlerTest, deleteArtifact) {
         ASSERT_TRUE(json::parse(r.content)["success"]);
     }
 }
+
+/**
+ * @brief TEST_F
+ * 2 Test Cases:
+ * 1. Invalid POST data (no username)
+ * 2. User not in DB
+ * 3. User in DB.
+ */
+TEST_F(HandlerTest, resetPassword) {
+    int sleeptime = 300;
+    string url = "/request/reset-password/";
+    Response r;
+    json data = json::object();
+
+    usleep(sleeptime);
+    r = this->requestTask(methods::POST, url, data);
+    ASSERT_EQ(r.status, status_codes::InternalError);
+    ASSERT_FALSE(json::parse(r.content)["success"]);
+
+    data["username"] = "testUser";
+    /**< Case 1*/
+    User user(data["username"], "email@example.com", "oldpassword~", 21);
+
+    {
+        InSequence s;
+        /**< Case 2 */
+        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Throw(ModelException("User not in DB.")))
+                .RetiresOnSaturation();
+
+
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::Conflict);
+        ASSERT_FALSE(json::parse(r.content)["success"]);
+
+        /**< Case 3 */
+//        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+//                .Times(testing::AtLeast(1))
+//                .WillRepeatedly(Return(user))
+//                .RetiresOnSaturation();
+//        EXPECT_CALL(this->model, updateUserInDB(testing::_))
+//                .RetiresOnSaturation();
+
+//        usleep(sleeptime);
+//        r = this->requestTask(methods::POST, url, data);
+//        ASSERT_EQ(r.status, status_codes::OK);
+//        ASSERT_TRUE(json::parse(r.content)["success"]);
+    }
+}
+

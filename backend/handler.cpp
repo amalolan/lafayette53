@@ -577,6 +577,9 @@ void Handler::getUserProfile(http_request message){
 template <typename T>
 std::string Handler::reviewEdit(Edit<T> edit, bool approved, User user) {
     T object = edit.getObject();
+    if (edit.getStatus() != Edit<T>::pending) {
+        throw ModelException("Edit already acted on.");
+    }
     std::string email = edit.getEditor().getEmail();
     std::string emailMessage = "Your edit on " + object.getName() + " has been ";
     bool isCurator = (object.getMuseum().getUser().getUserID() == user.getUserID());

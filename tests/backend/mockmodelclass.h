@@ -24,7 +24,7 @@ public:
     /**< User */
     MOCK_METHOD1(getUserObject, User(string));
     MOCK_METHOD1(saveUserToDB, void(User&));
-    MOCK_METHOD0(getHeadCurator, User());
+    MOCK_METHOD1(updateUserInDB, void(User&));
     MOCK_METHOD1(checkHeadCurator, bool(User&));
 
     /**< Museum */
@@ -54,6 +54,8 @@ public:
     MOCK_METHOD1(getEditCollectionObject, Edit<Collection>(int));
     MOCK_METHOD1(saveEditToDB, void(Edit<Artifact> &));
     MOCK_METHOD1(saveEditToDB, void(Edit<Collection> &));
+    MOCK_METHOD1(updateEditInDB,  void(Edit<Artifact>  &));
+    MOCK_METHOD1(updateEditInDB,  void(Edit<Collection> &));
     MOCK_METHOD1(removeArtifactCollection, void(Artifact const &));
 
 };
