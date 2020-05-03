@@ -38,7 +38,6 @@
 #include "../model/user.h"
 #include "../model/museum.h"
 #include "../model/artifact.h"
-#include "sha512.h"
 #include <chrono>
 #include <ctime>
 

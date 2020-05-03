@@ -7,8 +7,7 @@ SOURCES += \
         main.cpp \
         ../model/modelclass.cpp \
         modelclassext.cpp \
-        ../model/collection.cpp \
-        sha512.cpp
+        ../model/collection.cpp
 
 QMAKE_CXXFLAGS += -std=gnu++11
 QMAKE_CXXFLAGS_WARN_ON = -w
@@ -23,7 +22,6 @@ HEADERS += \
     ../model/museum.h \
     ../model/ModelException.h \
     modelclassext.h \
-    sha512.h \
     util.h \
     ../nlohmann/json.hpp
 

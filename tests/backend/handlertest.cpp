@@ -2025,6 +2025,11 @@ TEST_F(HandlerTest, deleteArtifact) {
     User curator("curator", "curator@example.com", "1234", 22);
     Museum otherMuseum("","","","", curator, 1213);
     Artifact otherArtifact("", "", "", "",  otherMuseum, stoi(artifactID));
+    vector<Collection> collectionList = {
+        Collection("1","","","",otherMuseum, 1654),
+        Collection("2","","","",otherMuseum, 1653),
+        Collection("3","","","",otherMuseum, 1652),
+    };
     Edit<Artifact> edit(otherArtifact, Edit<Artifact>::del, user, {});
     {
         InSequence s;
@@ -2066,6 +2071,9 @@ TEST_F(HandlerTest, deleteArtifact) {
                 .RetiresOnSaturation();
         EXPECT_CALL(this->model, getArtifact(stoi(artifactID)))
                 .WillOnce(Return(otherArtifact))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getCollectionsByArtifact(stoi(artifactID)))
+                .WillOnce(Return(collectionList))
                 .RetiresOnSaturation();
         EXPECT_CALL(this->model, saveEditToDB(edit))
                 .Times(1)

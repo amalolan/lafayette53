@@ -35,7 +35,6 @@ void Handler::handle_get(http_request message)
     auto paths = web::http::uri::split_path(web::http::uri::decode(message.relative_uri().path()));
 
     ucout << "relative uri GET " << message.relative_uri().to_string() << "\n";
-    EVP_get_digestbyname("sha512");
 
     // URL: /
     //check for frontend files.
@@ -322,11 +321,6 @@ void Handler::handle_post(http_request message)
         else if(paths[1] == "review-edit" && paths.size() == 2)
         {
             actOnEdit(message);
-            return;
-        }
-        else if(paths[1] == "reset-password" && paths.size() == 2)
-        {
-            changePassword(message);
             return;
         }
         //delete requests.
@@ -663,7 +657,8 @@ void Handler::deleteArtifact(http_request message, int artifactID)
             ucout << "artifact deleted\n";
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact deleted."));
         } else {
-            Edit<Artifact> edit(artifact, Edit<Artifact>::del, editor, {});
+            std::vector<Collection> collections = this->model->getCollectionsByArtifact(artifactID);
+            Edit<Artifact> edit(artifact, Edit<Artifact>::del, editor, collections);
             ucout << "artifact saved to DB\n";
             this->model->saveEditToDB(edit);
             return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact will be deleted after review."));
@@ -673,31 +668,6 @@ void Handler::deleteArtifact(http_request message, int artifactID)
     });
 }
 
-void Handler::changePassword(http_request message)
-{
-    message.extract_string(false).then([=](utility::string_t s){
-        json data = json::parse(s);
-        ucout << data.dump(3) << '\n';
-        //random password generator
-        int len = qrand() % 10 + 8;
-        QString pass;
-        pass.resize(len);
-        for (int s = 0; s < len ; ++s)
-        {
-            pass[s] = QChar('A' + char(qrand() % ('Z' - 'A')));
-        }
-        User u = this->model->getUserObject((std::string)data["username"]);
-        std::string sha = sha512(pass.toStdString());
-        u.setPassword(sha);
-        this->model->updateUserInDB(u);
-        std::string body = u.getName() + " your password has been reset."
-                                         " new pasword: " + pass.toStdString();
-        Util::sendEmail(u.getEmail(),"Password Reset", body);
-        return message.reply(status_codes::OK, Util::getSuccessJsonStr("Password sent to your email!"));
-    }).then([=](pplx::task<void> t){
-        handle_error(message, t, "Could not reset password.");
-    });
-}
 //
 // A PUT request
 //
