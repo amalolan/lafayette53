@@ -585,7 +585,7 @@ ApplicationWindow {
                 }
 
                 onLoadingChanged: function(loadRequest) {
-                    if (loadRequest.status == WebEngineView.LoadStartedStatus)
+                    if (loadRequest.status === WebEngineView.LoadStartedStatus)
                         findBar.reset();
                 }
 
