@@ -37,6 +37,7 @@ public:
     MOCK_METHOD1(getCollectionsByArtifact, vector<Collection>(int));
     MOCK_METHOD1(getCollectionObject, Collection(int));
     MOCK_METHOD1(saveCollectionToDB, void(Collection&));
+    MOCK_METHOD1(updateCollectionInDB, void(Collection&));
 
     /**< Artifact */
     MOCK_METHOD1(getArtifactsByMuseum, vector<Artifact>(int));
@@ -45,6 +46,7 @@ public:
     MOCK_METHOD1(saveArtifactToDB, void(Artifact&));
     MOCK_METHOD1(getArtifact, Artifact(int));
     MOCK_METHOD1(updateArtifactInDB, void(Artifact &));
+    MOCK_METHOD1(removeArtifactInDB, void(Artifact &));
 
     /**< Edit  */
     MOCK_METHOD1(saveEditToDB, void(Edit<Artifact> &));

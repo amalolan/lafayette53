@@ -3,7 +3,7 @@
 #ifdef __APPLE__
     #define CODE_BASE_DIRECTORY "../../../lafayette53/"
 #elif __linux
-    #define CODE_BASE_DIRECTORY "/../../../lafayette53/"
+    #define CODE_BASE_DIRECTORY "../../../lafayette53/"
 #endif
 #define BOOST_ASIO_HAS_STD_ATOMIC
 // GTest related includes
@@ -85,5 +85,6 @@ protected:
     Response requestTask(method mtd, std::string uri, json const & jvalue = json());
 
     void loginTest(string url, json data);
+    void loginTest(string url);
 };
 #endif // HANDLERTEST_H

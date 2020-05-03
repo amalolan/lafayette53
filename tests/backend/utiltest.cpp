@@ -233,7 +233,7 @@ TEST_F(UtilTest, checkLogin) {
         EXPECT_CALL(model, getUserObject((string) data["username"]))
                 .WillOnce(testing::Return(user))
                 .RetiresOnSaturation();
-        EXPECT_THROW(Util::checkLogin(data, &model), LoginException); /**< Case 3 */
+        EXPECT_THROW(Util::checkLogin(data, &model), BackendException); /**< Case 3 */
 
         /**< Case 4 */
         data["password"] = "realpassword";

@@ -10,20 +10,27 @@
 using json = nlohmann::json;
 
 /**
- * @brief The LoginException class If the user has invalid login credentials but performs POST requests requiring log ins,
+ * @brief The BackendException class Exceptions on the backend for which the message has to be displayed on the front end use this class.
+ * For example, if the user has invalid login credentials but performs POST requests requiring logins,
  * this exception is raised.
  */
-class LoginException : public std::exception
+class BackendException : public std::exception
 {
-
+    std::string _msg;
 public:
+    /**
+     * @brief BackendException Constructor
+     * @param msg Default message: "Error on Backend"
+     */
+    BackendException(const std::string msg = "Error on Backend") : _msg(msg){}
+
     /**
      * @brief what Describes the error
      * @return The description of the Login Error.
      */
     virtual const char * what () const noexcept override
     {
-        return "Login failed. Please check username or password and try again.";
+        return _msg.c_str();
     }
 };
 
@@ -82,7 +89,7 @@ public:
         User user = model->getUserObject(username);
         std::string password = user.getPassword();
         if (userJSON["password"] != password) {
-            throw LoginException();
+            throw BackendException("Login failed. Please check username or password and try again.");
         }
         return user;
     }
