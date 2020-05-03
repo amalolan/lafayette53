@@ -53,6 +53,19 @@ public:
     {
     }
 
+    friend std::ostream& operator<<(std::ostream &strm, const Edit<T> &m) {
+      return strm << "Edit(object : "<< m.object <<", "
+                     "kind: "<< m.kind<< ", "
+                     "status: " << m.status << ", "
+                     "user: " << m.user << ", "
+                     "id: " << m.id << ")";
+    }
+
+    void setObject(T obj)
+    {
+        this->object = obj;
+    }
+
     T getObject() const
     {
         return object;
@@ -112,6 +125,15 @@ public:
             }
         }
         return true;
+    }
+
+    std::string toString() const
+    {
+        return "Edit(object : " + this->object.toString()+", "
+                "kind: " + std::to_string(this->kind) + ", "
+                "status: " + std::to_string(this->status) + ", "
+                "user: " + this->user.toString() + ", "
+                "id: " + std::to_string(this->id) + ")";
     }
 
     json toJSON() const

@@ -43,6 +43,15 @@ public:
     {
     }
 
+    friend std::ostream& operator<<(std::ostream &strm, const Artifact &m) {
+      return strm << "Artifact(name : "<< m.name <<", "
+                     "introduction: "<< m.intro<< ", "
+                     "description: " << m.desc << ", "
+                     "id: " << m.id << ", "
+                     "museum: " << m.museum << ", "
+                     "photoURL: " << m.photo << ")";
+    }
+
     std::string getName() const
     {
         return this->name;

@@ -18,11 +18,10 @@ public:
     {
     }
     static ModelClassExt* singleInstance;
-    static ModelClassExt* getInstance(std::string);
-
-    virtual User getHeadCurator() {
-        return User("Prof Pfaffmann", "pfaffman@lafayette.edu", "123456", 0);
+    static ModelClassExt* getInstance(std::string baseDir){
+        return new ModelClassExt(baseDir + "database/testdb.db");
     }
+
 };
 
 

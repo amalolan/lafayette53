@@ -52,6 +52,15 @@ public:
     {
     }
 
+    friend std::ostream& operator<<(std::ostream &strm, const Collection &m) {
+      return strm << "Collection(name : "<< m.name <<", "
+                     "introduction: "<< m.intro<< ", "
+                     "description: " << m.desc << ", "
+                     "museum: " << m.museum << ", "
+                     "id: " << m.id << ", "
+                     "photoURL: " << m.photo << ")";
+    }
+
     std::string getName() const
     {
         return this->name;

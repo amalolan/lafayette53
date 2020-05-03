@@ -1941,8 +1941,8 @@ TEST_F(HandlerTest, deleteMuseum) {
         EXPECT_CALL(this->model, getMuseumObject(stoi(museumID)))
                 .WillOnce(Return(otherMuseum))
                 .RetiresOnSaturation();
-        EXPECT_CALL(this->model, getHeadCurator())
-                .WillOnce(Return(User("","","", 0)))
+        EXPECT_CALL(this->model, checkHeadCurator(user))
+                .WillOnce(Return(false))
                 .RetiresOnSaturation();
 
         usleep(sleeptime);
@@ -1958,8 +1958,8 @@ TEST_F(HandlerTest, deleteMuseum) {
         EXPECT_CALL(this->model, getMuseumObject(stoi(museumID)))
                 .WillOnce(Return(museum))
                 .RetiresOnSaturation();
-        EXPECT_CALL(this->model, getHeadCurator())
-                .WillOnce(Return(User("","","", 0)))
+        EXPECT_CALL(this->model, checkHeadCurator(user))
+                .WillOnce(Return(false))
                 .RetiresOnSaturation();
         EXPECT_CALL(this->model, removeMuseumFromDB(museum))
                 .Times(1)
@@ -1978,8 +1978,8 @@ TEST_F(HandlerTest, deleteMuseum) {
         EXPECT_CALL(this->model, getMuseumObject(stoi(museumID)))
                 .WillOnce(Return(museum))
                 .RetiresOnSaturation();
-        EXPECT_CALL(this->model, getHeadCurator())
-                .WillOnce(Return(user))
+        EXPECT_CALL(this->model, checkHeadCurator(user))
+                .WillOnce(Return(true))
                 .RetiresOnSaturation();
         EXPECT_CALL(this->model, removeMuseumFromDB(museum))
                 .Times(1)

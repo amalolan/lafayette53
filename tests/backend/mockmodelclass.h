@@ -25,6 +25,7 @@ public:
     MOCK_METHOD1(getUserObject, User(string));
     MOCK_METHOD1(saveUserToDB, void(User&));
     MOCK_METHOD0(getHeadCurator, User());
+    MOCK_METHOD1(checkHeadCurator, bool(User&));
 
     /**< Museum */
     MOCK_METHOD0(getMuseumList, vector<Museum>());
