@@ -244,6 +244,14 @@ public:
         output["reviewer"] = Util::getObjectWithKeys<User>(m.getUser(), {"username"});
         return output;
     }
+
+
+    /**
+     * @brief sendEmail Sends an email.
+     * @param to The email to send to.
+     * @param subject The subject of the email.
+     * @param body THe body of the email.
+     */
     static void sendEmail(std::string to, std::string subject, std::string body)
     {
         json email = {
