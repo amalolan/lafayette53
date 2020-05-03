@@ -86,6 +86,7 @@ public:
     virtual void saveUserToDB(User & user);
     virtual void removeUserFromDB(User & user);
     virtual void updateUserInDB(User & user);
+    virtual bool checkHeadCurator(User & user);
 
     static ModelClass* getInstance(bool kind);
     static void initdb(std::string);
@@ -100,6 +101,7 @@ protected:
     virtual void artifactPreCheck(const Artifact & artifact);
     virtual void collectionCheck(const Collection &);
     virtual void museumCheck(const Museum &);
+    virtual void preCollectionCheck(const Collection &);
     QSqlDatabase db;
     QSqlQuery query;
 
