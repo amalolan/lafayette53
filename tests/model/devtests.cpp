@@ -11,14 +11,22 @@ TEST_F(DevTests, testUserInput){
     this->model->open();
     User user("sena", "s@lafayette.edu", "password");
     User empty("", "", "");
-    EXPECT_NO_THROW(this->model->saveUserToDB(user));
+    User newUser("yevs", "y@laf", "pass");
+    ASSERT_NO_THROW(this->model->saveUserToDB(user));
+    ASSERT_NO_THROW(this->model->saveUserToDB(newUser));
     EXPECT_THROW(this->model->saveUserToDB(empty), ModelException);
-    ASSERT_TRUE(user.indb());
-    ASSERT_FALSE(empty.indb());
+    EXPECT_TRUE(user.indb());
+    EXPECT_FALSE(empty.indb());
+
+    EXPECT_TRUE(this->model->checkHeadCurator(user));
+    EXPECT_FALSE(this->model->checkHeadCurator(newUser));
+    EXPECT_THROW(this->model->checkHeadCurator(empty), ModelException);
+
     EXPECT_NO_THROW(this->model->updateUserInDB(user));
     EXPECT_THROW(this->model->updateUserInDB(empty), ModelException);
     EXPECT_THROW(this->model->saveUserToDB(user), ModelException);
     EXPECT_NO_THROW(this->model->removeUserFromDB(user));
+    EXPECT_NO_THROW(this->model->removeUserFromDB(newUser));
     EXPECT_THROW(this->model->removeUserFromDB(empty), ModelException);
     EXPECT_THROW(this->model->updateUserInDB(user), ModelException);
 }
@@ -56,11 +64,25 @@ TEST_F(DevTests, testingMuseumInput){
     EXPECT_THROW(this->model->updateMuseumInDB(museum4), ModelException);
     EXPECT_THROW(this->model->removeMuseumFromDB(museum3), ModelException);
     EXPECT_THROW(this->model->removeMuseumFromDB(museum4), ModelException);
+
     EXPECT_NO_THROW(this->model->getMuseumList());
+    EXPECT_NO_THROW(this->model->getMuseumByCurator(newUser.getUserID()));
+    std::vector<Museum> array = this->model->getMuseumList();
+    EXPECT_TRUE(std::find(array.begin(), array.end(), museum1)!=array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), museum2)!=array.end());
+    array = this->model->getMuseumByCurator(newUser.getUserID());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), museum1)!=array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), museum2)!=array.end());
+
     EXPECT_NO_THROW(this->model->removeMuseumFromDB(museum1));
     EXPECT_NO_THROW(this->model->removeUserFromDB(newUser));
+    EXPECT_THROW(this->model->updateMuseumInDB(museum2), ModelException);
     EXPECT_THROW(this->model->removeMuseumFromDB(museum2), ModelException);
     EXPECT_NO_THROW(this->model->getMuseumList());
+    EXPECT_THROW(this->model->getMuseumByCurator(newUser.getUserID()), ModelException);
+    array = this->model->getMuseumList();
+    EXPECT_TRUE(std::find(array.begin(), array.end(), museum1)==array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), museum2)==array.end());
 }
 
 TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
@@ -97,13 +119,28 @@ TEST_F(DevTests, TestingModelClassMuseumAndUserReturns){
     ASSERT_TRUE(!newUser.indb());
 }
 
-TEST_F(DevTests, TestingUserMuseumExceptions){
+TEST_F(DevTests, TestingUserMuseumArtifactCollectionEditExceptions){
     User newUser("sena", "s@lafayette.edu", "password");
     ASSERT_THROW(this->model->updateUserInDB(newUser), ModelException);
     ASSERT_THROW(this->model->removeUserFromDB(newUser), ModelException);
     ASSERT_THROW(this->model->getMuseumObject(""), ModelException);
     ASSERT_THROW(this->model->getUserObject(""), ModelException);
     ASSERT_THROW(this->model->getUserObject(-1), ModelException);
+    ASSERT_THROW(this->model->getMuseumByCurator(-1), ModelException);
+
+    ASSERT_THROW(this->model->getArtifactsByMuseum(-1), ModelException);
+    ASSERT_THROW(this->model->getCollectionListByMuseumID(-1), ModelException);
+    ASSERT_THROW(this->model->getCollectionsByArtifact(-1), ModelException);
+    ASSERT_THROW(this->model->getArtifactsByCollection(-1), ModelException);
+
+    ASSERT_THROW(this->model->getCollectionEdits(-1), ModelException);
+    ASSERT_THROW(this->model->getArtifactEdits(-1), ModelException);
+    ASSERT_THROW(this->model->getMuseumEdits(-1), ModelException);
+    ASSERT_THROW(this->model->getCollectionActions(-1), ModelException);
+    ASSERT_THROW(this->model->getArtifactActions(-1), ModelException);
+    ASSERT_THROW(this->model->getMuseumActions(-1), ModelException);
+    ASSERT_THROW(this->model->getArtifact(-1), ModelException);
+    ASSERT_THROW(this->model->getCollectionObject(-1), ModelException);
 
     Museum museum("aMuseum", "a sample museum", newUser);
     ASSERT_THROW(this->model->saveMuseumToDB(museum), ModelException);
@@ -133,7 +170,12 @@ TEST_F(DevTests, TestingArtifactInputAndOutput){
     Museum museum("museum", "desc", "intro", user);
     ASSERT_NO_THROW(this->model->saveMuseumToDB(museum));
     Artifact artifact("artifact", "desc", "intro", "photo", museum);
+    Artifact artifact0("", "", "", museum);
     ASSERT_NO_THROW(this->model->saveArtifactToDB(artifact));
+    ASSERT_THROW(this->model->saveArtifactToDB(artifact0), ModelException);
+    ASSERT_THROW(this->model->updateArtifactInDB(artifact0), ModelException);
+    ASSERT_THROW(this->model->removeArtifactInDB(artifact0), ModelException);
+
     EXPECT_TRUE(artifact.indb());
     artifact.setPhoto("newPhoto");
     artifact.setName("newName");
@@ -154,6 +196,17 @@ TEST_F(DevTests, TestingCollectionInput){
     ASSERT_NO_THROW(this->model->saveMuseumToDB(museum));
     Collection collection("collection", "desc", "intro", "photo", museum);
     ASSERT_NO_THROW(this->model->saveCollectionToDB(collection));
+
+    Collection collection0("", "", "", museum);
+    ASSERT_THROW(this->model->saveCollectionToDB(collection0), ModelException);
+    ASSERT_THROW(this->model->updateCollectionInDB(collection0), ModelException);
+    ASSERT_THROW(this->model->removeCollectionInDB(collection0), ModelException);
+
+    Collection collection1("collection", "desc", "intro", "photo", museum);
+    ASSERT_THROW(this->model->saveCollectionToDB(collection1), ModelException);
+    ASSERT_THROW(this->model->updateCollectionInDB(collection1), ModelException);
+    ASSERT_THROW(this->model->removeCollectionInDB(collection1), ModelException);
+
     EXPECT_TRUE(collection.indb());
     collection.setPhoto("newPhoto");
     collection.setName("newName");
@@ -247,89 +300,173 @@ TEST_F(DevTests, TestEditInput){
     EXPECT_EQ(edit, this->model->getArtifactEdits(user.getUserID()).front());
     EXPECT_EQ(1, this->model->getArtifactActions(museum.getMuseumID()).size());
     EXPECT_EQ(edit, this->model->getArtifactActions(museum.getMuseumID()).front());
+
     edit.rejectEdit();
     ASSERT_NO_THROW(this->model->updateEditInDB(edit));
     EXPECT_EQ(1, this->model->getArtifactEdits(user.getUserID()).size());
     EXPECT_EQ(edit, this->model->getArtifactEdits(user.getUserID()).front());
     EXPECT_EQ(0, this->model->getArtifactActions(museum.getMuseumID()).size());
+    EXPECT_TRUE(edit.getObject() != this->model->getArtifact(edit.getObject().getID()));
 
-    Artifact newArt("name", "intro", "desc", "photo", museum);
-    Edit<Artifact> edit0(newArt, Edit<Artifact>::add, user, this->model->getCollectionsByArtifact(artifact.getID()));
+
+    Edit<Artifact> edit0(artifact, Edit<Artifact>::edit, user, this->model->getCollectionsByArtifact(artifact.getID()));
     ASSERT_NO_THROW(this->model->saveEditToDB(edit0));
     ASSERT_NO_THROW(this->model->getArtifactEdits(user.getUserID()));
     EXPECT_EQ(2, this->model->getArtifactEdits(user.getUserID()).size());
+
     std::vector<Edit<Artifact>> array = this->model->getArtifactEdits(user.getUserID());
-    EXPECT_TRUE(std::find(array.begin(), array.end(), edit0)!= array.end());
-    EXPECT_TRUE(std::find(array.begin(), array.end(), edit)!= array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit0) != array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit) != array.end());
+
     EXPECT_EQ(1, this->model->getArtifactActions(museum.getMuseumID()).size());
-    array = this->model->getArtifactActions(museum.getMuseumID());
-    EXPECT_TRUE(std::find(array.begin(), array.end(), edit0)!= array.end());
-    EXPECT_TRUE(std::find(array.begin(), array.end(), edit)== array.end());
+    EXPECT_EQ(edit0, this->model->getArtifactActions(museum.getMuseumID()).front());
+
     edit0.approveEdit();
     ASSERT_NO_THROW(this->model->updateEditInDB(edit0));
     EXPECT_EQ(2, this->model->getArtifactEdits(user.getUserID()).size());
+
     array = this->model->getArtifactEdits(user.getUserID());
-    EXPECT_TRUE(std::find(array.begin(), array.end(), edit0)!= array.end());
-    EXPECT_TRUE(std::find(array.begin(), array.end(), edit)!= array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit0) != array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit) != array.end());
     EXPECT_EQ(0, this->model->getArtifactActions(museum.getMuseumID()).size());
+    EXPECT_TRUE(edit0.getObject() == this->model->getArtifact(edit.getObject().getID()));
+
+    Edit<Artifact> edit1(artifact, Edit<Artifact>::del, user, this->model->getCollectionsByArtifact(artifact.getID()));
+    ASSERT_NO_THROW(this->model->saveEditToDB(edit1));
+    ASSERT_NO_THROW(this->model->getArtifactEdits(user.getUserID()));
+
+    EXPECT_EQ(3, this->model->getArtifactEdits(user.getUserID()).size());
+    array = this->model->getArtifactEdits(user.getUserID());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit1) != array.end());
+    EXPECT_EQ(1, this->model->getArtifactActions(museum.getMuseumID()).size());
+    EXPECT_EQ(edit1, this->model->getArtifactActions(museum.getMuseumID()).front());
+
+    edit1.approveEdit();
+    ASSERT_NO_THROW(this->model->updateEditInDB(edit1));
+
+    EXPECT_EQ(1, this->model->getArtifactEdits(user.getUserID()).size());
+    array = this->model->getArtifactEdits(user.getUserID());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit0) == array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit) == array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit1) != array.end());
+    EXPECT_EQ(0, this->model->getArtifactActions(museum.getMuseumID()).size());
+    EXPECT_THROW(this->model->getArtifact(edit1.getObject().getID()), ModelException);
+
+
+    Artifact newArt("name", "intro", "desc", "photo", museum);
+    Edit<Artifact> edit2(newArt, Edit<Artifact>::add, user, {});
+    ASSERT_NO_THROW(this->model->saveEditToDB(edit2));
+
+    EXPECT_EQ(2, this->model->getArtifactEdits(user.getUserID()).size());
+    array = this->model->getArtifactEdits(user.getUserID());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit2)!= array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit1)!= array.end());
+
+    EXPECT_EQ(1, this->model->getArtifactActions(museum.getMuseumID()).size());
     array = this->model->getArtifactActions(museum.getMuseumID());
-    EXPECT_TRUE(std::find(array.begin(), array.end(), edit0)== array.end());
-    EXPECT_TRUE(std::find(array.begin(), array.end(), edit)== array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit2)!= array.end());
+
+    edit2.approveEdit();
+    ASSERT_NO_THROW(this->model->updateEditInDB(edit2));
+    EXPECT_EQ(2, this->model->getArtifactEdits(user.getUserID()).size());
+
+    array = this->model->getArtifactEdits(user.getUserID());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit2)!= array.end());
+    EXPECT_TRUE(std::find(array.begin(), array.end(), edit1)!= array.end());
+    EXPECT_EQ(0, this->model->getArtifactActions(museum.getMuseumID()).size());
+    EXPECT_EQ(edit2.getObject(), this->model->getArtifact(edit2.getObject().getID()));
 
     collection.setPhoto("newPhoto");
     collection.setName("newName");
     collection.setDescription("newDesc");
     collection.setIntro("newIntro");
-
-    Edit<Collection> edit2(collection, Edit<Collection>::edit, user);
-    ASSERT_NO_THROW(this->model->saveEditToDB(edit2));
+    Edit<Collection> edit3(collection, Edit<Collection>::edit, user);
+    ASSERT_NO_THROW(this->model->saveEditToDB(edit3));
     ASSERT_NO_THROW(this->model->getCollectionEdits(user.getUserID()));
     EXPECT_EQ(1, this->model->getCollectionEdits(user.getUserID()).size());
-    EXPECT_EQ(edit2, this->model->getCollectionEdits(user.getUserID()).front());
+    EXPECT_EQ(edit3, this->model->getCollectionEdits(user.getUserID()).front());
     EXPECT_EQ(1, this->model->getCollectionActions(museum.getMuseumID()).size());
-    EXPECT_EQ(edit2, this->model->getCollectionActions(museum.getMuseumID()).front());
-    edit2.rejectEdit();
-    ASSERT_NO_THROW(this->model->updateEditInDB(edit2));
+    EXPECT_EQ(edit3, this->model->getCollectionActions(museum.getMuseumID()).front());
+    edit3.approveEdit();
+    ASSERT_NO_THROW(this->model->updateEditInDB(edit3));
     EXPECT_EQ(1, this->model->getCollectionEdits(user.getUserID()).size());
-    EXPECT_EQ(edit2, this->model->getCollectionEdits(user.getUserID()).front());
+    EXPECT_EQ(edit3, this->model->getCollectionEdits(user.getUserID()).front());
     EXPECT_EQ(0, this->model->getCollectionActions(museum.getMuseumID()).size());
+    EXPECT_EQ(edit3.getObject(), this->model->getCollectionObject(edit3.getObject().getID()));
 
-    museum.setName("newMuseum");
-    museum.setIntro("newIntro");
-    museum.setDescription("newDesc");
-    museum.setPhoto("newPhoto");
-    Edit<Museum> edit3(museum, Edit<Museum>::edit, user);
-    ASSERT_NO_THROW(this->model->saveEditToDB(edit3));
+    Edit<Collection> edit4(collection, Edit<Collection>::del, user);
+    ASSERT_NO_THROW(this->model->saveEditToDB(edit4));
+    ASSERT_NO_THROW(this->model->getCollectionEdits(user.getUserID()));
+
+    EXPECT_EQ(2, this->model->getCollectionEdits(user.getUserID()).size());
+    std::vector<Edit<Collection>> array0 = this->model->getCollectionEdits(user.getUserID());
+    EXPECT_TRUE(std::find(array0.begin(), array0.end(), edit4) != array0.end());
+    EXPECT_TRUE(std::find(array0.begin(), array0.end(), edit3) != array0.end());
+    EXPECT_EQ(1, this->model->getCollectionActions(museum.getMuseumID()).size());
+    EXPECT_EQ(edit4, this->model->getCollectionActions(museum.getMuseumID()).front());
+
+    edit4.approveEdit();
+    ASSERT_NO_THROW(this->model->updateEditInDB(edit4));
+    EXPECT_EQ(1, this->model->getCollectionEdits(user.getUserID()).size());
+    EXPECT_EQ(edit4, this->model->getCollectionEdits(user.getUserID()).front());
+    EXPECT_EQ(0, this->model->getCollectionActions(museum.getMuseumID()).size());
+    EXPECT_THROW(this->model->getCollectionObject(edit4.getObject().getID()), ModelException);
+
+    Collection newCol("col", "desc", "intro", "", museum);
+    Edit<Collection> edit5(newCol, Edit<Collection>::add, user);
+    ASSERT_NO_THROW(this->model->saveEditToDB(edit5));
+    ASSERT_NO_THROW(this->model->getCollectionEdits(user.getUserID()));
+
+    EXPECT_EQ(2, this->model->getCollectionEdits(user.getUserID()).size());
+    array0 = this->model->getCollectionEdits(user.getUserID());
+    EXPECT_TRUE(std::find(array0.begin(), array0.end(), edit5) != array0.end());
+    EXPECT_TRUE(std::find(array0.begin(), array0.end(), edit4) != array0.end());
+
+    EXPECT_EQ(1, this->model->getCollectionActions(museum.getMuseumID()).size());
+    EXPECT_EQ(edit5, this->model->getCollectionActions(museum.getMuseumID()).front());
+
+    edit5.approveEdit();
+    ASSERT_NO_THROW(this->model->updateEditInDB(edit5));
+    EXPECT_EQ(2, this->model->getCollectionEdits(user.getUserID()).size());
+    array0 = this->model->getCollectionEdits(user.getUserID());
+    EXPECT_TRUE(std::find(array0.begin(), array0.end(), edit5) != array0.end());
+    EXPECT_TRUE(std::find(array0.begin(), array0.end(), edit4) != array0.end());
+    EXPECT_EQ(0, this->model->getCollectionActions(museum.getMuseumID()).size());
+    EXPECT_EQ(edit5.getObject(), this->model->getCollectionObject(edit5.getObject().getID()));
+
+    museum.setName("museum");
+    museum.setDescription("desc");
+    museum.setIntro("intro");
+    Edit<Museum> edit6(museum, Edit<Museum>::edit, user);
+    ASSERT_NO_THROW(this->model->saveEditToDB(edit6));
     ASSERT_NO_THROW(this->model->getMuseumEdits(user.getUserID()));
     EXPECT_EQ(1, this->model->getMuseumEdits(user.getUserID()).size());
-    EXPECT_EQ(edit3, this->model->getMuseumEdits(user.getUserID()).front());
+    EXPECT_EQ(edit6, this->model->getMuseumEdits(user.getUserID()).front());
     EXPECT_EQ(1, this->model->getMuseumActions(museum.getMuseumID()).size());
-    EXPECT_EQ(edit3, this->model->getMuseumActions(museum.getMuseumID()).front());
-    edit3.rejectEdit();
-    ASSERT_NO_THROW(this->model->updateEditInDB(edit3));
+    EXPECT_EQ(edit6, this->model->getMuseumActions(museum.getMuseumID()).front());
+    edit6.approveEdit();
+    ASSERT_NO_THROW(this->model->updateEditInDB(edit6));
     EXPECT_EQ(1, this->model->getMuseumEdits(user.getUserID()).size());
-    EXPECT_EQ(edit3, this->model->getMuseumEdits(user.getUserID()).front());
+    EXPECT_EQ(edit6, this->model->getMuseumEdits(user.getUserID()).front());
     EXPECT_EQ(0, this->model->getMuseumActions(museum.getMuseumID()).size());
+    EXPECT_EQ(edit6.getObject(), this->model->getMuseumObject(edit6.getObject().getMuseumID()));
 
-    EXPECT_EQ(edit3, this->model->getEditMuseumObject(edit3.getID()));
-    EXPECT_EQ(edit2, this->model->getEditCollectionObject(edit2.getID()));
-    EXPECT_EQ(edit0, this->model->getEditArtifactObject(edit0.getID()));
-    EXPECT_EQ(edit, this->model->getEditArtifactObject(edit.getID()));
 
-    ASSERT_NO_THROW(this->model->removeEditInDB(edit3));
-    std::vector<Edit<Museum>> array0 = this->model->getMuseumEdits(user.getUserID());
-    EXPECT_FALSE(std::find(array0.begin(), array0.end(), edit3)!=array0.end());
-    ASSERT_NO_THROW(this->model->removeEditInDB(edit2));
-    std::vector<Edit<Collection>> array1 = this->model->getCollectionEdits(user.getUserID());
-    EXPECT_FALSE(std::find(array1.begin(), array1.end(), edit2)!=array1.end());
-    ASSERT_NO_THROW(this->model->removeEditInDB(edit));
-    ASSERT_NO_THROW(this->model->removeEditInDB(edit0));
-    array = this->model->getArtifactEdits(user.getUserID());
-    EXPECT_FALSE(std::find(array.begin(), array.end(), edit0)!= array.end());
-    EXPECT_FALSE(std::find(array.begin(), array.end(), edit)!= array.end());
-    EXPECT_THROW(this->model->removeEditInDB(edit3), ModelException);
-    EXPECT_THROW(this->model->removeEditInDB(edit2), ModelException);
-    EXPECT_THROW(this->model->removeEditInDB(edit0), ModelException);
-    EXPECT_THROW(this->model->removeEditInDB(edit), ModelException);
+    EXPECT_EQ(edit6.toString(), this->model->getEditMuseumObject(edit6.getID()).toString());
+    EXPECT_EQ(edit5.toString(), this->model->getEditCollectionObject(edit5.getID()).toString());
+    EXPECT_EQ(edit4.toString(), this->model->getEditCollectionObject(edit4.getID()).toString());
+    EXPECT_EQ(edit2.toString(), this->model->getEditArtifactObject(edit2.getID()).toString());
+    EXPECT_EQ(edit1.toString(), this->model->getEditArtifactObject(edit1.getID()).toString());
+
+    ASSERT_NO_THROW(this->model->removeEditInDB(edit1));
+    Artifact delArt = edit2.getObject();
+    ASSERT_NO_THROW(this->model->removeArtifactInDB(delArt));
+    ASSERT_THROW(this->model->removeEditInDB(edit2), ModelException);
+    ASSERT_NO_THROW(this->model->removeEditInDB(edit4));
+    Collection delCol = edit5.getObject();
+    ASSERT_NO_THROW(this->model->removeCollectionInDB(delCol));
+    ASSERT_THROW(this->model->removeEditInDB(edit5), ModelException);
+    ASSERT_NO_THROW(this->model->removeMuseumFromDB(museum));
+    ASSERT_THROW(this->model->removeEditInDB(edit6), ModelException);
     this->model->removeUserFromDB(user);
 }

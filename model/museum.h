@@ -62,6 +62,7 @@ public:
       return strm << "Museum(name : "<< m.name <<", "
                      "introduction: "<< m.intro<< ", "
                      "description: " << m.description << ", "
+                     "id: " << m.museumID << ", "
                      "user: " << m.user << ", "
                      "photoURL: " << m.photo << ")";
     }
