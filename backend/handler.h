@@ -38,6 +38,8 @@
 #include "../model/user.h"
 #include "../model/museum.h"
 #include "../model/artifact.h"
+#include <chrono>
+#include <ctime>
 
 #include "modelclassext.h"
 #include "util.h"
@@ -115,8 +117,6 @@ private:
     void reviewEdit(http_request);
     std::string reviewArtifactEdit(int, bool, User);
     std::string reviewCollectionEdit(int, bool, User);
-    json getArtifactEdit(Edit<Artifact>);
-    json getCollectionEdit(Edit<Collection>);
 
     void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
 };

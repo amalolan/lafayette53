@@ -415,6 +415,8 @@ void Handler::addEditCollection(web::http::http_request message, int kind) {
             }
         } else{
             ucout<<"Trying to create edit object for collection"<<std::endl;
+            std::time_t time = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now());
+            ucout<<std::ctime(&time)<<std::endl;
             Edit<Collection> edit(collection, kind, user);
             this->model->saveEditToDB(edit);
             ucout << "edit/add collection added to review list.\n";
@@ -479,6 +481,8 @@ void Handler::addEditArtifact(http_request message, int kind) {
             }
         } else {
             Edit<Artifact> edit(artifact, kind, user, collections);
+            std::time_t time = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now());
+            ucout<<std::ctime(&time)<<std::endl;
             this->model->saveEditToDB(edit);
             ucout << "edit artifact added to review list.\n";
             statusMessage = "Your artifact edit/addition will be published after review.";
@@ -500,10 +504,10 @@ void Handler::getUserProfile(http_request message){
         // All of the user's requested edits.
         json editList = json::array();
         for(auto edit : this->model->getArtifactEdits(user.getUserID())) {
-            editList.push_back(this->getArtifactEdit(edit));
+            editList.push_back(Util::getArtifactEdit(edit));
         }
         for (auto edit: this->model->getCollectionEdits(user.getUserID())) {
-            editList.push_back(this->getCollectionEdit(edit));
+            editList.push_back(Util::getCollectionEdit(edit));
         }
         std::vector<Museum> museums = this->model->getMuseumByCurator(user.getUserID());
         // All of other user's edits that are pending for the user's approval.
@@ -511,10 +515,10 @@ void Handler::getUserProfile(http_request message){
         for(Museum museum : museums) {
             ucout << museum.getMuseumID() << ' ';
             for (auto action : this->model->getArtifactActions(museum.getMuseumID())) {
-                actionsList.push_back(this->getArtifactEdit(action));
+                actionsList.push_back(Util::getArtifactEdit(action));
             }
             for (auto action: this->model->getCollectionActions(museum.getMuseumID())) {
-                actionsList.push_back(this->getCollectionEdit(action));
+                actionsList.push_back(Util::getCollectionEdit(action));
             }
         }
 
@@ -538,33 +542,6 @@ void Handler::getUserProfile(http_request message){
     return;
 }
 
-json Handler::getArtifactEdit(Edit<Artifact> edit) {
-    json output = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "collection",
-                                                            "approvalStatus"});
-    output["artifact"]["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
-                                            {"id", "name", "description", "introduction", "image"});
-
-    Museum m = edit.getObject().getMuseum();
-    output["artifact"]["museum"] = Util::getObjectWithKeys<Museum>(m, {"id"});
-    output["artifact"]["collectionList"] = Util::arrayFromVector<Collection>(edit.getCollectionList(), {"id","name"});
-    output["reviewer"] = Util::getObjectWithKeys<User>(m.getUser(), {"username"});
-
-    ucout << output.dump(3) << '\n';
-    return output;
-}
-
-json Handler::getCollectionEdit(Edit<Collection> edit) {
-    json output = Util::getObjectWithKeys<Edit<Collection>>(edit, {"id", "type", "category", "artifact", "approvalStatus"});
-    output["collection"] =  Util::getObjectWithKeys<Collection>(edit.getObject(),
-                                            {"id", "name", "description", "introduction", "image"});
-
-    Museum m = edit.getObject().getMuseum();
-    output["collection"]["museum"] = Util::getObjectWithKeys<Museum>(m, {"id"});
-    output["reviewer"] = Util::getObjectWithKeys<User>(m.getUser(), {"username"});
-    ucout << output.dump(3) << '\n';
-    return output;
-}
-
 
 
 void Handler::returnEditByID(http_request message, int editID)
@@ -573,13 +550,13 @@ void Handler::returnEditByID(http_request message, int editID)
         ucout<< s <<std::endl;
         try {
             return message.reply(status_codes::OK,
-                                 this->getArtifactEdit(this->model->getEditArtifactObject(editID)).dump(4));
+                                 Util::getArtifactEdit(this->model->getEditArtifactObject(editID)).dump(4));
         } catch (ModelException &e) {
             ucout << e.what() << std::endl;
         }
         try {
             return message.reply(status_codes::OK,
-                                 this->getCollectionEdit(this->model->getEditCollectionObject(editID)).dump(4));
+                                 Util::getCollectionEdit(this->model->getEditCollectionObject(editID)).dump(4));
         } catch (ModelException &e) {
             ucout << e.what() << std::endl;
         }
@@ -666,9 +643,6 @@ std::string Handler::reviewCollectionEdit(int editID, bool approved, User user) 
     return "Edit approved.";
 }
 
-
-//
-//FIXME
 void Handler::reviewEdit(http_request message) {
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);

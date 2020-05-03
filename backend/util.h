@@ -164,6 +164,87 @@ public:
         return obj.dump();
     }
 
+    /**
+     * @brief getArtifactEdit Helper function that turns an Edit<Artifact> object into a JSON representation
+     * for the front end.
+     * @param edit the edit object
+     * @return the JSON representation
+     * {
+     *    id: int,
+     *    type: string ["Addition", "Edit", or"Deletion"],
+     *    category: string "artifact",
+     *    approvalStatus: string ["Approved", "Denied", "Under Review"],
+     *    reviewer: {
+     *        id: int
+     *    }
+     *    artifact: {
+     *        artifact: {
+     *            id: int
+     *            name: string
+     *            description: string
+     *            introduction: string
+     *            image: string
+     *         },
+     *        collectionList: [{id: int, name: string} ... ],
+     *        museum: {
+     *             id: int,
+     *             name: string
+     *         }
+     *     }
+     * }
+     */
+    static json getArtifactEdit(Edit<Artifact> edit) {
+        json output = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "approvalStatus"});
+        output["artifact"]["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
+                                                {"id", "name", "description", "introduction", "image"});
+
+        Museum m = edit.getObject().getMuseum();
+        output["artifact"]["museum"] = Util::getObjectWithKeys<Museum>(m, {"id", "name"});
+        output["artifact"]["collectionList"] = Util::arrayFromVector<Collection>(edit.getCollectionList(), {"id","name"});
+        output["reviewer"] = Util::getObjectWithKeys<User>(m.getUser(), {"username"});
+        return output;
+    }
+
+    /**
+     * @brief getCollectionEdit Helper function that turns an Edit<Collection> object into a JSON representation
+     * for the front end.
+     * @param edit the edit object
+     * @return the JSON representation
+     * {
+     *    id: int,
+     *    type: string ["Addition", "Edit", or"Deletion"],
+     *    category: string "collection",
+     *    approvalStatus: string ["Approved", "Rejected", "Under Review"],
+     *    reviewer: {
+     *        username: string
+     *    }
+     *    collection: {
+     *        collection: {
+     *            id: int
+     *            name: string
+     *            description: string
+     *            introduction: string
+     *            image: string
+     *         },
+     *        museum: {
+     *             id: int,
+     *             name: string
+     *         }
+     *     }
+     * }
+     */
+    static json getCollectionEdit(Edit<Collection> edit) {
+        json output = Util::getObjectWithKeys<Edit<Collection>>(edit, {"id", "type", "category", "approvalStatus"});
+        output["collection"]["collection"] =  Util::getObjectWithKeys<Collection>(edit.getObject(),
+                                                {"id", "name", "description", "introduction", "image"});
+
+        Museum m = edit.getObject().getMuseum();
+        output["collection"]["museum"] = Util::getObjectWithKeys<Museum>(m, {"id", "name"});
+        output["reviewer"] = Util::getObjectWithKeys<User>(m.getUser(), {"username"});
+        return output;
+    }
+
+
 };
 
 #endif // UTILITY_H

@@ -96,7 +96,7 @@ TEST_F(UtilTest, getObjectWithKeys) {
             {"1", 3},
             {"31",  "12"},
             {"keya",
-                {{"a,b", 23.4},  {"b", true}} // Looking for b must result in an exception as it is in a nested object.
+             {{"a,b", 23.4},  {"b", true}} // Looking for b must result in an exception as it is in a nested object.
             },
             {"extra", 1.21}
         };
@@ -109,7 +109,7 @@ TEST_F(UtilTest, getObjectWithKeys) {
             {"1", 3},
             {"31",  "12"},
             {"keya",
-                {{"a,b", 23.4},  {"b", true}}
+             {{"a,b", 23.4},  {"b", true}}
             },
             {"extra", 1.21}
         };
@@ -132,6 +132,14 @@ TEST_F(UtilTest, getObjectWithKeys) {
 /**
  * @brief TEST_F Tests Util::arrayFromVector()
  * 8 Test Cases:
+ * 1. Empty vector
+ * 2. Empty vector, non-empty keys list.
+ * 3. Non-empty vector, all and only keys in top level of object in keyslist.
+ * 4. Non-empty vector, only keys in top level of object in keyslist, not all object's keys in keylist.
+ * 5. Non-empty vector, empty keys list.
+ * 6. Non-empty vector, not all keys in keyslist in vector.
+ * 7. Non-empty vector, all objects' keys in keylist and one key in keylist and not in object.
+ * 8. Non-empty vector, nested objects' key in keylist, rest of the keys in keylist are in object.
  */
 TEST_F(UtilTest, arrayFromVector) {
     vector<MockObject*> mockList;
@@ -148,7 +156,7 @@ TEST_F(UtilTest, arrayFromVector) {
         {"1", 3},
         {"31",  "12"},
         {"keya",
-            {{"a,b", 23.4},  {"b", true}} // Looking for b must result in an exception as it is in a nested object.
+         {{"a,b", 23.4},  {"b", true}} // Looking for b must result in an exception as it is in a nested object.
         },
         {"extra", 1.21}
     };
@@ -161,8 +169,8 @@ TEST_F(UtilTest, arrayFromVector) {
             .WillRepeatedly(Return(objectJSON));
     for (int i = 1; i < 4; i++) {
         EXPECT_CALL(*(mockList.at(i)), toJSON())
-            .Times(3) /**< Will be called only for cases 3 - 5 */
-            .WillRepeatedly(Return(objectJSON));
+                .Times(3) /**< Will be called only for cases 3 - 5 */
+                .WillRepeatedly(Return(objectJSON));
 
     }
     result = Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya", "extra"});
@@ -293,3 +301,154 @@ TEST_F(UtilTest, failureJSON) {
     };
     ASSERT_EQ(json::parse(Util::getFailureJsonStr(message)), j1);
 }
+
+/**
+ * @brief TEST_F Tests Util::getCollectionEdit()
+ * 1 Test Case
+ * 1. Simple Edit::edit and Edit::pending
+ */
+TEST_F(UtilTest, getCollectionEdit) {
+    User user("curator", "email", "password", 3);
+    Museum museum("museumName", "museumDescription", "museumIntroduction", "museumImage", user, 55);
+    Collection collection("collectionName", "collectionDescription", "collectionIntroduction", "collectionImage", museum, 32);
+    Edit<Collection> edit(collection, Edit<Collection>::edit, user, Edit<Collection>::pending, 2);
+    json expectation = {
+        {"id", 2},
+        {"type", "Edit"},
+        {"category", "collection"},
+        {"approvalStatus","Under review"},
+        {"reviewer", {{"username", "curator"}}},
+        {"collection", {
+             {"collection", {
+                  {"id", 32},
+                  {"name", "collectionName"},
+                  {"description", "collectionDescription"},
+                  {"introduction", "collectionIntroduction"},
+                  {"image", "collectionImage"}
+              }},
+             {"museum", {
+                  {"id", 55},
+                  {"name", "museumName"}
+              }}
+         }
+        }
+    };
+    json result = Util::getCollectionEdit(edit);
+    ASSERT_EQ(result, expectation); /**< Case 1 */
+}
+
+
+/**
+ * @brief TEST_F Tests Util::getArtifactEdit()
+ * 3 Test Case
+ * 1. Empty collection list, Edit::add and Edit::approve type.
+ * 2. Singleton collection list, Edit::del and Edit::reject type.
+ * 3. Non-singleton collection list, Edit::edit and Edit::approve type.
+ */
+TEST_F(UtilTest, getArtifactEdit) {
+    User user("curator", "email", "password", 3);
+    Museum museum("museumName", "museumDescription", "museumIntroduction", "museumImage", user, 55);
+    vector<Collection> collectionList = {
+        Collection("collection2Name", "collection2Description", "collection2Introduction", "collection2Image", museum, 33),
+    };
+    Artifact artifact("artifactName", "artifactDescription", "artifactIntroduction", "artifactImage", museum, 1232);
+    Edit<Artifact> edit1(artifact, Edit<Artifact>::add, user, {}, Edit<Artifact>::approve, 1);
+    json expectation = {
+        {"id", 1},
+        {"type", "Addition"},
+        {"category", "artifact"},
+        {"approvalStatus","Approved"},
+        {"reviewer", {{"username", "curator"}}},
+        {"artifact", {
+             {"artifact", {
+                  {"id", 1232},
+                  {"name", "artifactName"},
+                  {"description", "artifactDescription"},
+                  {"introduction", "artifactIntroduction"},
+                  {"image", "artifactImage"}
+              }},
+             {"museum", {
+                  {"id", 55},
+                  {"name", "museumName"}
+              }},
+             {"collectionList", json::array()}
+         }
+        }
+    };
+    json result = Util::getArtifactEdit(edit1);
+    cout<<result.dump(2)<<endl;
+    cout<<expectation.dump(2)<<endl;
+    ASSERT_EQ(result, expectation); /**< Case 1 */
+
+    Edit<Artifact> edit2(artifact, Edit<Artifact>::del, user, collectionList, Edit<Artifact>::reject, 2);
+    expectation = {
+        {"id", 2},
+        {"type", "Deletion"},
+        {"category", "artifact"},
+        {"approvalStatus","Rejected"},
+        {"reviewer", {{"username", "curator"}}},
+        {"artifact", {
+             {"artifact", {
+                  {"id", 1232},
+                  {"name", "artifactName"},
+                  {"description", "artifactDescription"},
+                  {"introduction", "artifactIntroduction"},
+                  {"image", "artifactImage"}
+              }},
+             {"museum", {
+                  {"id", 55},
+                  {"name", "museumName"}
+              }},
+             {"collectionList", {
+                  {
+                      {"id", 33},
+                      {"name", "collection2Name"}
+                  }
+              }}
+         }
+        }
+    };
+    result = Util::getArtifactEdit(edit2);
+    cout<<result.dump(2)<<endl;
+    cout<<expectation.dump(2)<<endl;
+    ASSERT_EQ(result, expectation); /**< Case 2 */
+
+    collectionList.push_back(Collection("collectionName", "collectionDescription", "collectionIntroduction", "collectionImage", museum, 32));
+    Edit<Artifact> edit3(artifact, Edit<Artifact>::edit, user, collectionList, Edit<Artifact>::approve, 3);
+    expectation = {
+        {"id", 3},
+        {"type", "Edit"},
+        {"category", "artifact"},
+        {"approvalStatus","Approved"},
+        {"reviewer", {{"username", "curator"}}},
+        {"artifact", {
+             {"artifact", {
+                  {"id", 1232},
+                  {"name", "artifactName"},
+                  {"description", "artifactDescription"},
+                  {"introduction", "artifactIntroduction"},
+                  {"image", "artifactImage"}
+              }},
+             {"museum", {
+                  {"id", 55},
+                  {"name", "museumName"}
+              }},
+             {"collectionList", {
+                  {
+                      {"id", 33},
+                      {"name", "collection2Name"}
+                  },
+                  {
+                      {"id", 32},
+                      {"name", "collectionName"}
+                  }
+
+              }}
+         }
+        }
+    };
+    result = Util::getArtifactEdit(edit3);
+    ASSERT_EQ(result, expectation); /**< Case 3 */
+
+}
+
