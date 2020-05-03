@@ -3,7 +3,7 @@
 gtest
 gtest.tar
 *.autosave
-database/*.db
+*.db
 *.a
 *.core
 *.moc

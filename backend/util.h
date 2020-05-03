@@ -10,20 +10,27 @@
 using json = nlohmann::json;
 
 /**
- * @brief The LoginException class If the user has invalid login credentials but performs POST requests requiring log ins,
+ * @brief The BackendException class Exceptions on the backend for which the message has to be displayed on the front end use this class.
+ * For example, if the user has invalid login credentials but performs POST requests requiring logins,
  * this exception is raised.
  */
-class LoginException : public std::exception
+class BackendException : public std::exception
 {
-
+    std::string _msg;
 public:
+    /**
+     * @brief BackendException Constructor
+     * @param msg Default message: "Error on Backend"
+     */
+    BackendException(const std::string msg = "Error on Backend") : _msg(msg){}
+
     /**
      * @brief what Describes the error
      * @return The description of the Login Error.
      */
     virtual const char * what () const noexcept override
     {
-        return "Login failed. Please check username or password and try again.";
+        return _msg.c_str();
     }
 };
 
@@ -82,7 +89,7 @@ public:
         User user = model->getUserObject(username);
         std::string password = user.getPassword();
         if (userJSON["password"] != password) {
-            throw LoginException();
+            throw BackendException("Login failed. Please check username or password and try again.");
         }
         return user;
     }
@@ -156,6 +163,87 @@ public:
         };
         return obj.dump();
     }
+
+    /**
+     * @brief getArtifactEdit Helper function that turns an Edit<Artifact> object into a JSON representation
+     * for the front end.
+     * @param edit the edit object
+     * @return the JSON representation
+     * {
+     *    id: int,
+     *    type: string ["Addition", "Edit", or"Deletion"],
+     *    category: string "artifact",
+     *    approvalStatus: string ["Approved", "Denied", "Under Review"],
+     *    reviewer: {
+     *        id: int
+     *    }
+     *    artifact: {
+     *        artifact: {
+     *            id: int
+     *            name: string
+     *            description: string
+     *            introduction: string
+     *            image: string
+     *         },
+     *        collectionList: [{id: int, name: string} ... ],
+     *        museum: {
+     *             id: int,
+     *             name: string
+     *         }
+     *     }
+     * }
+     */
+    static json getArtifactEditJSON(Edit<Artifact> edit) {
+        json output = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "approvalStatus"});
+        output["artifact"]["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
+                                                {"id", "name", "description", "introduction", "image"});
+
+        Museum m = edit.getObject().getMuseum();
+        output["artifact"]["museum"] = Util::getObjectWithKeys<Museum>(m, {"id", "name"});
+        output["artifact"]["collectionList"] = Util::arrayFromVector<Collection>(edit.getCollectionList(), {"id","name"});
+        output["reviewer"] = Util::getObjectWithKeys<User>(m.getUser(), {"username"});
+        return output;
+    }
+
+    /**
+     * @brief getCollectionEdit Helper function that turns an Edit<Collection> object into a JSON representation
+     * for the front end.
+     * @param edit the edit object
+     * @return the JSON representation
+     * {
+     *    id: int,
+     *    type: string ["Addition", "Edit", or"Deletion"],
+     *    category: string "collection",
+     *    approvalStatus: string ["Approved", "Rejected", "Under Review"],
+     *    reviewer: {
+     *        username: string
+     *    }
+     *    collection: {
+     *        collection: {
+     *            id: int
+     *            name: string
+     *            description: string
+     *            introduction: string
+     *            image: string
+     *         },
+     *        museum: {
+     *             id: int,
+     *             name: string
+     *         }
+     *     }
+     * }
+     */
+    static json getCollectionEditJSON(Edit<Collection> edit) {
+        json output = Util::getObjectWithKeys<Edit<Collection>>(edit, {"id", "type", "category", "approvalStatus"});
+        output["collection"]["collection"] =  Util::getObjectWithKeys<Collection>(edit.getObject(),
+                                                {"id", "name", "description", "introduction", "image"});
+
+        Museum m = edit.getObject().getMuseum();
+        output["collection"]["museum"] = Util::getObjectWithKeys<Museum>(m, {"id", "name"});
+        output["reviewer"] = Util::getObjectWithKeys<User>(m.getUser(), {"username"});
+        return output;
+    }
+
 
 };
 

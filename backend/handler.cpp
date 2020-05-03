@@ -5,7 +5,7 @@ void Handler::handle_error(http_request message, pplx::task<void>& t, std::strin
     try {
         t.get();
     }
-    catch(LoginException &l) {
+    catch(BackendException &l) {
         ucout << l.what() << "\n";
         message.reply(status_codes::Unauthorized, Util::getFailureJsonStr(l.what()));
     }
@@ -239,27 +239,27 @@ void Handler::returnArtifactByID(http_request message, int artifactID) {
 void Handler::returnEditByID(http_request message, int editID)
 {
     message.extract_string(false).then([=](utility::string_t s){
-        Edit<Artifact> edit = this->model->getEditArtifactObject(editID);
-        json editJSON = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "collection",
-                                                                "approvalStatus"});
-        json artifact;
-        artifact["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
-                                                {"id", "name", "description", "introduction", "image"});
-
-        artifact["museum"]["id"] = edit.getObject().getMuseum().getMuseumID();
-        artifact["collectionList"] = Util::arrayFromVector<Collection>(edit.getCollectionList(), {"id","name"});
-
-        editJSON["artifact"] = artifact;
-
-        ucout << editJSON.dump(3) << '\n';
-        return message.reply(status_codes::OK, editJSON.dump(3));
+        ucout<< s <<std::endl;
+        try {
+            return message.reply(status_codes::OK,
+                                 Util::getArtifactEditJSON(this->model->getEditArtifactObject(editID)).dump(4));
+        } catch (ModelException &e) {
+            ucout << e.what() << std::endl;
+        }
+        try {
+            return message.reply(status_codes::OK,
+                                 Util::getCollectionEditJSON(this->model->getEditCollectionObject(editID)).dump(4));
+        } catch (ModelException &e) {
+            ucout << e.what() << std::endl;
+        }
+        throw ModelException("No edits found in DB.");
+//         TODO museum edit
     }).then([=](pplx::task<void> t){
         handle_error(message, t, "Edit could not be returned");
     });
 
 }
 
-//
 // A POST request
 //
 void Handler::handle_post(http_request message)
@@ -291,7 +291,12 @@ void Handler::handle_post(http_request message)
         // URL: /request/add-collection
         else if(paths[1] == "add-collection")
         {
-            addCollection(message);
+            addEditCollection(message, Edit<Collection>::add);
+            return;
+        }
+        // URL: /request/edit-collection
+        else if (paths[1] == "edit-collection") {
+            addEditCollection(message, Edit<Collection>::edit);
             return;
         }
         // URL: /request/user-profile
@@ -335,6 +340,12 @@ void Handler::handle_post(http_request message)
             deleteMuseum(message, id);
             return;
         }
+        //URL: request/delete-artifact/[id]
+        if ( paths[1] == "delete-artifact")
+        {
+            deleteArtifact(message, id);
+            return;
+        }
     }
 
     message.extract_string(false).then([](utility::string_t s){
@@ -342,7 +353,6 @@ void Handler::handle_post(http_request message)
     });
     message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
 }
-
 
 void Handler::validateLogin(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
@@ -392,7 +402,7 @@ void Handler::addMuseum(http_request message){
     });
 }
 
-void Handler::addCollection(web::http::http_request message) {
+void Handler::addEditCollection(web::http::http_request message, int kind) {
     message.extract_string(false).then([=](utility::string_t s){
         //parses user and museum objects from stirng.
         json data = json::parse(s);
@@ -401,29 +411,45 @@ void Handler::addCollection(web::http::http_request message) {
         // nested object individually.
         Util::validateJSON(data, {"museum", "collection", "user"});
         Util::validateJSON(data["museum"], {"id"});
-        Util::validateJSON(data["collection"], {"description", "name", "introduction"});
+        Util::validateJSON(data["collection"], {"description", "name", "introduction", "image"});
         User user = Util::checkLogin(data["user"], this->model);
         //gets museum and user objects.
         Museum museum = this->model->getMuseumObject((int) data["museum"]["id"]);
+        Collection collection(data["collection"]["name"], data["collection"]["description"],
+                data["collection"]["introduction"], data["collection"]["image"], museum);
 
-        int curatorID = museum.getUser().getUserID();
-        bool isCuratorOfMuseum = (user.getUserID()  == curatorID);
-        if(isCuratorOfMuseum){
-            Collection *collection = new Collection(data["collection"]["name"], data["collection"]["description"],
-                    data["collection"]["introduction"], data["collection"]["image"], museum);
-            this->model->saveCollectionToDB(*collection);
-            ucout << "saved to database\n";
-            delete collection;
-            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Collection added successfully."));
-        } else{
-            ucout << "not the owner\n";
-            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("You are not "
-                                                                                       "the owner of the museum!"));
-            //TODO not owner add to request thing.
+        if (kind == Edit<Collection>::edit) {
+            Util::validateJSON(data["collection"], {"id"});
+            this->model->getCollectionObject((int) data["collection"]["id"]);
+            collection.setID(data["collection"]["id"]);
         }
-        //return message.reply(status_codes::NotImplemented, Util::getSuccessJsonStr("Collection Addition Not Implemented"));
+        bool isCuratorOfMuseum = (user.getUserID()  == museum.getUser().getUserID());
+        ucout<<"Is curator " << isCuratorOfMuseum << std::endl;
+
+        std::string statusMessage;
+        if(isCuratorOfMuseum){
+            if (kind == Edit<Collection>::edit) {
+                this->model->updateCollectionInDB(collection);
+                ucout << "edit done.\n";
+                statusMessage = "Collection has been successfully edited.";
+            } else {
+                this->model->saveCollectionToDB(collection);
+                ucout << "saved to database\n";
+                statusMessage =  "Collection added successfully.";
+            }
+        } else{
+            ucout<<"Trying to create edit object for collection"<<std::endl;
+            std::time_t time = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now());
+            ucout<<std::ctime(&time)<<std::endl;
+            Edit<Collection> edit(collection, kind, user);
+            this->model->saveEditToDB(edit);
+            ucout << "edit/add collection added to review list.\n";
+            statusMessage = "Your collection edit/addition will be published after review.";
+        }
+        return message.reply(status_codes::OK, Util::getSuccessJsonStr(statusMessage));
     }).then([=](pplx::task<void> t){
-        this->handle_error(message, t, "Error adding collection.");
+        this->handle_error(message, t, "Task unsuccessful. Please ensure no other collection has"
+                                       " the same name.");
     });
 };
 
@@ -479,13 +505,16 @@ void Handler::addEditArtifact(http_request message, int kind) {
             }
         } else {
             Edit<Artifact> edit(artifact, kind, user, collections);
+            std::time_t time = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now());
+            ucout<<std::ctime(&time)<<std::endl;
             this->model->saveEditToDB(edit);
-            ucout << "edit added to review list.\n";
-            statusMessage = "Edits added to the review list.";
+            ucout << "edit artifact added to review list.\n";
+            statusMessage = "Your artifact edit/addition will be published after review.";
         }
         return message.reply(status_codes::OK, Util::getSuccessJsonStr(statusMessage));
     }).then([=](pplx::task<void> t){
-        this->handle_error(message,t,"Add/Edit unsuccessful.");
+        this->handle_error(message, t, "Task unsuccessful. Please ensure no other artifact has"
+                                       " the same name.");
     });
 
 }
@@ -493,130 +522,145 @@ void Handler::addEditArtifact(http_request message, int kind) {
 void Handler::getUserProfile(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
-        Util::validateJSON(data, {"username", "password"});
-        Util::checkLogin(data,  this->model);
+        User user = Util::checkLogin(data,  this->model);
         ucout << "Authorized.\n";
         ucout << data.dump(3) << '\n';
-
-        User u = this->model->getUserObject(std::string(data["username"]));
-
-        json userJSON = Util::getObjectWithKeys<User>(u, {"username", "email", "id"});
-
-        //editList
-        json editList;
-        std::vector<Edit<Artifact>> eList = this->model->getArtifactEdits((int)userJSON["id"]);
-
-        for(auto e : eList)
-        {
-            json eJSON = Util::getObjectWithKeys<Edit<Artifact>>(e,{"id", "type", "category",
-                                                                    "collection", "approvalStatus"});
-            json artifact;
-            artifact["artifact"] =  Util::getObjectWithKeys<Artifact>(e.getObject(),
-            {"id", "name", "description", "introduction", "image"});
-            artifact["museum"]["id"] = e.getObject().getMuseum().getMuseumID();
-            eJSON["artifact"] = artifact;
-            editList.push_back(eJSON);
+        // All of the user's requested edits.
+        json editList = json::array();
+        for(auto edit : this->model->getArtifactEdits(user.getUserID())) {
+            editList.push_back(Util::getArtifactEditJSON(edit));
         }
-
-        //museums
-        std::vector<Museum> museums = this->model->getMuseumByCurator(userJSON["id"]);
-        json museumsJSON = Util::arrayFromVector(museums,{"id", "name"});
-        std::vector<Edit<Artifact>> actionsVector;
+        for (auto edit: this->model->getCollectionEdits(user.getUserID())) {
+            editList.push_back(Util::getCollectionEditJSON(edit));
+        }
+        std::vector<Museum> museums = this->model->getMuseumByCurator(user.getUserID());
+        // All of other user's edits that are pending for the user's approval.
         json actionsList = json::array();
-
-        for(Museum m : museums)
-        {
-            ucout << m.getMuseumID() << ' ';
-            std::vector<Edit<Artifact>>  aList = this->model->getArtifactActions(m.getMuseumID());
-            ucout << aList.size() << '\n';
-            for (auto a : aList)
-            {
-                json aJSON = Util::getObjectWithKeys<Edit<Artifact>>(a,{"id", "type", "category",
-                                                                        "collection"});
-                json artifact;
-                artifact["artifact"] =  Util::getObjectWithKeys<Artifact>(a.getObject(),
-                {"id", "name", "description", "introduction", "image"});
-                artifact["museum"]["id"] = a.getObject().getMuseum().getMuseumID();
-                aJSON["artifact"] = artifact;
-                actionsList.push_back(aJSON);
+        for(Museum museum : museums) {
+            ucout << museum.getMuseumID() << ' ';
+            for (auto action : this->model->getArtifactActions(museum.getMuseumID())) {
+                actionsList.push_back(Util::getArtifactEditJSON(action));
+            }
+            for (auto action: this->model->getCollectionActions(museum.getMuseumID())) {
+                actionsList.push_back(Util::getCollectionEditJSON(action));
             }
         }
 
+        // TODO Headcurator
+        User headCurator = this->model->getHeadCurator();
+        bool isHeadCurator = (user.getUserID() == headCurator.getUserID());
+
         json output = {
-            {"user", userJSON},
+            {"user", Util::getObjectWithKeys<User>(user, {"username", "email", "id"})},
+            {"museumList", Util::arrayFromVector(museums, {"id", "name"})},
             {"editsList", editList},
-            {"museumList", museumsJSON},
             {"actionsList", actionsList}
         };
+        if (isHeadCurator) {
+            output["headCuratorList"] = Util::arrayFromVector(this->model->getMuseumList(), {"id", "name"});
+        }
         return message.reply(status_codes::OK, output.dump(3));
-
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Get User Profile Error.");
     });
     return;
 }
 
-//FIXME
-void Handler::reviewEdit(http_request message)
-{
+std::string Handler::reviewArtifactEdit(int editID, bool approved, User user) {
+    Edit<Artifact> edit = this->model->getEditArtifactObject(editID);
+    Artifact artifact = edit.getObject();
+    bool isCurator = (artifact.getMuseum().getUser().getUserID() == user.getUserID());
+    if (! isCurator) {
+        ucout << "permission denied!" << '\n';
+        throw BackendException("Permission to act on edit denied!");
+    }
+    ucout << "permission granted!\n";
+    if (! approved) {
+        edit.rejectEdit();
+        this->model->updateEditInDB(edit);
+        ucout << "edit rejected and updated\n";
+        return "Edit rejected.";
+    }
+    if (edit.getKind() == Edit<Artifact>::edit)
+    {
+        this->model->updateArtifactInDB(artifact);
+        this->model->removeArtifactCollection(artifact);
+        for( Collection collection : edit.getCollectionList())  {
+            this->model->addArtifactCollection(collection, artifact);
+        }
+        ucout << "edit approved and updated\n";
+    } else if (edit.getKind() == Edit<Artifact>::add)
+    {
+        this->model->saveArtifactToDB(artifact);
+        for( Collection collection : edit.getCollectionList()) {
+            this->model->addArtifactCollection(collection, artifact);
+        }
+        ucout << "artifact added\n";
+    } else // kind is Edit::del
+    {
+        this->model->removeArtifactInDB(artifact);
+        ucout << "artifact deleted\n";
+    }
+    edit.approveEdit();
+    this->model->updateEditInDB(edit);
+    return "Edit approved.";
+}
+
+std::string Handler::reviewCollectionEdit(int editID, bool approved, User user) {
+    Edit<Collection> edit = this->model->getEditCollectionObject(editID);
+    Collection collection = edit.getObject();
+    bool isCurator = (collection.getMuseum().getUser().getUserID() == user.getUserID());
+    if (! isCurator) {
+        ucout << "permission denied!" << '\n';
+        throw BackendException("Permission to act on edit denied!");
+    }
+    ucout << "permission granted!\n";
+    if (! approved) {
+        edit.rejectEdit();
+        this->model->updateEditInDB(edit);
+        ucout << "edit rejected and updated\n";
+        return "Edit rejected.";
+    }
+    if (edit.getKind() == Edit<Artifact>::edit)
+    {
+        this->model->updateCollectionInDB(collection);
+        ucout << "collection edit approved and updated\n";
+    } else if (edit.getKind() == Edit<Artifact>::add)
+    {
+        this->model->saveCollectionToDB(collection);
+        ucout << "collection added\n";
+    } else // kind is Edit::del
+    {
+        throw BackendException("Deletion not implemented.");
+//        this->model->removeCollectionInDB(collection);
+        // TODO
+//        ucout << "collection deleted\n";
+    }
+    edit.approveEdit();
+    this->model->updateEditInDB(edit);
+    return "Edit approved.";
+}
+
+void Handler::reviewEdit(http_request message) {
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
         ucout << data.dump(3) << '\n';
-        Util::validateJSON(data, {"user", "editId", "action"});
-
-        Util::validateJSON(data["user"], {"username", "password"});
-        User u = Util::checkLogin(data["user"], this->model);
-
-        Edit<Artifact> edit = this->model->getEditArtifactObject(data["editId"]);
-
-        bool isCurator = (edit.getObject().getMuseum().getUser().getUserID() == u.getUserID());
-        bool action = data["action"];
-        if(isCurator)
-        {
-            ucout << "permission granted!\n";
-            if(action)
-            {
-                if(edit.getKind() == Edit<Artifact>::edit)
-                {
-                    Artifact artifact = edit.getObject();
-                    this->model->updateArtifactInDB(artifact);
-                    this->model->removeArtifactCollection(artifact);
-                    for( Collection c : edit.getCollectionList())
-                    {
-                        this->model->addArtifactCollection(c,artifact);
-                    }
-                    edit.approveEdit();
-                    this->model->updateEditInDB(edit);
-                    ucout << "edit approved and updated!\n";
-                    return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edit Approved!"));
-                } else if(edit.getKind() == Edit<Artifact>::add)
-                {
-                    Artifact artifact = edit.getObject();
-                    this->model->saveArtifactToDB(artifact);
-                    for( Collection c : edit.getCollectionList())
-                    {
-                        this->model->addArtifactCollection(c,artifact);
-                    }
-                    edit.approveEdit();
-                    this->model->updateEditInDB(edit);
-                    ucout << "edit approved and artifact added!\n";
-                    return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edut Approved!"));
-                }
-            } else
-            {
-                edit.rejectEdit();
-                this->model->updateEditInDB(edit);
-                ucout << "edit rejected and updated!\n";
-                return message.reply(status_codes::OK, Util::getSuccessJsonStr("Edit Rejected!"));
-            }
-
-        } else{
-            ucout << "permission denied!" << '\n';
-            return message.reply(status_codes::Unauthorized, Util::getFailureJsonStr("Permission denied!"));
+        Util::validateJSON(data, {"user", "editId", "action", "category"});
+        User user = Util::checkLogin(data["user"], this->model);
+        std::string statusMessage;
+        if (data["category"] == "artifact") {
+            statusMessage = this->reviewArtifactEdit(data["editId"], data["action"], user);
+        } else if (data["category"] == "collection") {
+            statusMessage =  this->reviewCollectionEdit(data["editId"], data["action"], user);
+        } else if (data["category"] == "museum"){
+            return message.reply(status_codes::NotImplemented, Util::getFailureJsonStr("Editing museums has not been implemented"));
+        } else {
+            throw json::other_error::create(1, "category key has invalid value");
         }
-        return message.reply(status_codes::InternalError, Util::getFailureJsonStr("Internal Error!"));
+        return message.reply(status_codes::OK, Util::getSuccessJsonStr(statusMessage));
     }).then([=](pplx::task<void> t){
-        handle_error(message, t, "Review unsuccesful");
+        this->handle_error(message, t, "Review unsuccesful. The updated object's name may clash with another object. "
+                                       "Try again, or try rejecting the edit.");
     });
 }
 
@@ -647,6 +691,30 @@ void Handler::deleteMuseum(http_request message, int museumID)
         }
     }).then([=](pplx::task<void> t){
         this->handle_error(message, t, "Delete unsuccessful.");
+    });
+}
+
+void Handler::deleteArtifact(http_request message, int artifactID)
+{
+    message.extract_string(false).then([=](utility::string_t s){
+        json data = json::parse(s);
+        User editor = Util::checkLogin(data, this->model);
+        Artifact artifact = this->model->getArtifact(artifactID);
+
+        bool isCurator = (editor.getUserID() == artifact.getMuseum().getUser().getUserID());
+
+        if ( isCurator ) {
+            this->model->removeArtifactInDB(artifact);
+            ucout << "artifact deleted\n";
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact deleted."));
+        } else {
+            Edit<Artifact> edit(artifact, Edit<Artifact>::del, editor, {});
+            ucout << "artifact saved to DB\n";
+            this->model->saveEditToDB(edit);
+            return message.reply(status_codes::OK, Util::getSuccessJsonStr("Artifact will be deleted after review."));
+        }
+    }).then([=](pplx::task<void> t){
+        handle_error(message, t, "Delete could not be processed.");
     });
 }
 

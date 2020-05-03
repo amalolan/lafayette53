@@ -123,11 +123,9 @@ public:
         {
             output["artifact"] = this->object.toJSON();
             output["category"] = "artifact";
-            output["collection"] = "";
         }
         if (std::is_same<T, Collection>::value)
         {
-            output["artifact"] = "";
             output["collection"] = this->object.toJSON();
             output["category"] = "collection";
         }
@@ -142,18 +140,18 @@ public:
             output["approvalStatus"] = "Under review";
         } else if (status == -1)
         {
-            output["approvalStatus"] = "Denied";
+            output["approvalStatus"] = "Rejected";
         }
         //kind
         if (kind == 1)
         {
-            output["type"] = "add";
+            output["type"] = "Addition";
         } else if (kind == 0)
         {
-            output["type"] = "edit";
+            output["type"] = "Edit";
         } else if (kind == -1)
         {
-            output["type"] = "del";
+            output["type"] = "Deletion";
         }
 
         return output;
