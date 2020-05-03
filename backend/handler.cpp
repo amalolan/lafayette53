@@ -689,12 +689,12 @@ void Handler::changePassword(http_request message)
         ucout << data.dump(3) << '\n';
         User u = this->model->getUserObject((std::string)data["username"]);
         //random password generator
-        int len = qrand() % 10 + 8;
+        int len = std::rand()% 10 + 8;
         QString pass;
         pass.resize(len);
         for (int s = 0; s < len ; ++s)
         {
-            pass[s] = QChar('A' + char(qrand() % ('Z' - 'A')));
+            pass[s] = QChar('A' + char(std::rand() % ('Z' - 'A')));
         }
         QByteArray result = QCryptographicHash::hash(pass.toUtf8(), QCryptographicHash::Sha512);
         QString inputHash = QLatin1String(result.toHex());
