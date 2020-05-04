@@ -34,7 +34,7 @@ public:
     Handler *g_httpHandler;
     /**
      * @brief Controller Setus up the server. Starts listening to http requests at
-     * address. Also opens up a database by initializing the ModelClassExt
+     * address. Also opens up a database by initializing the ModelClass
      * @param address string [usually "http://127.0.0.1:5300" ]
      * @param model The database/ModelClass object associated with this Controller object.
      */

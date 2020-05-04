@@ -20,8 +20,7 @@ HEADERS += \
 SOURCES += \
     ../../model/modelclass.cpp \
     ../../model/artifact.cpp \
-    ../../model/collection.cpp \
-    ../../backend/modelclassext.cpp
+    ../../model/collection.cpp
 
 
 HEADERS += \
@@ -30,9 +29,7 @@ HEADERS += \
     ../../model/collection.h \
     ../../model/museum.h \
     ../../model/user.h \
-    ../../model/LafException.h \
-    ../../model/ModelException.h \
-    ../../backend/modelclassext.h\
+    ../../model/ModelException.h
 
 LIBS += -pthread
 
