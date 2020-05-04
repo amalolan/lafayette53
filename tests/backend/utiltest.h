@@ -1,7 +1,5 @@
 #ifndef UTILTEST_H
 #define UTILTEST_H
-// Other libraries
-#include <../../nlohmann/json.hpp>
 // GTest related includes
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

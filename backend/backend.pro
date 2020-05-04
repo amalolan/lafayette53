@@ -23,7 +23,7 @@ HEADERS += \
     ../model/museum.h \
     ../model/ModelException.h \
     util.h \
-    ../nlohmann/json.hpp
+    ../lib/nlohmann/json.hpp
 
 
 

@@ -11,11 +11,10 @@
 #include "gmock/gmock.h"
 #include "mockmodelclass.h"
 // Cpprestsdk
-#include <cpprest/http_client.h>
+#include "cpprest/http_client.h"
 #include <cpprest/filestream.h>
 // Other libraries
 #include <iostream>
-#include "../nlohmann/json.hpp"
 
 // Backend
 #include "../../backend/controller.h"

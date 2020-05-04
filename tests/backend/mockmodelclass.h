@@ -19,27 +19,27 @@ using namespace std;
 class MockModelClass: public  ModelClass {
 public:
     MockModelClass() : ModelClass("") {}
-    /**< User */
+    /** User */
     MOCK_METHOD1(getUserObject, User(string));
     MOCK_METHOD1(saveUserToDB, void(User&));
     MOCK_METHOD1(updateUserInDB, void(User&));
     MOCK_METHOD1(checkHeadCurator, bool(User&));
 
-    /**< Museum */
+    /** Museum */
     MOCK_METHOD0(getMuseumList, vector<Museum>());
     MOCK_METHOD1(getMuseumByCurator, vector<Museum>(int));
     MOCK_METHOD1(getMuseumObject, Museum(int));
     MOCK_METHOD1(saveMuseumToDB, void(Museum&));
     MOCK_METHOD1(removeMuseumFromDB, void(Museum&));
 
-    /**< Collection */
+    /** Collection */
     MOCK_METHOD1(getCollectionListByMuseumID, vector<Collection>(int));
     MOCK_METHOD1(getCollectionsByArtifact, vector<Collection>(int));
     MOCK_METHOD1(getCollectionObject, Collection(int));
     MOCK_METHOD1(saveCollectionToDB, void(Collection&));
     MOCK_METHOD1(updateCollectionInDB, void(Collection&));
 
-    /**< Artifact */
+    /** Artifact */
     MOCK_METHOD1(getArtifactsByMuseum, vector<Artifact>(int));
     MOCK_METHOD1(getArtifactsByCollection, vector<Artifact>(int));
     MOCK_METHOD2(addArtifactCollection, void(Artifact const &, Collection const & ));
@@ -48,7 +48,7 @@ public:
     MOCK_METHOD1(updateArtifactInDB, void(Artifact &));
     MOCK_METHOD1(removeArtifactInDB, void(Artifact &));
 
-    /**< Edit  */
+    /** Edit  */
     MOCK_METHOD1(getEditArtifactObject, Edit<Artifact>(int));
     MOCK_METHOD1(getArtifactEdits, vector<Edit<Artifact>>(int));
     MOCK_METHOD1(getArtifactActions, vector<Edit<Artifact>>(int));

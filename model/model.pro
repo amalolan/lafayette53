@@ -16,5 +16,5 @@ HEADERS += \
     museum.h \
     modelclass.h \
     user.h \
-    ../nlohmann/json.hpp
+    ../lib/nlohmann/json.hpp
 

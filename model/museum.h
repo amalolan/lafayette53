@@ -2,7 +2,7 @@
 #define MUSEUM_H
 #include <string>
 #include "user.h"
-#include <../nlohmann/json.hpp>
+#include "../lib/nlohmann/json.hpp"
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>

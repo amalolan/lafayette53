@@ -5,7 +5,7 @@
 #include <QJsonObject>
 #include <QByteArray>
 #include <iostream>
-#include <../nlohmann/json.hpp>
+#include "../lib/nlohmann/json.hpp"
 /*
  * Represents a User object
  */

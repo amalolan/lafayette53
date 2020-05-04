@@ -2,7 +2,7 @@
 #define UTIL_H
 #include <vector>
 #include <iostream>
-#include "../nlohmann/json.hpp"
+#include "../lib/nlohmann/json.hpp"
 
 #include "../model/ModelException.h"
 #include "../model/modelclass.h"

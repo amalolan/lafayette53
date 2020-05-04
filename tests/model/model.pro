@@ -33,15 +33,15 @@ HEADERS += \
 
 LIBS += -pthread
 
-SOURCES += ../../gtest/googletest/src/gtest-all.cc \
-           ../../gtest/googlemock/src/gmock-all.cc
+SOURCES += ../../lib/gtest/googletest/src/gtest-all.cc \
+           ../../lib/gtest/googlemock/src/gmock-all.cc
 
 
-INCLUDEPATH +=  ../../gtest                                   \
-                ../../gtest/googletest                        \
-                ../../gtest/googletest/include                \
-                ../../gtest/googletest/include/gtest          \
-                ../../gtest/googlemock                        \
-                ../../gtest/googlemock/include                \
-                ../../gtest/googlemock/include/gmock
+INCLUDEPATH +=  ../../lib/gtest                                   \
+                ../../lib/gtest/googletest                        \
+                ../../lib/gtest/googletest/include                \
+                ../../lib/gtest/googletest/include/gtest          \
+                ../../lib/gtest/googlemock                        \
+                ../../lib/gtest/googlemock/include                \
+                ../../lib/gtest/googlemock/include/gmock
 

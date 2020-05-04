@@ -44,7 +44,7 @@
 
 #include "util.h"
 
-#include "../nlohmann/json.hpp"
+#include "../lib/nlohmann/json.hpp"
 using json = nlohmann::json;
 
 using namespace utility;                    // Common utilities like string conversions

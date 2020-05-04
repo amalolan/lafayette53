@@ -43,54 +43,45 @@ HEADERS += \
 
 
 
-SOURCES += ../../gtest/googletest/src/gtest-all.cc \
-           ../../gtest/googlemock/src/gmock-all.cc \
-           ../../nlohmann/json.hpp
+SOURCES += ../../lib/gtest/googletest/src/gtest-all.cc \
+           ../../lib/gtest/googlemock/src/gmock-all.cc \
+           ../../lib/nlohmann/json.hpp
 
 
-INCLUDEPATH +=  ../../gtest                                   \
-                ../../gtest/googletest                        \
-                ../../gtest/googletest/include                \
-                ../../gtest/googletest/include/gtest          \
-                ../../gtest/googlemock                        \
-                ../../gtest/googlemock/include                \
-                ../../gtest/googlemock/include/gmock
+INCLUDEPATH +=  ../../lib/gtest                                   \
+                ../../lib/gtest/googletest                        \
+                ../../lib/gtest/googletest/include                \
+                ../../lib/gtest/googletest/include/gtest          \
+                ../../lib/gtest/googlemock                        \
+                ../../lib/gtest/googlemock/include                \
+                ../../lib/gtest/googlemock/include/gmock
 
 #LIBS += -lgtest -L$$PWD/../../
 #LIBS += -lgtest -L$$PWD/../../
 #LIBS += -lgcov
-QMAKE_LFLAGS += -g -fprofile-arcs -ftest-coverage  -O0
 
 LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
 
-macx: LIBS += -L$$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/lib/ -lboost_system
 
-INCLUDEPATH += $$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
-DEPENDPATH += $$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
+macx|win32: LIBS += -L$$PWD/../../lib/cpprestsdk@2.10.15/lib/ -lcpprest.2.10
 
+INCLUDEPATH += $$PWD/../../lib/cpprestsdk@2.10.15/include
+DEPENDPATH += $$PWD/../../lib/cpprestsdk@2.10.15/include
 
-macx: LIBS += -L$$PWD/../../../../../../../../../usr/local/Cellar/cpprestsdk/2.10.15/lib/ -lcpprest.2.10
+macx|win32: LIBS += -L$$PWD/../../lib/openssl@1.0.2t/lib/ -lssl.1.0.0
 
-INCLUDEPATH += $$PWD/../../../../../../../../../usr/local/Cellar/cpprestsdk/2.10.15/include
-DEPENDPATH += $$PWD/../../../../../../../../../usr/local/Cellar/cpprestsdk/2.10.15/include
+INCLUDEPATH += $$PWD/../../lib/openssl@1.0.2t/include
+DEPENDPATH += $$PWD/../../lib/openssl@1.0.2t/include
 
-macx: LIBS += -L$$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/lib/ -lssl.1.0.0
+macx|win32: LIBS += -L$$PWD/../../lib/openssl@1.0.2t/lib/ -lcrypto.1.0.0
 
-INCLUDEPATH +=  $$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/include
-DEPENDPATH += $$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/include
+macx|win32: LIBS += -L$$PWD/../../lib/boost@1.60/lib/ -lboost_system-mt
 
-macx: LIBS += -L$$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/lib/ -lcrypto.1.0.0
+INCLUDEPATH += $$PWD/../../lib/boost@1.60/include
+DEPENDPATH += $$PWD/../../lib/boost@1.60/include
 
-INCLUDEPATH += $$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/include
-DEPENDPATH += $$PWD/../../../../../../../../../usr/local/Cellar/openssl/1.0.2t/include
+macx|win32: LIBS += -L$$PWD/../../lib/boost@1.60/lib/ -lboost_chrono-mt
 
-macx: LIBS += -L$$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/lib/ -lboost_thread-mt
+macx|win32: LIBS += -L$$PWD/../../lib/boost@1.60/lib/ -lboost_thread-mt
 
-INCLUDEPATH += $$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
-DEPENDPATH += $$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
-
-macx: LIBS += -L$$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/lib/ -lboost_chrono-mt
-
-INCLUDEPATH += $$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
-DEPENDPATH += $$PWD/../../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
