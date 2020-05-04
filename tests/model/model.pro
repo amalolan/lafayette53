@@ -5,6 +5,10 @@ CONFIG -= app_bundle
 QT += sql
 QMAKE_CXXFLAGS += -std=gnu++11
 
+QMAKE_LFLAGS += -g -fprofile-arcs -ftest-coverage  -O0
+QMAKE_CXXFLAGS += -g -fprofile-arcs -ftest-coverage -O0
+
+
 SOURCES += \
         devtests.cpp \
         main.cpp
