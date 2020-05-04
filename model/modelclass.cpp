@@ -230,6 +230,7 @@ void ModelClass::createTables(){
                     "introduction TEXT, "
                     "photo TEXT, "
                     "list TEXT, "
+                    "datetime TEXT,"
                     "FOREIGN KEY(artifactID) REFERENCES artifacts(artifactID) "
                     "ON DELETE CASCADE "
                     "ON UPDATE CASCADE, "
@@ -417,6 +418,13 @@ void ModelClass::saveEditToDB(Edit<Museum> & edit){
     int seed = std::chrono::steady_clock::now().time_since_epoch().count();
     std::default_random_engine eng(seed);
     int nextEditIndex = eng();
+    query.exec("SELECT datetime('now');");
+    query.next();
+    if(!query.isValid())
+    {
+        throw ModelException("Error getting date.");
+    }
+    QString datetime = query.value(0).toString();
     QString editID = QString::fromStdString(std::to_string(nextEditIndex));
     QString museumID = QString::fromStdString(std::to_string(edit.getObject().getMuseumID()));
     QString description = QString::fromStdString(edit.getObject().getDescription());
@@ -427,10 +435,12 @@ void ModelClass::saveEditToDB(Edit<Museum> & edit){
     QString status = QString::fromStdString(std::to_string(edit.getStatus()));
     QString kind = QString::fromStdString(std::to_string(edit.getKind()));
 
+    query.finish();
+
     bool done =
-    query.exec("INSERT INTO edit(museumID, editID, userID, name, description, photo, introduction, kind, status)"
+    query.exec("INSERT INTO edit(museumID, editID, userID, name, description, photo, introduction, kind, status, datetime)"
                " VALUES ("+museumID+", "+editID+", "+userID+", '"+name+"', '"+description+"', '"+photo+"', "
-                 "'"+intro+"', "+kind+", "+status+")");
+                 "'"+intro+"', "+kind+", "+status+", '"+datetime+"')");
 
     if(!done)
     {
@@ -439,6 +449,7 @@ void ModelClass::saveEditToDB(Edit<Museum> & edit){
     }
     edit.setID(nextEditIndex);
     query.exec("PRAGMA foreign_keys = ON;");
+    edit.setTime(datetime.toStdString());
     query.finish();
 }
 
@@ -459,6 +470,14 @@ void ModelClass::saveEditToDB(Edit<Collection> & edit){
     int seed = std::chrono::steady_clock::now().time_since_epoch().count();
     std::default_random_engine eng(seed);
     int nextEditIndex = eng();
+
+    query.exec("SELECT datetime('now');");
+    query.next();
+    if(!query.isValid())
+    {
+        throw ModelException("Error getting date.");
+    }
+    QString datetime = query.value(0).toString();
     QString editID = QString::fromStdString(std::to_string(nextEditIndex));
     QString collectionID = QString::fromStdString(std::to_string(edit.getObject().getID()));
     QString museumID = QString::fromStdString(std::to_string(edit.getObject().getMuseum().getMuseumID()));
@@ -469,10 +488,12 @@ void ModelClass::saveEditToDB(Edit<Collection> & edit){
     QString status = QString::fromStdString(std::to_string(edit.getStatus()));
     QString kind = QString::fromStdString(std::to_string(edit.getKind()));
     QString userID = QString::fromStdString(std::to_string(edit.getEditor().getUserID()));
+    query.finish();
+
     bool done =
-    query.exec("INSERT INTO edit(museumID, editID, userID, collectionID, name, description, photo, introduction, kind, status)"
+    query.exec("INSERT INTO edit(museumID, editID, userID, collectionID, name, description, photo, introduction, kind, status, datetime)"
                " VALUES ("+museumID+", "+editID+", "+userID+", "+collectionID+", '"+name+"', '"+description+"', '"+photo+"', "
-                 "'"+intro+"', "+kind+", "+status+")");
+                 "'"+intro+"', "+kind+", "+status+", '"+datetime+"')");
 
     if(!done)
     {
@@ -481,6 +502,7 @@ void ModelClass::saveEditToDB(Edit<Collection> & edit){
     }
     edit.setID(nextEditIndex);
     query.exec("PRAGMA foreign_keys = ON;");
+    edit.setTime(datetime.toStdString());
     query.finish();
 }
 
@@ -489,7 +511,6 @@ void ModelClass::saveEditToDB(Edit<Artifact> & edit){
     {
         throw ModelException("Edit object already in database");
     }
-    //TODO those have to be fixed some typos.
     else if (edit.getKind() != Edit<Artifact>::add){
         artifactCheck(edit.getObject());
     }
@@ -501,6 +522,14 @@ void ModelClass::saveEditToDB(Edit<Artifact> & edit){
     int seed = std::chrono::steady_clock::now().time_since_epoch().count();
     std::default_random_engine eng(seed);
     int nextEditIndex = eng();
+
+    query.exec("SELECT datetime('now');");
+    query.next();
+    if(!query.isValid())
+    {
+        throw ModelException("Error getting date.");
+    }
+    QString datetime = query.value(0).toString();
     QString editID = QString::fromStdString(std::to_string(nextEditIndex));
     QString artifactID = QString::fromStdString(std::to_string(edit.getObject().getID()));
     QString museumID = QString::fromStdString(std::to_string(edit.getObject().getMuseum().getMuseumID()));
@@ -511,7 +540,7 @@ void ModelClass::saveEditToDB(Edit<Artifact> & edit){
     QString status = QString::fromStdString(std::to_string(edit.getStatus()));
     QString kind = QString::fromStdString(std::to_string(edit.getKind()));
     QString userID = QString::fromStdString(std::to_string(edit.getEditor().getUserID()));
-
+    query.finish();
     std::string stdList;
     for(unsigned long i = 0; i < edit.getCollectionList().size(); i++)
     {
@@ -524,9 +553,9 @@ void ModelClass::saveEditToDB(Edit<Artifact> & edit){
     }
     QString list = QString::fromStdString(stdList);
     bool done =
-    query.exec("INSERT INTO edit(editID, museumID, userID, artifactID, name, description, photo, introduction, kind, status, list)"
+    query.exec("INSERT INTO edit(editID, museumID, userID, artifactID, name, description, photo, introduction, kind, status, list, datetime)"
                " VALUES ("+editID+", "+museumID+", "+userID+", "+artifactID+", '"+name+"', '"+description+"', '"+photo+"', "
-                 "'"+intro+"', "+kind+", "+status+", '"+list+"')");
+                 "'"+intro+"', "+kind+", "+status+", '"+list+"', '"+datetime+"')");
 
     if(!done)
     {
@@ -535,6 +564,7 @@ void ModelClass::saveEditToDB(Edit<Artifact> & edit){
     }
     edit.setID(nextEditIndex);
     query.exec("PRAGMA foreign_keys = ON;");
+    edit.setTime(datetime.toStdString());
     query.finish();
 }
 
@@ -588,7 +618,6 @@ void ModelClass::updateEditInDB(Edit<Collection> & edit){
         query.exec("UPDATE edit SET collectionID = -1 WHERE editID = "+id+";");
         query.exec("PRAGMA foreign_keys = ON;");
         this->removeCollectionInDB(collection);
-        throw ModelException("Deletion not implemented");
         edit.setObject(collection);
     }
 }
@@ -743,8 +772,8 @@ std::vector<Edit<Museum>> ModelClass::getMuseumEdits(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
     User user = this->getUserObject(userID);
     bool done = query.exec
-    ("SELECT museumID, name, description, photo, introduction, status, kind, editID"
-     " FROM edit WHERE userID = "+id+" AND collectionID = -2 AND artifactID = -2;");
+    ("SELECT museumID, name, description, photo, introduction, status, kind, editID, datetime"
+     " FROM edit WHERE userID = "+id+" AND collectionID = -2 AND artifactID = -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -769,6 +798,7 @@ std::vector<Edit<Museum>> ModelClass::getMuseumEdits(int userID){
         rowList.push_back(query.value(5).toString().toStdString());
         rowList.push_back(query.value(6).toString().toStdString());
         rowList.push_back(query.value(7).toString().toStdString());
+        rowList.push_back(query.value(8).toString().toStdString());
         queryList.push_back(rowList);
     }while (query.next());
 
@@ -780,6 +810,7 @@ std::vector<Edit<Museum>> ModelClass::getMuseumEdits(int userID){
         museum.setIntro(row.at(4));
         museum.setPhoto(row.at(3));
         Edit<Museum> edit(museum, std::stoi(row.at(6)), user, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        edit.setTime(row.at(8));
         output.push_back(edit);
     }
     return output;
@@ -789,8 +820,8 @@ std::vector<Edit<Collection>> ModelClass::getCollectionEdits(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
     User user = this->getUserObject(userID);
     bool done = query.exec
-    ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, museumID"
-     " FROM edit WHERE userID = "+id+" AND artifactID == -2;");
+    ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, museumID, datetime"
+     " FROM edit WHERE userID = "+id+" AND artifactID == -2 ORDER BY datetime DESC;");
 
     if (!done)
     {
@@ -818,6 +849,7 @@ std::vector<Edit<Collection>> ModelClass::getCollectionEdits(int userID){
         rowList.push_back(query.value(6).toString().toStdString());
         rowList.push_back(query.value(7).toString().toStdString());
         rowList.push_back(query.value(8).toString().toStdString());
+        rowList.push_back(query.value(9).toString().toStdString());
         queryList.push_back(rowList);
     }while (query.next());
 
@@ -830,6 +862,7 @@ std::vector<Edit<Collection>> ModelClass::getCollectionEdits(int userID){
         collection.setPhoto(row.at(3));
         collection.setID(std::stoi(row.at(0)));
         Edit<Collection> edit(collection, std::stoi(row.at(6)), user, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        edit.setTime(row.at(9));
         output.push_back(edit);
     }
     return output;
@@ -839,8 +872,8 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactEdits(int userID){
     QString id(QString::fromStdString(std::to_string(userID)));
     User user = this->getUserObject(userID);
     bool done = query.exec
-    ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, list, museumID"
-     " FROM edit WHERE userID = "+id+" AND artifactID != -2;");
+    ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, list, museumID, datetime"
+     " FROM edit WHERE userID = "+id+" AND artifactID != -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -867,6 +900,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactEdits(int userID){
         rowList.push_back(query.value(7).toString().toStdString());
         rowList.push_back(query.value(8).toString().toStdString());
         rowList.push_back(query.value(9).toString().toStdString());
+        rowList.push_back(query.value(10).toString().toStdString());
         queryList.push_back(rowList);
     }while (query.next());
 
@@ -892,6 +926,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactEdits(int userID){
             }
         }
         Edit<Artifact> edit(artifact, std::stoi(row.at(6)), user, list, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        edit.setTime(row.at(10));
         output.push_back(edit);
     }
     return output;
@@ -901,8 +936,8 @@ std::vector<Edit<Museum>> ModelClass::getMuseumActions(int museumID){
     Museum museum = this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
     query.exec
-    ("SELECT userID, name, description, photo, introduction, status, kind, editID"
-     " FROM edit WHERE museumID = "+id+" AND collectionID = -2 AND artifactID = -2 AND status = 0;");
+    ("SELECT userID, name, description, photo, introduction, status, kind, editID, datetime"
+     " FROM edit WHERE museumID = "+id+" AND collectionID = -2 AND artifactID = -2 AND status = 0 ORDER BY datetime DESC;");
 
     std::vector<Edit<Museum>> output;
     query.next();
@@ -922,6 +957,7 @@ std::vector<Edit<Museum>> ModelClass::getMuseumActions(int museumID){
         rowList.push_back(query.value(5).toString().toStdString());
         rowList.push_back(query.value(6).toString().toStdString());
         rowList.push_back(query.value(7).toString().toStdString());
+        rowList.push_back(query.value(8).toString().toStdString());
         queryList.push_back(rowList);
 
     }while (query.next());
@@ -934,6 +970,7 @@ std::vector<Edit<Museum>> ModelClass::getMuseumActions(int museumID){
         museum.setPhoto(row.at(3));
         User user = getUserObject(std::stoi(row.at(0)));
         Edit<Museum> edit(museum, std::stoi(row.at(6)), user, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        edit.setTime(row.at(8));
         output.push_back(edit);
     }
     return output;
@@ -943,8 +980,8 @@ std::vector<Edit<Collection>> ModelClass::getCollectionActions(int museumID){
     this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
     bool done = query.exec
-    ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, userID"
-     " FROM edit WHERE museumID = "+id+" AND collectionID != -2 AND status = 0;");
+    ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, userID, datetime"
+     " FROM edit WHERE museumID = "+id+" AND collectionID != -2 AND status = 0 ORDER BY datetime DESC;");
 
     if (!done)
     {
@@ -971,6 +1008,7 @@ std::vector<Edit<Collection>> ModelClass::getCollectionActions(int museumID){
         rowList.push_back(query.value(6).toString().toStdString());
         rowList.push_back(query.value(7).toString().toStdString());
         rowList.push_back(query.value(8).toString().toStdString());
+        rowList.push_back(query.value(9).toString().toStdString());
         queryList.push_back(rowList);
     }while (query.next());
 
@@ -984,6 +1022,7 @@ std::vector<Edit<Collection>> ModelClass::getCollectionActions(int museumID){
         collection.setID(std::stoi(row.at(0)));
         User user = getUserObject(std::stoi(row.at(8)));
         Edit<Collection> edit(collection, std::stoi(row.at(6)), user, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        edit.setTime(row.at(9));
         output.push_back(edit);
     }
     return output;
@@ -993,8 +1032,8 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
     Museum museum = this->getMuseumObject(museumID);
     QString id(QString::fromStdString(std::to_string(museumID)));
     bool done = query.exec
-    ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, userID, list"
-     " FROM edit WHERE museumID = "+id+" AND artifactID != -2 AND status = 0;");
+    ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, userID, list, datetime"
+     " FROM edit WHERE museumID = "+id+" AND artifactID != -2 AND status = 0 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -1021,6 +1060,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
         rowList.push_back(query.value(7).toString().toStdString());
         rowList.push_back(query.value(8).toString().toStdString());
         rowList.push_back(query.value(9).toString().toStdString());
+        rowList.push_back(query.value(10).toString().toStdString());
         queryList.push_back(rowList);
     }while (query.next());
 
@@ -1047,6 +1087,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
             }
         }
         Edit<Artifact> edit(artifact, std::stoi(row.at(6)), user, list, std::stoi(row.at(5)), std::stoi(row.at(7)));
+        edit.setTime(row.at(10));
         output.push_back(edit);
     }
     return output;
@@ -1055,8 +1096,8 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
 Edit<Museum> ModelClass::getEditMuseumObject(int editID){
     QString id = QString::fromStdString(std::to_string(editID));
     bool done = query.exec
-    ("SELECT museumID, name, description, photo, introduction, status, kind, editID, userID"
-     " FROM edit WHERE editID = "+id+" AND museumID != -2 AND collectionID = -2 AND artifactID = -2;");
+    ("SELECT museumID, name, description, photo, introduction, status, kind, editID, userID, datetime"
+     " FROM edit WHERE editID = "+id+" AND museumID != -2 AND collectionID = -2 AND artifactID = -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -1078,6 +1119,7 @@ Edit<Museum> ModelClass::getEditMuseumObject(int editID){
     rowList.push_back(query.value(6).toString().toStdString());
     rowList.push_back(query.value(7).toString().toStdString());
     rowList.push_back(query.value(8).toString().toStdString());
+    rowList.push_back(query.value(9).toString().toStdString());
     Museum museum = this->getMuseumObject(std::stoi(rowList.at(0)));
     museum.setName(rowList.at(1));
     museum.setDescription(rowList.at(2));
@@ -1085,14 +1127,15 @@ Edit<Museum> ModelClass::getEditMuseumObject(int editID){
     museum.setPhoto(rowList.at(3));
     User user = getUserObject(std::stoi(rowList.at(8)));
     Edit<Museum> edit(museum, std::stoi(rowList.at(6)), user, std::stoi(rowList.at(5)), std::stoi(rowList.at(7)));
+    edit.setTime(rowList.at(9));
     return edit;
 }
 
 Edit<Collection> ModelClass::getEditCollectionObject(int editID){
     QString id = QString::fromStdString(std::to_string(editID));
     bool done = query.exec
-    ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, userID, museumID"
-     " FROM edit WHERE editID = "+id+" AND artifactID = -2 AND collectionID != -2;");
+    ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, userID, museumID, datetime"
+     " FROM edit WHERE editID = "+id+" AND artifactID = -2 AND collectionID != -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -1115,6 +1158,7 @@ Edit<Collection> ModelClass::getEditCollectionObject(int editID){
     rowList.push_back(query.value(7).toString().toStdString());
     rowList.push_back(query.value(8).toString().toStdString());
     rowList.push_back(query.value(9).toString().toStdString());
+    rowList.push_back(query.value(10).toString().toStdString());
     Collection collection = Collection("","","","", this->getMuseumObject(std::stoi(rowList.at(9))));
     collection.setName(rowList.at(1));
     collection.setDescription(rowList.at(2));
@@ -1123,14 +1167,15 @@ Edit<Collection> ModelClass::getEditCollectionObject(int editID){
     collection.setID(std::stoi(rowList.at(0)));
     User user = getUserObject(std::stoi(rowList.at(8)));
     Edit<Collection> edit(collection, std::stoi(rowList.at(6)), user, std::stoi(rowList.at(5)), std::stoi(rowList.at(7)));
+    edit.setTime(rowList.at(10));
     return edit;
 }
 
 Edit<Artifact> ModelClass::getEditArtifactObject(int editID){
     QString id = QString::fromStdString(std::to_string(editID));
     bool done = query.exec
-    ("SELECT artifactID, name, description, photo, introduction, status, kind, museumID, userID, list"
-     " FROM edit WHERE editID = "+id+" AND collectionID = -2 AND artifactID != -2;");
+    ("SELECT artifactID, name, description, photo, introduction, status, kind, museumID, userID, list, datetime"
+     " FROM edit WHERE editID = "+id+" AND collectionID = -2 AND artifactID != -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -1154,6 +1199,7 @@ Edit<Artifact> ModelClass::getEditArtifactObject(int editID){
     rowList.push_back(query.value(7).toString().toStdString());
     rowList.push_back(query.value(8).toString().toStdString());
     rowList.push_back(query.value(9).toString().toStdString());
+    rowList.push_back(query.value(10).toString().toStdString());
 
     Artifact artifact("","","","", this->getMuseumObject(std::stoi(rowList.at(7))));
     artifact.setName(rowList.at(1));
@@ -1176,6 +1222,7 @@ Edit<Artifact> ModelClass::getEditArtifactObject(int editID){
         }
     }
     Edit<Artifact> edit(artifact, std::stoi(rowList.at(6)), user, list, std::stoi(rowList.at(5)), editID);
+    edit.setTime(rowList.at(10));
     return edit;
 }
 
@@ -1605,7 +1652,7 @@ void ModelClass::removeCollectionInDB(Collection &collection){
  * @return
  */
 std::vector<Museum> ModelClass::getMuseumList(){
-    query.exec("SELECT museumID, userID, name, description, introduction, photo FROM museum;");
+    query.exec("SELECT museumID, userID, name, description, introduction, photo FROM museum ORDER BY name ASC;");
     std::vector<Museum> museumList;
     this->query.next();
     if (!this->query.isValid())
@@ -1631,40 +1678,6 @@ std::vector<Museum> ModelClass::getMuseumList(){
         museum.setUser(this->getUserObject(museum.getUser().getUserID()));
     }
     return museumList;
-}
-/**
- * @brief ModelClass::getMuseumListJSON Returns a list of museums in the database as a JSON ARRAY
- * Please remove this function once the erro with  getMuseumList() is fixed.
- * @return A JSON array of schema below
- * [
- *  {"name": string,
- *   "introduction": string,
- *   "description": string,
- *   "id": int,
- *   "userID": int
- * },
- * ....
- * ]
- */
-json ModelClass::getMuseumListJSON() {
-    query.exec("SELECT museumID, userID, name, description FROM museum;");
-    this->query.next();
-    if (!this->query.isValid())
-    {
-        throw ModelException("No museum entity stored in database");
-    }
-    json array = json::array();
-    do{
-        json object;
-        object["name"] = this->query.value(2).toString().toStdString();
-        object["introduction"] = "This is "+ this->query.value(2).toString().toStdString();
-        object["description"] = this->query.value(3).toString().toStdString();
-        object["id"] = this->query.value(0).toString().toInt();
-        object["userID"] = this->query.value(1).toString().toInt();
-        array.push_back(object);
-    }while(this->query.next());
-    this->query.finish();
-    return array;
 }
 
 Museum ModelClass::getMuseumObject(int museumID){
@@ -1828,7 +1841,7 @@ void ModelClass::updateMuseumInDB(Museum & museum){
 std::vector<Museum> ModelClass::getMuseumByCurator(int userID){
     QString id = QString::fromStdString(std::to_string(userID));
     User user = this->getUserObject(userID);
-    query.exec("SELECT museumID, userID, name, description, introduction, photo FROM museum WHERE userID = '"+id+"';");
+    query.exec("SELECT museumID, userID, name, description, introduction, photo FROM museum WHERE userID = '"+id+"' ORDER BY name ASC;");
     query.next();
 
     std::vector<Museum> output;

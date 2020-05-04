@@ -1,6 +1,10 @@
 #ifndef ARTIFACT_H
 #define ARTIFACT_H
 #include "museum.h"
+
+/*
+ * Represents an Artifact object
+ */
 class Artifact
 {
 public:

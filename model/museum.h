@@ -8,6 +8,9 @@
 #include <QJsonDocument>
 #include <iostream>
 
+/*
+ * Represents a Museum object
+ */
 using json = nlohmann::json;
 class Museum
 {
