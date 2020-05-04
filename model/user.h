@@ -6,7 +6,9 @@
 #include <QByteArray>
 #include <iostream>
 #include <../nlohmann/json.hpp>
-
+/*
+ * Represents a User object
+ */
 using json = nlohmann::json;
 class User
 {

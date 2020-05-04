@@ -3,6 +3,9 @@
 #include <string>
 #include "museum.h"
 
+/*
+ * Represents a Collection object
+ */
 class Collection
 {
 public:

@@ -5,6 +5,10 @@ CONFIG -= app_bundle
 QT += sql
 QMAKE_CXXFLAGS += -std=gnu++11
 
+QMAKE_LFLAGS += -g -fprofile-arcs -ftest-coverage  -O0
+QMAKE_CXXFLAGS += -g -fprofile-arcs -ftest-coverage -O0
+
+
 SOURCES += \
         devtests.cpp \
         main.cpp
@@ -16,8 +20,7 @@ HEADERS += \
 SOURCES += \
     ../../model/modelclass.cpp \
     ../../model/artifact.cpp \
-    ../../model/collection.cpp \
-    ../../backend/modelclassext.cpp
+    ../../model/collection.cpp
 
 
 HEADERS += \
@@ -26,9 +29,7 @@ HEADERS += \
     ../../model/collection.h \
     ../../model/museum.h \
     ../../model/user.h \
-    ../../model/LafException.h \
-    ../../model/ModelException.h \
-    ../../backend/modelclassext.h\
+    ../../model/ModelException.h
 
 LIBS += -pthread
 
