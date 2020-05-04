@@ -91,8 +91,18 @@ public:
         return this->id;
     }
 
+    std::string getTime() const
+    {
+        return this->time;
+    }
+
     void setID(int id){
         this->id = id;
+    }
+
+    void setTime(std::string t)
+    {
+        this->time = t;
     }
 
     bool indb() const
@@ -139,7 +149,7 @@ public:
     json toJSON() const
     {
         json output;
-
+        output["time"] = this->time;
         //artifact/collection
         if (std::is_same<T, Artifact>::value)
         {
@@ -192,6 +202,7 @@ private:
     int status;
     int kind;
     int id;
+    std::string time;
     std::vector<Collection> collection;
 };
 template <class T>
@@ -214,7 +225,9 @@ inline bool operator==(const Edit<T>& lhs, const Edit<T>& rhs) {
                 && (lhs.getKind() == rhs.getKind())
                 && (lhs.getStatus() == rhs.getStatus())
                 && (lhs.getEditor() == rhs.getEditor())
-                && (lhs.compareList(rhs.getCollectionList())));
+                && (lhs.compareList(rhs.getCollectionList()))
+                && (rhs.compareList(lhs.getCollectionList()))
+                && (lhs.getTime() == rhs.getTime()));
 }
 
 template <class T>
@@ -224,6 +237,8 @@ inline bool operator!=(const Edit<T>& lhs, const Edit<T>& rhs) {
             || (lhs.getKind() != rhs.getKind())
             || (lhs.getStatus() != rhs.getStatus())
             || (lhs.getEditor() != rhs.getEditor())
-            || !(lhs.compareList(rhs.getCollectionList())));
+            || !(lhs.compareList(rhs.getCollectionList()))
+            || !(rhs.compareList(lhs.getCollectionList()))
+            || (lhs.getTime() == rhs.getTime()));
 }
 #endif // EDIT_H
