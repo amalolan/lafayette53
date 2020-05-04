@@ -5,6 +5,10 @@ CONFIG -= app_bundle
 QT += sql
 QMAKE_CXXFLAGS += -std=gnu++11
 
+QMAKE_LFLAGS += -g -fprofile-arcs -ftest-coverage  -O0
+QMAKE_CXXFLAGS += -g -fprofile-arcs -ftest-coverage -O0
+
+
 SOURCES += \
         devtests.cpp \
         main.cpp
@@ -25,10 +29,9 @@ HEADERS += \
     ../../model/collection.h \
     ../../model/museum.h \
     ../../model/user.h \
-    ../../model/LafException.h \
-    ../../model/ModelException.h \
+    ../../model/ModelException.h
 
-
+LIBS += -pthread
 
 SOURCES += ../../gtest/googletest/src/gtest-all.cc \
            ../../gtest/googlemock/src/gmock-all.cc

@@ -3,18 +3,24 @@ CONFIG += console c++11
 QT += sql
 
 SOURCES += \
+        handler.cpp \
         main.cpp \
-        ../model/modelclass.cpp
+        ../model/modelclass.cpp \
+        ../model/collection.cpp
+
 
 QMAKE_CXXFLAGS += -std=gnu++11
-
+QMAKE_CXXFLAGS_WARN_ON = -w
 LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
 HEADERS += \
+    controller.h \
     handler.h \
     ../model/modelclass.h \
+    ../model/collection.h \
+    ../model/user.h \
+    ../model/museum.h \
     ../model/ModelException.h \
-    handler.tpp \
     util.h \
     ../nlohmann/json.hpp
 
@@ -49,3 +55,4 @@ macx: LIBS += -L$$PWD/../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0
 
 INCLUDEPATH += $$PWD/../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
 DEPENDPATH += $$PWD/../../../../../../../../usr/local/Cellar/boost@1.60/1.60.0/include
+
