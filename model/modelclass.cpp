@@ -1597,7 +1597,7 @@ void ModelClass::removeCollectionInDB(Collection &collection){
  * @return
  */
 std::vector<Museum> ModelClass::getMuseumList(){
-    query.exec("SELECT museumID, userID, name, description, introduction, photo FROM museum;");
+    query.exec("SELECT museumID, userID, name, description, introduction, photo FROM museum ORDER BY name ASC;");
     std::vector<Museum> museumList;
     this->query.next();
     if (!this->query.isValid())
