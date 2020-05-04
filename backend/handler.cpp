@@ -528,7 +528,7 @@ void Handler::addEditArtifact(http_request message, int kind) {
 
 }
 
-void Handler::getUserProfile(http_request message){
+void Handler::getUserProfile(http_request message) {
     message.extract_string(false).then([=](utility::string_t s){
         json data = json::parse(s);
         User user = Util::checkLogin(data,  this->model);
@@ -571,7 +571,6 @@ void Handler::getUserProfile(http_request message){
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Get User Profile Error.");
     });
-    return;
 }
 
 template <typename T>
@@ -720,7 +719,6 @@ void Handler::handle_put(http_request message)
 {
     ucout << "PUT " << message.relative_uri().to_string() << "\n";
     message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
-    return;
 }
 
 //
@@ -732,7 +730,6 @@ void Handler::handle_delete(http_request message)
     ucout <<"Delete " << message.relative_uri().to_string() << std::endl;
 
     message.reply(status_codes::NotFound,Util::getFailureJsonStr("Check the url and try again."));
-    return;
 }
 
 

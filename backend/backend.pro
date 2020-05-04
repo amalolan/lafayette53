@@ -6,7 +6,6 @@ SOURCES += \
         handler.cpp \
         main.cpp \
         ../model/modelclass.cpp \
-        modelclassext.cpp \
         ../model/collection.cpp
 
 
@@ -22,7 +21,6 @@ HEADERS += \
     ../model/user.h \
     ../model/museum.h \
     ../model/ModelException.h \
-    modelclassext.h \
     util.h \
     ../nlohmann/json.hpp
 

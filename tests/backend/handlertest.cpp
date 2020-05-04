@@ -2190,7 +2190,10 @@ TEST_F(HandlerTest, reviewEdit) {
  * 2. Invalid POST data (no username/password).
  * 3. Valid data, User not in DB.
  * 4. Valid data, User in DB, password mismatch.
- * 5. Logged in.
+ * 5. Logged in, Empty lists.
+ * 6. Logged in,  Empty lists, head curator.
+ * 7. Logged in, non-empty lists.
+ * 8. Logged in, non-empty lists, head curator.
  */
 TEST_F(HandlerTest, getUserProfile) {
     int sleeptime = 300;
@@ -2200,24 +2203,195 @@ TEST_F(HandlerTest, getUserProfile) {
         {"username", "abc"},
         {"password", "realpassword"}
     };
-    json expectation;
+    json expectation, result;
     /**< Cases 1-4*/
     this->loginTest(url);
-    /**< Cases 4-*/
-    // getArtifactEdits
-    // getMuseumByCurator
-    // for each museum: getArtifactActions
-    User user(data["username"], "email@example.com", data["password"], 21);
-    //    {
-    //        InSequence s;
+    /**< Cases 5-*/
+    data["password"] = "realpassword";
+    vector<Museum> museumList, curatorMuseumList;
+    vector<Edit<Artifact>> artifactEditsList, artifactActionsList1, artifactActionsList2;
+    vector<Edit<Collection>> collectionEditsList, collectionActionsList1, collectionActionsList2;
 
-    //        /**< Case 5 */
-    //        data["password"] = "realpassword";
-    //        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
-    //                .Times(testing::AtLeast(1))
-    //                .WillRepeatedly(Return(user))
-    //                .RetiresOnSaturation();
-    //    }
+    // getArtifactEdits
+    // getCollectionEdits
+    // getMuseumByCurator
+    // for each museum: getArtifactActions getCollectionActions
+    // if head curator: getMuseumList
+    User user(data["username"], "email@example.com", data["password"], 1),
+            otherUser("other", "other@example.com", "otherPassword", 2);
+        {
+            InSequence s;
+            /**< Case 5 */
+            EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                    .Times(testing::AtLeast(1))
+                    .WillRepeatedly(Return(user))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getArtifactEdits(user.getUserID()))
+                    .WillOnce(Return(artifactEditsList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getCollectionEdits(user.getUserID()))
+                    .WillOnce(Return(collectionEditsList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getMuseumByCurator(user.getUserID()))
+                    .WillOnce(Return(curatorMuseumList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, checkHeadCurator(user))
+                    .WillOnce(Return(false))
+                    .RetiresOnSaturation();
+            expectation = {
+                {"user", Util::getObjectWithKeys<User>(user, {"email", "id", "username"})},
+                {"museumList", json::array()},
+                {"editsList", json::array()},
+                {"actionsList", json::array()}
+            };
+
+            usleep(sleeptime);
+            r = this->requestTask(methods::POST, url, data);
+            result = json::parse(r.content);
+            cout<<result.dump(2)<<endl;
+            ASSERT_EQ(r.status, status_codes::OK);
+            ASSERT_EQ(result, expectation);
+
+            /**< Case 6 */
+            EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                    .Times(testing::AtLeast(1))
+                    .WillRepeatedly(Return(user))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getArtifactEdits(user.getUserID()))
+                    .WillOnce(Return(artifactEditsList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getCollectionEdits(user.getUserID()))
+                    .WillOnce(Return(collectionEditsList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getMuseumByCurator(user.getUserID()))
+                    .WillOnce(Return(curatorMuseumList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, checkHeadCurator(user))
+                    .WillOnce(Return(true))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getMuseumList())
+                    .WillOnce(Return(museumList))
+                    .RetiresOnSaturation();
+            expectation = {
+                {"user", Util::getObjectWithKeys<User>(user, {"email", "id", "username"})},
+                {"museumList", json::array()},
+                {"editsList", json::array()},
+                {"actionsList", json::array()},
+                {"headCuratorList", json::array()}
+            };
+
+            usleep(sleeptime);
+            r = this->requestTask(methods::POST, url, data);
+            result = json::parse(r.content);
+//            cout<<result.dump(2)<<endl;
+            ASSERT_EQ(r.status, status_codes::OK);
+            ASSERT_EQ(result, expectation);
+
+
+            /**< Case 7-8 */
+            museumList = {Museum("Museum1", "", "", "", user, 1),
+                          Museum("Museum2", "", "", "", otherUser, 2),
+                          Museum("Museum3", "", "", "", user, 3)};
+            curatorMuseumList = {museumList.at(0), museumList.at(2)};
+            artifactEditsList = {
+                Edit<Artifact>(Artifact("art1", "", "", "", museumList.at(1)), Edit<Artifact>::add,
+                user, {Collection("col11", "", "", "", museumList.at(1)), Collection("col12", "", "", "", museumList.at(1))}),
+                Edit<Artifact>(Artifact("art2", "", "", "", museumList.at(1), 2), Edit<Artifact>::del,
+                user, {Collection("col13", "", "", "", museumList.at(1))})
+            };
+
+            collectionEditsList =  {
+                Edit<Collection>(Collection("col1", "", "", "", museumList.at(1)), Edit<Collection>::add, user),
+                Edit<Collection>(Collection("col2", "", "", "", museumList.at(1), 2), Edit<Collection>::edit, user, Edit<Collection>::approve, 1)
+            };
+            artifactActionsList1 = {
+                Edit<Artifact>(Artifact("art2", "", "", "", museumList.at(0), 2), Edit<Artifact>::edit,
+                user, {Collection("col13", "", "", "", museumList.at(0)), Collection("col14", "", "", "", museumList.at(0))})
+            };
+            collectionActionsList2 =  {
+                Edit<Collection>(Collection("col3", "", "", "", museumList.at(2)), Edit<Collection>::add, user)
+            };
+
+            /**< Case 7 */
+            EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                    .Times(testing::AtLeast(1))
+                    .WillRepeatedly(Return(user))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getArtifactEdits(user.getUserID()))
+                    .WillOnce(Return(artifactEditsList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getCollectionEdits(user.getUserID()))
+                    .WillOnce(Return(collectionEditsList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getMuseumByCurator(user.getUserID()))
+                    .WillOnce(Return(curatorMuseumList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getArtifactActions(curatorMuseumList.at(0).getMuseumID()))
+                    .WillOnce(Return(artifactActionsList1))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getCollectionActions(curatorMuseumList.at(0).getMuseumID()))
+                    .WillOnce(Return(collectionActionsList2))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getArtifactActions(curatorMuseumList.at(1).getMuseumID()))
+                    .WillOnce(Return(artifactActionsList1))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getCollectionActions(curatorMuseumList.at(1).getMuseumID()))
+                    .WillOnce(Return(collectionActionsList2))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, checkHeadCurator(user))
+                    .WillOnce(Return(false))
+                    .RetiresOnSaturation();
+            expectation = json::parse("{  \"actionsList\": [{      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art2\"        },        \"collectionList\": [{            \"id\": -1,            \"name\": \"col13\"          },          {            \"id\": -1,            \"name\": \"col14\"          }        ],        \"museum\": {          \"id\": 1,          \"name\": \"Museum1\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"type\": \"Edit\"    },    {      \"approvalStatus\": \"Under review\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col3\"        },        \"museum\": {          \"id\": 3,          \"name\": \"Museum3\"        }      },      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"type\": \"Addition\"    },    {      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art2\"        },        \"collectionList\": [{            \"id\": -1,            \"name\": \"col13\"          },          {            \"id\": -1,            \"name\": \"col14\"          }        ],        \"museum\": {          \"id\": 1,          \"name\": \"Museum1\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"type\": \"Edit\"    },    {      \"approvalStatus\": \"Under review\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col3\"        },        \"museum\": {          \"id\": 3,          \"name\": \"Museum3\"        }      },      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"type\": \"Addition\"    }  ],  \"editsList\": [{      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art1\"        },        \"collectionList\": [{            \"id\": -1,            \"name\": \"col11\"          },          {            \"id\": -1,            \"name\": \"col12\"          }        ],        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"other\"      },      \"type\": \"Addition\"    },    {      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art2\"        },        \"collectionList\": [{          \"id\": -1,          \"name\": \"col13\"        }],        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"other\"      },      \"type\": \"Deletion\"    },    {      \"approvalStatus\": \"Under review\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col1\"        },        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"id\": -1,      \"reviewer\": {        \"username\": \"other\"      },      \"type\": \"Addition\"    },    {      \"approvalStatus\": \"Approved\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col2\"        },        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"id\": 1,      \"reviewer\": {        \"username\": \"other\"      },      \"type\": \"Edit\"    }  ],  \"museumList\": [{      \"id\": 1,      \"name\": \"Museum1\"    },    {      \"id\": 3,      \"name\": \"Museum3\"    }  ],  \"user\": {    \"email\": \"email@example.com\",    \"id\": 1,    \"username\": \"abc\"  }}");
+
+            usleep(sleeptime);
+            r = this->requestTask(methods::POST, url, data);
+            result = json::parse(r.content);
+            cout<<result.dump(2)<<endl;
+            ASSERT_EQ(r.status, status_codes::OK);
+            ASSERT_EQ(result, expectation);
+
+            /**< Case 8 */
+            EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                    .Times(testing::AtLeast(1))
+                    .WillRepeatedly(Return(user))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getArtifactEdits(user.getUserID()))
+                    .WillOnce(Return(artifactEditsList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getCollectionEdits(user.getUserID()))
+                    .WillOnce(Return(collectionEditsList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getMuseumByCurator(user.getUserID()))
+                    .WillOnce(Return(curatorMuseumList))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getArtifactActions(curatorMuseumList.at(0).getMuseumID()))
+                    .WillOnce(Return(artifactActionsList1))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getCollectionActions(curatorMuseumList.at(0).getMuseumID()))
+                    .WillOnce(Return(collectionActionsList2))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getArtifactActions(curatorMuseumList.at(1).getMuseumID()))
+                    .WillOnce(Return(artifactActionsList1))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getCollectionActions(curatorMuseumList.at(1).getMuseumID()))
+                    .WillOnce(Return(collectionActionsList2))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, checkHeadCurator(user))
+                    .WillOnce(Return(true))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(this->model, getMuseumList())
+                    .WillOnce(Return(museumList))
+                    .RetiresOnSaturation();
+            expectation["headCuratorList"] = Util::arrayFromVector(museumList, {"id", "name"});
+
+
+            usleep(sleeptime);
+            r = this->requestTask(methods::POST, url, data);
+            result = json::parse(r.content);
+            cout<<result.dump(2)<<endl;
+            ASSERT_EQ(r.status, status_codes::OK);
+            ASSERT_EQ(result, expectation);
+        }
 }
 
 
@@ -2457,17 +2631,17 @@ TEST_F(HandlerTest, resetPassword) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
         /**< Case 3 */
-//        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
-//                .Times(testing::AtLeast(1))
-//                .WillRepeatedly(Return(user))
-//                .RetiresOnSaturation();
-//        EXPECT_CALL(this->model, updateUserInDB(testing::_))
-//                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, getUserObject((string) data["username"]))
+                .Times(testing::AtLeast(1))
+                .WillRepeatedly(Return(user))
+                .RetiresOnSaturation();
+        EXPECT_CALL(this->model, updateUserInDB(testing::_))
+                .RetiresOnSaturation();
 
-//        usleep(sleeptime);
-//        r = this->requestTask(methods::POST, url, data);
-//        ASSERT_EQ(r.status, status_codes::OK);
-//        ASSERT_TRUE(json::parse(r.content)["success"]);
+        usleep(sleeptime);
+        r = this->requestTask(methods::POST, url, data);
+        ASSERT_EQ(r.status, status_codes::OK);
+        ASSERT_TRUE(json::parse(r.content)["success"]);
     }
 }
 

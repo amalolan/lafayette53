@@ -6,8 +6,8 @@ QT += sql
 QMAKE_CXXFLAGS += -std=gnu++11
 QMAKE_CXXFLAGS_WARN_ON = -w
 
-#QMAKE_LFLAGS += -g -fprofile-arcs -ftest-coverage  -O0
-#QMAKE_CXXFLAGS += -g -fprofile-arcs -ftest-coverage -O0
+QMAKE_LFLAGS += -g -fprofile-arcs -ftest-coverage  -O0
+QMAKE_CXXFLAGS += -g -fprofile-arcs -ftest-coverage -O0
 
 #lcov --capture --directory build-lafayette53-Desktop_Qt_5_14_1_clang_64bit-Debug/tests/backend --output-file lcov/coverage.info
 #genhtml lcov/coverage.info --output-directory lcov
@@ -27,14 +27,12 @@ SOURCES += \
     ../../model/modelclass.cpp \
     ../../model/artifact.cpp \
     ../../model/collection.cpp \
-    ../../backend/modelclassext.cpp \
     ../../backend/handler.cpp
 
 
 HEADERS += \
     ../../backend/handler.h \
     ../../backend/util.h \
-    ../../backend/modelclassext.h \
     ../../backend/controller.h \
     ../../model/modelclass.h \
     ../../model/artifact.h \

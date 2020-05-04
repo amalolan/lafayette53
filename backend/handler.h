@@ -33,7 +33,7 @@
 #include <QCryptographicHash>
 //#include <execinfo.h>
 #include <exception>
-//#include "../model/modelclass.h"
+#include "../model/modelclass.h"
 #include "../model/ModelException.h"
 #include "../model/collection.h"
 #include "../model/user.h"
@@ -42,7 +42,6 @@
 #include <chrono>
 #include <ctime>
 
-#include "modelclassext.h"
 #include "util.h"
 
 #include "../nlohmann/json.hpp"
@@ -64,7 +63,7 @@ public:
          * @brief Handler sets up the object adds support to GET,PUT,POST,DEL http requests.
          * @param url the url of the server
          */
-    Handler(utility::string_t url, ModelClassExt *model, std::string codeBaseDirectory) : m_listener(url), model(nullptr) {
+    Handler(utility::string_t url, ModelClass *model, std::string codeBaseDirectory) : m_listener(url), model(nullptr) {
         this->model = model;
         this->codeBaseDirectory =  codeBaseDirectory;
         m_listener.support(methods::GET, std::bind(&Handler::handle_get, this, std::placeholders::_1));
@@ -90,7 +89,7 @@ protected:
 
 private:
     http_listener m_listener;
-    ModelClassExt* model;
+    ModelClass* model;
     std::string codeBaseDirectory;
 
     void handle_error( http_request, pplx::task<void>& , std::string ="An error occured.");
