@@ -5,7 +5,6 @@
 #include "../model/collection.h"
 #include "../nlohmann/json.hpp"
 #include "../model/artifact.h"
-//#include "handler.h"
 #include <vector>
 using json=nlohmann::json;
 
@@ -19,7 +18,10 @@ public:
     {
     }
     static ModelClassExt* singleInstance;
-    static ModelClassExt* getInstance(std::string);
+    static ModelClassExt* getInstance(std::string baseDir){
+        return new ModelClassExt(baseDir + "database/testdb.db");
+    }
+
 };
 
 

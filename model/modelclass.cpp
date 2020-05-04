@@ -588,6 +588,7 @@ void ModelClass::updateEditInDB(Edit<Collection> & edit){
         query.exec("UPDATE edit SET collectionID = -1 WHERE editID = "+id+";");
         query.exec("PRAGMA foreign_keys = ON;");
         this->removeCollectionInDB(collection);
+        throw ModelException("Deletion not implemented");
         edit.setObject(collection);
     }
 }
@@ -626,6 +627,9 @@ void ModelClass::updateEditInDB(Edit<Artifact> & edit){
     if (edit.getKind() == Edit<Artifact>::add)
     {
         this->saveArtifactToDB(artifact);
+        for( Collection collection : edit.getCollectionList()) {
+            this->addArtifactCollection(collection, artifact);
+        }
         QString artifactID = QString::fromStdString(std::to_string(artifact.getID()));
         query.exec("PRAGMA foreign_keys = OFF;");
         query.exec("UPDATE edit SET artifactID = "+artifactID+" WHERE editID = "+id+";");
@@ -634,6 +638,10 @@ void ModelClass::updateEditInDB(Edit<Artifact> & edit){
     }
     else if (edit.getKind() == Edit<Artifact>::edit)
     {
+        this->removeArtifactCollection(artifact);
+        for( Collection collection : edit.getCollectionList())  {
+            this->addArtifactCollection(collection, artifact);
+        }
         this->updateArtifactInDB(artifact);
     }
     else if(edit.getKind() == Edit<Artifact>::del)

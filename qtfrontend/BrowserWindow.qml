@@ -460,7 +460,7 @@ ApplicationWindow {
                 focus: true
 
                 onLinkHovered: function(hoveredUrl) {
-                    if (hoveredUrl == "")
+                    if (hoveredUrl === "")
                         hideStatusText.start();
                     else {
                         statusText.text = hoveredUrl;
@@ -585,7 +585,7 @@ ApplicationWindow {
                 }
 
                 onLoadingChanged: function(loadRequest) {
-                    if (loadRequest.status == WebEngineView.LoadStartedStatus)
+                    if (loadRequest.status === WebEngineView.LoadStartedStatus)
                         findBar.reset();
                 }
 
