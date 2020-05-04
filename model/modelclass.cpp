@@ -4,9 +4,9 @@ bool ModelClass::instanceFlagTest = false;
 
 bool ModelClass::instanceFlagPro = false;
 
-const bool ModelClass::test = false;
+const bool ModelClass::test = true;
 
-const bool ModelClass::pro = true;
+const bool ModelClass::pro = false;
 
 std::string ModelClass::path = "";
 

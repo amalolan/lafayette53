@@ -4,8 +4,6 @@
 #include <vector>
 // GTest related includes
 #include "gmock/gmock.h"
-// Backend
-#include "../../backend/modelclassext.h"
 // Model
 #include "../../model/modelclass.h"
 #include "../../model/ModelException.h"
@@ -18,9 +16,9 @@ using namespace std;
 /**
  * @brief The MockModelClass class Mocks ModelClass using GMock.
  */
-class MockModelClass: public  ModelClassExt {
+class MockModelClass: public  ModelClass {
 public:
-    MockModelClass() : ModelClassExt("") {}
+    MockModelClass() : ModelClass("") {}
     /**< User */
     MOCK_METHOD1(getUserObject, User(string));
     MOCK_METHOD1(saveUserToDB, void(User&));
@@ -29,6 +27,7 @@ public:
 
     /**< Museum */
     MOCK_METHOD0(getMuseumList, vector<Museum>());
+    MOCK_METHOD1(getMuseumByCurator, vector<Museum>(int));
     MOCK_METHOD1(getMuseumObject, Museum(int));
     MOCK_METHOD1(saveMuseumToDB, void(Museum&));
     MOCK_METHOD1(removeMuseumFromDB, void(Museum&));
@@ -51,7 +50,11 @@ public:
 
     /**< Edit  */
     MOCK_METHOD1(getEditArtifactObject, Edit<Artifact>(int));
+    MOCK_METHOD1(getArtifactEdits, vector<Edit<Artifact>>(int));
+    MOCK_METHOD1(getArtifactActions, vector<Edit<Artifact>>(int));
     MOCK_METHOD1(getEditCollectionObject, Edit<Collection>(int));
+    MOCK_METHOD1(getCollectionEdits, vector<Edit<Collection>>(int));
+    MOCK_METHOD1(getCollectionActions, vector<Edit<Collection>>(int));
     MOCK_METHOD1(saveEditToDB, void(Edit<Artifact> &));
     MOCK_METHOD1(saveEditToDB, void(Edit<Collection> &));
     MOCK_METHOD1(updateEditInDB,  void(Edit<Artifact>  &));

@@ -34,11 +34,11 @@ public:
     Handler *g_httpHandler;
     /**
      * @brief Controller Setus up the server. Starts listening to http requests at
-     * address. Also opens up a database by initializing the ModelClassExt
+     * address. Also opens up a database by initializing the ModelClass
      * @param address string [usually "http://127.0.0.1:5300" ]
      * @param model The database/ModelClass object associated with this Controller object.
      */
-    Controller(const string_t& address, ModelClassExt *model, std::string codeBaseDirectory)  {
+    Controller(const string_t& address, ModelClass *model, std::string codeBaseDirectory)  {
         uri_builder uri(address);
         auto addr = uri.to_uri().to_string();
         this->g_httpHandler = new Handler(addr, model, codeBaseDirectory);
@@ -58,7 +58,6 @@ public:
     {
         this->g_httpHandler->close().wait();
         delete this->g_httpHandler;
-        return;
     }
 
     /**
@@ -89,8 +88,8 @@ public:
      */
     static int runServer(std::string portString="5300") {
         ModelClass::initdb(CODE_BASE_DIRECTORY);
-//        ModelClass *model =  ModelClass::getInstance(ModelClass::pro);
-        ModelClassExt *model =  ModelClassExt::getInstance(CODE_BASE_DIRECTORY);
+        ModelClass *model =  ModelClass::getInstance(ModelClass::pro);
+//        ModelClassExt *model =  ModelClassExt::getInstance(CODE_BASE_DIRECTORY);
         model->createTables();
         Controller c(U("http://127.0.0.1:"+portString), model, CODE_BASE_DIRECTORY);
         std::string line;
