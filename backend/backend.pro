@@ -3,10 +3,11 @@ CONFIG += console c++11
 QT += sql
 
 SOURCES += \
+        handler.cpp \
         main.cpp \
         ../model/modelclass.cpp \
-        modelclassext.cpp \
         ../model/collection.cpp
+
 
 QMAKE_CXXFLAGS += -std=gnu++11
 QMAKE_CXXFLAGS_WARN_ON = -w
@@ -21,8 +22,6 @@ HEADERS += \
     ../model/user.h \
     ../model/museum.h \
     ../model/ModelException.h \
-    handler.tpp \
-    modelclassext.h \
     util.h \
     ../nlohmann/json.hpp
 
@@ -48,4 +47,3 @@ DEPENDPATH += $$PWD/../lib/boost@1.60/include
 macx|win32: LIBS += -L$$PWD/../lib/boost@1.60/lib/ -lboost_chrono-mt
 
 macx|win32: LIBS += -L$$PWD/../lib/boost@1.60/lib/ -lboost_thread-mt
-

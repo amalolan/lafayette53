@@ -6,11 +6,18 @@
 #include <QByteArray>
 #include <iostream>
 #include <../nlohmann/json.hpp>
-
+/*
+ * Represents a User object
+ */
 using json = nlohmann::json;
 class User
 {
 public:
+    User()
+    {
+        this->userID = -1;
+    }
+
     User(std::string username, std::string email, std::string password, int id)
     {
         this->userID = id;
@@ -27,27 +34,18 @@ public:
         this->password = password;
     }
 
-    User(const User &user)
+    User(const User &user) = default;
+    User& operator = (const User&) = default;
+    User& operator=(User&&) = default;
+    User(User&&) = default;
+    virtual ~User()
     {
-        this->userID = user.getUserID();
-        this->username = user.getName();
-        this->email = user.getEmail();
-        this->password = user.getPassword();
-
     }
 
-    User& operator = (const User &user)
-    {
-        this->userID = user.getUserID();
-        this->username = user.getName();
-        this->email = user.getEmail();
-        this->password = user.getPassword();
-        return *this;
-    }
-
-    ~User()
-    {
-
+    friend std::ostream& operator<<(std::ostream &strm, const User &u) {
+      return strm << "User(name : "<< u.username <<", "
+                     "id: " << u.userID << ", "
+                     "email: "<< u.email<< ")";
     }
 
     std::string getEmail() const
@@ -84,22 +82,11 @@ public:
         this->password = newPassword;
     }
 
-    bool indb()
+    bool indb() const
     {
         return this->userID > -1;
     }
 
-    std::string getJSON()
-    {
-        QJsonObject properties;
-        properties["username"] = QString::fromStdString(this->username);
-        properties["email"] = QString::fromStdString(this->email);
-        properties["userID"] = this->userID;
-        properties["password"] = QString::fromStdString(this->password);
-        QJsonDocument doc;
-        doc.setObject(properties);
-        return doc.toJson().toStdString();
-    }
 
     /*
      * json = { username:
@@ -109,17 +96,26 @@ public:
      *        }
      *
      */
-    json getJson(){
-        json output;
-        output["username"] = this->username;
-        output["email"] = this->email;
-        output["userID"] = this->userID;
-        output["password"] = this->password;
+    virtual json toJSON() const
+    {
+        json output  =  {
+            {"username", this->getName()},
+            {"email", this->getEmail()},
+            {"id", this->getUserID()},
+            {"passowrd", this->getPassword()}
+        };
         return output;
     }
 
     bool empty(){
         return username == "" && email == "" && password == "";
+    }
+
+    std::string toString() const
+    {
+        return "Public(name : "+ this->username + ", "
+                       "email: " + this->email + ", "
+                       "id: " + std::to_string(this->userID) + ")";
     }
 
 private:
@@ -129,5 +125,20 @@ private:
     std::string password;
 
 };
+
+
+inline bool operator==(const User& lhs, const User& rhs) {
+        return ((lhs.getName() == rhs.getName())
+                && (lhs.getEmail() == rhs.getEmail())
+                && (lhs.getPassword() == rhs.getPassword())
+                && (lhs.getUserID() == rhs.getUserID()));
+}
+
+inline bool operator!=(const User& lhs, const User& rhs) {
+        return ((lhs.getName() != rhs.getName())
+                || (lhs.getEmail() != rhs.getEmail())
+                || (lhs.getPassword() != rhs.getPassword())
+                || (lhs.getUserID() != rhs.getUserID()));
+}
 
 #endif // USER_H

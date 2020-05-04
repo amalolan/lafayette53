@@ -12,16 +12,9 @@ HEADERS += \
     ModelException.h \
     artifact.h \
     collection.h \
+    edit.h \
     museum.h \
     modelclass.h \
     user.h \
     ../nlohmann/json.hpp
 
-LIBS += -pthread
-
-SOURCES += ../gtest/googletest/src/gtest-all.cc
-
-INCLUDEPATH +=  ../gtest                                   \
-                ../gtest/googletest                        \
-                ../gtest/googletest/include                \
-                ../gtest/googletest/include/gtest
