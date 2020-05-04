@@ -331,7 +331,7 @@ TEST_F(DevTests, TestEditInput){
     EXPECT_EQ(0, this->model->getArtifactActions(museum.getMuseumID()).size());
     EXPECT_TRUE(edit0.getObject() == this->model->getArtifact(edit.getObject().getID()));
 
-    Edit<Artifact> edit1(artifact, Edit<Artifact>::del, user, this->model->getCollectionsByArtifact(artifact.getID()));
+    Edit<Artifact> edit1(artifact, Edit<Artifact>::del, user, {});
     ASSERT_NO_THROW(this->model->saveEditToDB(edit1));
     ASSERT_NO_THROW(this->model->getArtifactEdits(user.getUserID()));
 
@@ -406,7 +406,7 @@ TEST_F(DevTests, TestEditInput){
     EXPECT_EQ(edit4, this->model->getCollectionActions(museum.getMuseumID()).front());
 
     edit4.approveEdit();
-    ASSERT_NO_THROW(this->model->updateEditInDB(edit4));
+    this->model->updateEditInDB(edit4);
     EXPECT_EQ(1, this->model->getCollectionEdits(user.getUserID()).size());
     EXPECT_EQ(edit4, this->model->getCollectionEdits(user.getUserID()).front());
     EXPECT_EQ(0, this->model->getCollectionActions(museum.getMuseumID()).size());
@@ -452,11 +452,11 @@ TEST_F(DevTests, TestEditInput){
     EXPECT_EQ(edit6.getObject(), this->model->getMuseumObject(edit6.getObject().getMuseumID()));
 
 
-    EXPECT_EQ(edit6.toString(), this->model->getEditMuseumObject(edit6.getID()).toString());
-    EXPECT_EQ(edit5.toString(), this->model->getEditCollectionObject(edit5.getID()).toString());
-    EXPECT_EQ(edit4.toString(), this->model->getEditCollectionObject(edit4.getID()).toString());
-    EXPECT_EQ(edit2.toString(), this->model->getEditArtifactObject(edit2.getID()).toString());
-    EXPECT_EQ(edit1.toString(), this->model->getEditArtifactObject(edit1.getID()).toString());
+    EXPECT_EQ(edit6, this->model->getEditMuseumObject(edit6.getID()));
+    EXPECT_EQ(edit5, this->model->getEditCollectionObject(edit5.getID()));
+    EXPECT_EQ(edit4, this->model->getEditCollectionObject(edit4.getID()));
+    EXPECT_EQ(edit2, this->model->getEditArtifactObject(edit2.getID()));
+    EXPECT_EQ(edit1, this->model->getEditArtifactObject(edit1.getID()));
 
     ASSERT_NO_THROW(this->model->removeEditInDB(edit1));
     Artifact delArt = edit2.getObject();

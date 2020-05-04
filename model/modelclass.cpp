@@ -618,7 +618,6 @@ void ModelClass::updateEditInDB(Edit<Collection> & edit){
         query.exec("UPDATE edit SET collectionID = -1 WHERE editID = "+id+";");
         query.exec("PRAGMA foreign_keys = ON;");
         this->removeCollectionInDB(collection);
-        throw ModelException("Deletion not implemented");
         edit.setObject(collection);
     }
 }
@@ -774,7 +773,7 @@ std::vector<Edit<Museum>> ModelClass::getMuseumEdits(int userID){
     User user = this->getUserObject(userID);
     bool done = query.exec
     ("SELECT museumID, name, description, photo, introduction, status, kind, editID, datetime"
-     " FROM edit WHERE userID = "+id+" AND collectionID = -2 AND artifactID = -2;");
+     " FROM edit WHERE userID = "+id+" AND collectionID = -2 AND artifactID = -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -822,7 +821,7 @@ std::vector<Edit<Collection>> ModelClass::getCollectionEdits(int userID){
     User user = this->getUserObject(userID);
     bool done = query.exec
     ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, museumID, datetime"
-     " FROM edit WHERE userID = "+id+" AND artifactID == -2;");
+     " FROM edit WHERE userID = "+id+" AND artifactID == -2 ORDER BY datetime DESC;");
 
     if (!done)
     {
@@ -874,7 +873,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactEdits(int userID){
     User user = this->getUserObject(userID);
     bool done = query.exec
     ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, list, museumID, datetime"
-     " FROM edit WHERE userID = "+id+" AND artifactID != -2;");
+     " FROM edit WHERE userID = "+id+" AND artifactID != -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -938,7 +937,7 @@ std::vector<Edit<Museum>> ModelClass::getMuseumActions(int museumID){
     QString id(QString::fromStdString(std::to_string(museumID)));
     query.exec
     ("SELECT userID, name, description, photo, introduction, status, kind, editID, datetime"
-     " FROM edit WHERE museumID = "+id+" AND collectionID = -2 AND artifactID = -2 AND status = 0;");
+     " FROM edit WHERE museumID = "+id+" AND collectionID = -2 AND artifactID = -2 AND status = 0 ORDER BY datetime DESC;");
 
     std::vector<Edit<Museum>> output;
     query.next();
@@ -982,7 +981,7 @@ std::vector<Edit<Collection>> ModelClass::getCollectionActions(int museumID){
     QString id(QString::fromStdString(std::to_string(museumID)));
     bool done = query.exec
     ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, userID, datetime"
-     " FROM edit WHERE museumID = "+id+" AND collectionID != -2 AND status = 0;");
+     " FROM edit WHERE museumID = "+id+" AND collectionID != -2 AND status = 0 ORDER BY datetime DESC;");
 
     if (!done)
     {
@@ -1034,7 +1033,7 @@ std::vector<Edit<Artifact>> ModelClass::getArtifactActions(int museumID){
     QString id(QString::fromStdString(std::to_string(museumID)));
     bool done = query.exec
     ("SELECT artifactID, name, description, photo, introduction, status, kind, editID, userID, list, datetime"
-     " FROM edit WHERE museumID = "+id+" AND artifactID != -2 AND status = 0;");
+     " FROM edit WHERE museumID = "+id+" AND artifactID != -2 AND status = 0 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -1098,7 +1097,7 @@ Edit<Museum> ModelClass::getEditMuseumObject(int editID){
     QString id = QString::fromStdString(std::to_string(editID));
     bool done = query.exec
     ("SELECT museumID, name, description, photo, introduction, status, kind, editID, userID, datetime"
-     " FROM edit WHERE editID = "+id+" AND museumID != -2 AND collectionID = -2 AND artifactID = -2;");
+     " FROM edit WHERE editID = "+id+" AND museumID != -2 AND collectionID = -2 AND artifactID = -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -1136,7 +1135,7 @@ Edit<Collection> ModelClass::getEditCollectionObject(int editID){
     QString id = QString::fromStdString(std::to_string(editID));
     bool done = query.exec
     ("SELECT collectionID, name, description, photo, introduction, status, kind, editID, userID, museumID, datetime"
-     " FROM edit WHERE editID = "+id+" AND artifactID = -2 AND collectionID != -2;");
+     " FROM edit WHERE editID = "+id+" AND artifactID = -2 AND collectionID != -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -1176,7 +1175,7 @@ Edit<Artifact> ModelClass::getEditArtifactObject(int editID){
     QString id = QString::fromStdString(std::to_string(editID));
     bool done = query.exec
     ("SELECT artifactID, name, description, photo, introduction, status, kind, museumID, userID, list, datetime"
-     " FROM edit WHERE editID = "+id+" AND collectionID = -2 AND artifactID != -2;");
+     " FROM edit WHERE editID = "+id+" AND collectionID = -2 AND artifactID != -2 ORDER BY datetime DESC;");
     if (!done)
     {
         throw ModelException
@@ -1679,40 +1678,6 @@ std::vector<Museum> ModelClass::getMuseumList(){
         museum.setUser(this->getUserObject(museum.getUser().getUserID()));
     }
     return museumList;
-}
-/**
- * @brief ModelClass::getMuseumListJSON Returns a list of museums in the database as a JSON ARRAY
- * Please remove this function once the erro with  getMuseumList() is fixed.
- * @return A JSON array of schema below
- * [
- *  {"name": string,
- *   "introduction": string,
- *   "description": string,
- *   "id": int,
- *   "userID": int
- * },
- * ....
- * ]
- */
-json ModelClass::getMuseumListJSON() {
-    query.exec("SELECT museumID, userID, name, description FROM museum ORDER BY name ASC;");
-    this->query.next();
-    if (!this->query.isValid())
-    {
-        throw ModelException("No museum entity stored in database");
-    }
-    json array = json::array();
-    do{
-        json object;
-        object["name"] = this->query.value(2).toString().toStdString();
-        object["introduction"] = "This is "+ this->query.value(2).toString().toStdString();
-        object["description"] = this->query.value(3).toString().toStdString();
-        object["id"] = this->query.value(0).toString().toInt();
-        object["userID"] = this->query.value(1).toString().toInt();
-        array.push_back(object);
-    }while(this->query.next());
-    this->query.finish();
-    return array;
 }
 
 Museum ModelClass::getMuseumObject(int museumID){

@@ -2,7 +2,9 @@
 #define EDIT_H
 #include "collection.h"
 #include "artifact.h"
-
+/*
+ * Represents an Edit object
+ */
 template <class T>
 class Edit
 {
