@@ -1,7 +1,15 @@
+/**
+ * @file handlertest.cpp
+ *
+ * All Google Test Cases of UtilTest are documented here. Each test fixture has details of every test case as a list.
+ *
+ */
 #include "utiltest.h"
 
 /**
+ * @fn TEST_F(UtilTest, validateJSON)
  * @brief TEST_F Tests Util::validateJSON()
+ *
  * 12 Test Cases:
  * 1. Empty object, empty keys list.
  * 2. Empty object, non-empty keys list.
@@ -18,15 +26,15 @@
  */
 TEST_F(UtilTest, validateJSON) {
     json obj =  json::object();
-    ASSERT_NO_THROW(Util::validateJSON(obj, {})); /**< Case 1 */
-    EXPECT_THROW(Util::validateJSON(obj, {"a", "b", "c"}), json::other_error); /**< Case 2 */
+    ASSERT_NO_THROW(Util::validateJSON(obj, {})); /** Case 1 */
+    EXPECT_THROW(Util::validateJSON(obj, {"a", "b", "c"}), json::other_error); /** Case 2 */
 
 
     obj = {{"a", true}};
-    ASSERT_NO_THROW(Util::validateJSON(obj, {"a"}));     /**< Case 3 */
-    ASSERT_NO_THROW(Util::validateJSON(obj, {}));     /**< Case 4 */
-    EXPECT_THROW(Util::validateJSON(obj, {"aa"}), json::other_error);     /**< Case 5 */
-    EXPECT_THROW(Util::validateJSON(obj, {"a", "b", "c"}), json::other_error);     /**< Case 6 */
+    ASSERT_NO_THROW(Util::validateJSON(obj, {"a"}));     /** Case 3 */
+    ASSERT_NO_THROW(Util::validateJSON(obj, {}));     /** Case 4 */
+    EXPECT_THROW(Util::validateJSON(obj, {"aa"}), json::other_error);     /** Case 5 */
+    EXPECT_THROW(Util::validateJSON(obj, {"a", "b", "c"}), json::other_error);     /** Case 6 */
 
 
     obj = {
@@ -38,18 +46,20 @@ TEST_F(UtilTest, validateJSON) {
         {"extra", 1.21}
     };
 
-    ASSERT_NO_THROW(Util::validateJSON(obj, {"1", "31", "keya", "extra"}));     /**< Case 7 */
-    ASSERT_NO_THROW(Util::validateJSON(obj, {"1", "31", "keya"}));     /**< Case 8 */
-    ASSERT_NO_THROW(Util::validateJSON(obj, {}));     /**< Case 9 */
-    EXPECT_THROW(Util::validateJSON(obj, {"11", "31", "keya", "extra"}), json::other_error);     /**< Case 10 */
-    EXPECT_THROW(Util::validateJSON(obj, {"1", "31", "keya", "extra", "e231"}), json::other_error);     /**< Case 11 */
-    EXPECT_THROW(Util::validateJSON(obj, {"1", "31", "keya","b", "extra"}), json::other_error);     /**< Case 12 */
+    ASSERT_NO_THROW(Util::validateJSON(obj, {"1", "31", "keya", "extra"}));     /** Case 7 */
+    ASSERT_NO_THROW(Util::validateJSON(obj, {"1", "31", "keya"}));     /** Case 8 */
+    ASSERT_NO_THROW(Util::validateJSON(obj, {}));     /** Case 9 */
+    EXPECT_THROW(Util::validateJSON(obj, {"11", "31", "keya", "extra"}), json::other_error);     /** Case 10 */
+    EXPECT_THROW(Util::validateJSON(obj, {"1", "31", "keya", "extra", "e231"}), json::other_error);     /** Case 11 */
+    EXPECT_THROW(Util::validateJSON(obj, {"1", "31", "keya","b", "extra"}), json::other_error);     /** Case 12 */
 
 
 }
 
 /**
+ * @fn TEST_F(UtilTest, getObjectWithKeys)
  * @brief TEST_F Tests Util::getObjectWithKeys()
+ *
  * 12 Test Cases:
  * 1. T.toJSON() = {}, Empty keys list.
  * 2. T.toJSON() = {}, Non-empty keys list.
@@ -70,28 +80,28 @@ TEST_F(UtilTest, getObjectWithKeys) {
         InSequence s;
         json objectJSON = json::object();
         json expectation = json::object();
-        /**< Empty T.toJSON() */
+        /** Empty T.toJSON() */
         EXPECT_CALL(*mock, toJSON())
                 .Times(2)
                 .WillRepeatedly(Return(objectJSON))
                 .RetiresOnSaturation();
-        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {}), expectation); /**< Case 1 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"a", "b", "c"}), json::other_error); /**< Case 2 */
+        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {}), expectation); /** Case 1 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"a", "b", "c"}), json::other_error); /** Case 2 */
 
-        /**< Singleton T.toJSON() */
+        /** Singleton T.toJSON() */
         objectJSON = {{"a", true}};
         EXPECT_CALL(*mock, toJSON())
                 .Times(4)
                 .WillRepeatedly(Return(objectJSON))
                 .RetiresOnSaturation();
 
-        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {}), expectation); /**< Case 3 */
+        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {}), expectation); /** Case 3 */
         expectation = {{"a", true}};
-        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {"a"}), expectation); /**< Case 4 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"aa"}), json::other_error); /**< Case 5 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"a", "b", "c"}), json::other_error); /**< Case 6 */
+        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {"a"}), expectation); /** Case 4 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"aa"}), json::other_error); /** Case 5 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"a", "b", "c"}), json::other_error); /** Case 6 */
 
-        /**< Non-singleton T.toJSON() */
+        /** Non-singleton T.toJSON() */
         objectJSON = {
             {"1", 3},
             {"31",  "12"},
@@ -113,24 +123,26 @@ TEST_F(UtilTest, getObjectWithKeys) {
             },
             {"extra", 1.21}
         };
-        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya", "extra"}), expectation); /**< Case 7 */
+        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya", "extra"}), expectation); /** Case 7 */
 
         expectation = {
             {"1", 3},
             {"31",  "12"},
         };
-        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31"}), expectation); /**< Case 8 */
+        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31"}), expectation); /** Case 8 */
         expectation = json::object();
-        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {}), expectation); /**< Case 9 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"11", "31", "keya", "extra"}), json::other_error);     /**< Case 10 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya", "extra", "e231"}), json::other_error);     /**< Case 11 */
-        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya","b", "extra"}), json::other_error);     /**< Case 12 */
+        ASSERT_EQ(Util::getObjectWithKeys<MockObject*>(mock, {}), expectation); /** Case 9 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"11", "31", "keya", "extra"}), json::other_error);     /** Case 10 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya", "extra", "e231"}), json::other_error);     /** Case 11 */
+        EXPECT_THROW(Util::getObjectWithKeys<MockObject*>(mock, {"1", "31", "keya","b", "extra"}), json::other_error);     /** Case 12 */
     }
     delete mock;
 }
 
 /**
+ * @fn TEST_F(UtilTest, arrayFromVector)
  * @brief TEST_F Tests Util::arrayFromVector()
+ *
  * 8 Test Cases:
  * 1. Empty vector
  * 2. Empty vector, non-empty keys list.
@@ -145,13 +157,13 @@ TEST_F(UtilTest, arrayFromVector) {
     vector<MockObject*> mockList;
     json objectJSON = json::object();
     json expectation = json::array();
-    /**< Empty vector<T> */
+    /** Empty vector<T> */
     json result = Util::arrayFromVector<MockObject*>(mockList, {});
-    ASSERT_EQ(result, expectation); /**< Case 1 */
+    ASSERT_EQ(result, expectation); /** Case 1 */
     result = Util::arrayFromVector<MockObject*>(mockList, {"1", "2"});
-    ASSERT_EQ(result, expectation); /**< Case 2 */
+    ASSERT_EQ(result, expectation); /** Case 2 */
 
-    /**< Non-empty vector<T> */
+    /** Non-empty vector<T> */
     objectJSON = {
         {"1", 3},
         {"31",  "12"},
@@ -164,17 +176,17 @@ TEST_F(UtilTest, arrayFromVector) {
         mockList.push_back(new MockObject());
         expectation.push_back(objectJSON);
     }
-    EXPECT_CALL(*(mockList).at(0), toJSON()) /**< Will be called for all cases 3 - 8 */
+    EXPECT_CALL(*(mockList).at(0), toJSON()) /** Will be called for all cases 3 - 8 */
             .Times(6)
             .WillRepeatedly(Return(objectJSON));
     for (int i = 1; i < 4; i++) {
         EXPECT_CALL(*(mockList.at(i)), toJSON())
-                .Times(3) /**< Will be called only for cases 3 - 5 */
+                .Times(3) /** Will be called only for cases 3 - 5 */
                 .WillRepeatedly(Return(objectJSON));
 
     }
     result = Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya", "extra"});
-    ASSERT_EQ(result, expectation); /**< Case 3 */
+    ASSERT_EQ(result, expectation); /** Case 3 */
 
     expectation = json::array();
     for (int i = 0; i < 4; i++) {
@@ -183,27 +195,30 @@ TEST_F(UtilTest, arrayFromVector) {
                                   {"31",  "12"},
                               });
     }
-    ASSERT_EQ(Util::arrayFromVector<MockObject*>(mockList, {"1", "31"}), expectation); /**< Case 4 */
+    ASSERT_EQ(Util::arrayFromVector<MockObject*>(mockList, {"1", "31"}), expectation); /** Case 4 */
 
     expectation = json::array();
     for (int i = 0; i < 4; i++) {
         expectation.push_back(json::object());
     }
-    ASSERT_EQ(Util::arrayFromVector<MockObject*>(mockList, {}), expectation); /**< Case 5 */
+    ASSERT_EQ(Util::arrayFromVector<MockObject*>(mockList, {}), expectation); /** Case 5 */
 
-    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"11", "31", "keya", "extra"}), json::other_error);     /**< Case 6 */
-    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya", "extra", "e231"}), json::other_error);     /**< Case 7 */
-    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya","b", "extra"}), json::other_error);     /**< Case 8 */
+    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"11", "31", "keya", "extra"}), json::other_error);     /** Case 6 */
+    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya", "extra", "e231"}), json::other_error);     /** Case 7 */
+    EXPECT_THROW(Util::arrayFromVector<MockObject*>(mockList, {"1", "31", "keya","b", "extra"}), json::other_error);     /** Case 8 */
     for (MockObject* mock: mockList) {
         delete mock;
     }
 }
 
 /**
+ * @fn TEST_F(UtilTest, checkLogin)
  * @brief TEST_F Tests Util::checkLogin() Helper test function to ensure log in actually works.
+ *
  * Called by many POST request test functions.
  * Validity of user JSON objects  are tested in model tests.
  * Validity of Username, Password asserted on front-end.
+ *
  * 4 Test Cases:
  * 1. Invalid POST data (no username & password).
  * 2. Valid data, Username not found in DB.
@@ -218,14 +233,14 @@ TEST_F(UtilTest, checkLogin) {
     MockModelClass model;
     {
         InSequence s;
-        /**< Case 1 */
+        /** Case 1 */
         data = {
             {"username",  "anfann12"},
             {"passwor12d", "password~*?"}
         };
-        EXPECT_THROW(Util::checkLogin(data, &model), json::other_error); /**< Case 1 */
+        EXPECT_THROW(Util::checkLogin(data, &model), json::other_error); /** Case 1 */
 
-        /**< Case 2 */
+        /** Case 2 */
         data = {
             {"username",  "anfann12"},
             {"password", "password~*?"}
@@ -234,34 +249,36 @@ TEST_F(UtilTest, checkLogin) {
                 .WillOnce(testing::Throw(ModelException("Can't find User")))
                 .RetiresOnSaturation();
 
-        EXPECT_THROW(Util::checkLogin(data, &model), ModelException); /**< Case 2 */
+        EXPECT_THROW(Util::checkLogin(data, &model), ModelException); /** Case 2 */
 
-        /**< Case 3 */
+        /** Case 3 */
         User user(data["username"],"email@example.com", "realpassword", 12);
         EXPECT_CALL(model, getUserObject((string) data["username"]))
                 .WillOnce(testing::Return(user))
                 .RetiresOnSaturation();
-        EXPECT_THROW(Util::checkLogin(data, &model), BackendException); /**< Case 3 */
+        EXPECT_THROW(Util::checkLogin(data, &model), BackendException); /** Case 3 */
 
-        /**< Case 4 */
+        /** Case 4 */
         data["password"] = "realpassword";
         EXPECT_CALL(model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillOnce(testing::Return(user))
                 .RetiresOnSaturation();
 
-        ASSERT_EQ(user, Util::checkLogin(data, &model)); /**< Case 4 */
+        ASSERT_EQ(user, Util::checkLogin(data, &model)); /** Case 4 */
     }
 }
 
 /**
+ * @fn TEST_F(UtilTest, successJSON)
  * @brief TEST_F Tests Util::getSuccessJsonStr()
+ *
  * 2 Test Cases:
  * 1. Empty string message
  * 2. Non-empty string message
  */
 TEST_F(UtilTest, successJSON) {
-    /**< Case 1 */
+    /** Case 1 */
     string message = "";
     json j2 = {
         {"success", true},
@@ -269,7 +286,7 @@ TEST_F(UtilTest, successJSON) {
     };
     ASSERT_EQ(json::parse(Util::getSuccessJsonStr(message)), j2);
 
-    /**< Case 2 */
+    /** Case 2 */
     message = "hi";
     json j1 = {
         {"success", true},
@@ -279,13 +296,15 @@ TEST_F(UtilTest, successJSON) {
 }
 
 /**
+ * @fn TEST_F(UtilTest, failureJSON)
  * @brief TEST_F Tests Util::getFailureJsonStr()
+ *
  * 2 Test Cases:
  * 1. Empty string message
  * 2. Non-empty string message
  */
 TEST_F(UtilTest, failureJSON) {
-    /**< Case 1 */
+    /** Case 1 */
     string message = "";
     json j2 = {
         {"success", false},
@@ -293,7 +312,7 @@ TEST_F(UtilTest, failureJSON) {
     };
     ASSERT_EQ(json::parse(Util::getFailureJsonStr(message)), j2);
 
-    /**< Case 2 */
+    /** Case 2 */
     message = "hi";
     json j1 = {
         {"success", false},
@@ -303,8 +322,10 @@ TEST_F(UtilTest, failureJSON) {
 }
 
 /**
+ * @fn TEST_F(UtilTest, getCollectionEditJSON)
  * @brief TEST_F Tests Util::getCollectionEditJSON()
- * 1 Test Case
+ *
+ * 1 Test Case:
  * 1. Simple Edit::edit and Edit::pending
  */
 TEST_F(UtilTest, getCollectionEditJSON) {
@@ -314,6 +335,7 @@ TEST_F(UtilTest, getCollectionEditJSON) {
     Edit<Collection> edit(collection, Edit<Collection>::edit, user, Edit<Collection>::pending, 2);
     json expectation = {
         {"id", 2},
+        {"time", edit.getTime()},
         {"type", "Edit"},
         {"category", "collection"},
         {"approvalStatus","Under review"},
@@ -334,13 +356,15 @@ TEST_F(UtilTest, getCollectionEditJSON) {
         }
     };
     json result = Util::getCollectionEditJSON(edit);
-    ASSERT_EQ(result, expectation); /**< Case 1 */
+    ASSERT_EQ(result, expectation); /** Case 1 */
 }
 
 
 /**
+ * @fn TEST_F(UtilTest, getArtifactEditJSON)
  * @brief TEST_F Tests Util::getArtifactEditJSON()
- * 3 Test Case
+ *
+ * 3 Test Case:
  * 1. Empty collection list, Edit::add and Edit::approve type.
  * 2. Singleton collection list, Edit::del and Edit::reject type.
  * 3. Non-singleton collection list, Edit::edit and Edit::approve type.
@@ -355,6 +379,7 @@ TEST_F(UtilTest, getArtifactEditJSON) {
     Edit<Artifact> edit1(artifact, Edit<Artifact>::add, user, {}, Edit<Artifact>::approve, 1);
     json expectation = {
         {"id", 1},
+        {"time", edit1.getTime()},
         {"type", "Addition"},
         {"category", "artifact"},
         {"approvalStatus","Approved"},
@@ -378,11 +403,12 @@ TEST_F(UtilTest, getArtifactEditJSON) {
     json result = Util::getArtifactEditJSON(edit1);
     cout<<result.dump(2)<<endl;
     cout<<expectation.dump(2)<<endl;
-    ASSERT_EQ(result, expectation); /**< Case 1 */
+    ASSERT_EQ(result, expectation); /** Case 1 */
 
     Edit<Artifact> edit2(artifact, Edit<Artifact>::del, user, collectionList, Edit<Artifact>::reject, 2);
     expectation = {
         {"id", 2},
+        {"time", edit2.getTime()},
         {"type", "Deletion"},
         {"category", "artifact"},
         {"approvalStatus","Rejected"},
@@ -411,12 +437,13 @@ TEST_F(UtilTest, getArtifactEditJSON) {
     result = Util::getArtifactEditJSON(edit2);
     cout<<result.dump(2)<<endl;
     cout<<expectation.dump(2)<<endl;
-    ASSERT_EQ(result, expectation); /**< Case 2 */
+    ASSERT_EQ(result, expectation); /** Case 2 */
 
     collectionList.push_back(Collection("collectionName", "collectionDescription", "collectionIntroduction", "collectionImage", museum, 32));
     Edit<Artifact> edit3(artifact, Edit<Artifact>::edit, user, collectionList, Edit<Artifact>::approve, 3);
     expectation = {
         {"id", 3},
+        {"time", edit3.getTime()},
         {"type", "Edit"},
         {"category", "artifact"},
         {"approvalStatus","Approved"},
@@ -448,7 +475,7 @@ TEST_F(UtilTest, getArtifactEditJSON) {
         }
     };
     result = Util::getArtifactEditJSON(edit3);
-    ASSERT_EQ(result, expectation); /**< Case 3 */
+    ASSERT_EQ(result, expectation); /** Case 3 */
 
 }
 

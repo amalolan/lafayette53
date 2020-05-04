@@ -228,8 +228,7 @@ inline bool operator==(const Edit<T>& lhs, const Edit<T>& rhs) {
                 && (lhs.getStatus() == rhs.getStatus())
                 && (lhs.getEditor() == rhs.getEditor())
                 && (lhs.compareList(rhs.getCollectionList()))
-                && (rhs.compareList(lhs.getCollectionList()))
-                && (lhs.getTime() == rhs.getTime()));
+                && (rhs.compareList(lhs.getCollectionList())));
 }
 
 template <class T>
@@ -240,7 +239,6 @@ inline bool operator!=(const Edit<T>& lhs, const Edit<T>& rhs) {
             || (lhs.getStatus() != rhs.getStatus())
             || (lhs.getEditor() != rhs.getEditor())
             || !(lhs.compareList(rhs.getCollectionList()))
-            || !(rhs.compareList(lhs.getCollectionList()))
-            || (lhs.getTime() == rhs.getTime()));
+            || !(rhs.compareList(lhs.getCollectionList())));
 }
 #endif // EDIT_H

@@ -168,7 +168,6 @@ void Handler::returnMuseumList(http_request message){
         ucout  << s <<  std::endl;
         json output = Util::arrayFromVector<Museum>(this->model->getMuseumList(),
         {"id", "name", "description", "introduction", "userID", "image"});
-        //    json museumList = this->model->getMuseumListJSON();
         message.reply(status_codes::OK, output.dump(4));
     }).then([=] (pplx::task<void> t) {
         this->handle_error(message, t, "Museum list could not be found");

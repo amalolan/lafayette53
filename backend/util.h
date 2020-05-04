@@ -172,6 +172,7 @@ public:
      * @return the JSON representation
      * {
      *    id: int,
+     *    time: string,
      *    type: string ["Addition", "Edit", or"Deletion"],
      *    category: string "artifact",
      *    approvalStatus: string ["Approved", "Denied", "Under Review"],
@@ -195,7 +196,7 @@ public:
      * }
      */
     static json getArtifactEditJSON(Edit<Artifact> edit) {
-        json output = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "approvalStatus"});
+        json output = Util::getObjectWithKeys<Edit<Artifact>>(edit, {"id", "type", "category", "approvalStatus", "time"});
         output["artifact"]["artifact"] =  Util::getObjectWithKeys<Artifact>(edit.getObject(),
                                                 {"id", "name", "description", "introduction", "image"});
 
@@ -213,6 +214,7 @@ public:
      * @return the JSON representation
      * {
      *    id: int,
+     *    time: string,
      *    type: string ["Addition", "Edit", or"Deletion"],
      *    category: string "collection",
      *    approvalStatus: string ["Approved", "Rejected", "Under Review"],
@@ -235,7 +237,7 @@ public:
      * }
      */
     static json getCollectionEditJSON(Edit<Collection> edit) {
-        json output = Util::getObjectWithKeys<Edit<Collection>>(edit, {"id", "type", "category", "approvalStatus"});
+        json output = Util::getObjectWithKeys<Edit<Collection>>(edit, {"id", "type", "category", "approvalStatus", "time"});
         output["collection"]["collection"] =  Util::getObjectWithKeys<Collection>(edit.getObject(),
                                                 {"id", "name", "description", "introduction", "image"});
 

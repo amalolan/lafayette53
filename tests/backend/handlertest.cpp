@@ -1,3 +1,9 @@
+/**
+ * @file handlertest.cpp
+ *
+ * All Google Test Cases of HandlerTest are documented here. Each test fixture has details of every test case as a list.
+ *
+ */
 #include "handlertest.h"
 
 pplx::task<http_response> HandlerTest::make_task_request(method mtd, string uri, json const & jvalue)
@@ -29,6 +35,7 @@ Response HandlerTest::requestTask(method mtd, string uri, json const & jvalue) {
 }
 
 /**
+ * @fn serverRunning
  * @brief TEST_F Checks if the server has started running.
  */
 TEST_F(HandlerTest, serverRunning) {
@@ -39,6 +46,7 @@ TEST_F(HandlerTest, serverRunning) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, handlePUTDEL)
  * @brief TEST_F Tests DEL and PUT requests for erroneous URL inputs to ensure server doesn't break
  * Since no PUT or DEL requests are implemented, this should always return null.
  */
@@ -98,6 +106,7 @@ TEST_F(HandlerTest, handlePUTDEL)  {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, handleGET)
  * @brief TEST_F Tests GET requests for erroneous URL inputs to ensure server doesn't break
  * Front-end handles 404 errors. Backend merely returns the same index.html file.
  * The test ensures the html file is returned.
@@ -192,8 +201,10 @@ TEST_F(HandlerTest, handleGET)  {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, handlePOST)
  * @brief TEST_F Tests POST requests for erroneous URL inputs to ensure server doesn't break
  * Server must return a 404 message, with a dumped JSON object
+ *
  * {
  *  success: false,
  *  message: [string]
@@ -257,8 +268,10 @@ TEST_F(HandlerTest, handlePOST) {
 //amalolan
 
 /**
+ * @fn TEST_F(HandlerTest, returnMuseumList)
  * @brief TEST_F Tests HTTP GET request at /request/museum-list
  * Validity of  Museum JSON objects are tested in model tests.
+ *
  * 3 test cases:
  * 1. Model has an exception
  * 2. empty list
@@ -274,7 +287,7 @@ TEST_F(HandlerTest, returnMuseumList) {
     {
         InSequence s;
 
-        /**< Case 1 */
+        /** Case 1 */
         EXPECT_CALL(this->model, getMuseumList())
                 .WillOnce(Throw(ModelException("Museum  list not working")))
                 .RetiresOnSaturation();
@@ -285,7 +298,7 @@ TEST_F(HandlerTest, returnMuseumList) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
 
-        /**< Case 2 */
+        /** Case 2 */
         expectation = json::array();
         EXPECT_CALL(this->model, getMuseumList())
                 .WillOnce(Return(museumList))
@@ -297,7 +310,7 @@ TEST_F(HandlerTest, returnMuseumList) {
         ASSERT_EQ(json::parse(r.content),  expectation);
 
 
-        /**< Case Expect the json list of museums. Can use Util since it is already tested. */
+        /** Case Expect the json list of museums. Can use Util since it is already tested. */
         museumList = {
             Museum("1", "1desc", User("malo", "malo@", "k21")),
             Museum("2", "lsf", "21", "", User("2", "", "")),
@@ -318,8 +331,10 @@ TEST_F(HandlerTest, returnMuseumList) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, returnMuseumByID)
  * @brief TEST_F Tests HTTP GET request at /request/museum/[id]
  * No ID is tested in handleGET() tests. Validity of collection JSON objects are tested in model tests.
+ *
  * 4 Test Cases:
  * 1. Invalid IDs (string and greater than INT_MAX)
  * 2. Valid ID, Not found in DB
@@ -333,7 +348,7 @@ TEST_F(HandlerTest, returnMuseumByID) {
     Response r;
     json expectation;
 
-    /**< Case 1 */
+    /** Case 1 */
     id = "AB1";
     usleep(sleeptime);
     r = this->requestTask(methods::GET,  url + id);
@@ -347,7 +362,7 @@ TEST_F(HandlerTest, returnMuseumByID) {
     ASSERT_FALSE(json::parse(r.content)["success"]);
     {
         InSequence s;
-        /**< Case 2 */
+        /** Case 2 */
         id = to_string(INT_MAX);
         EXPECT_CALL(this->model, getMuseumObject(stoi(id)))
                 .WillOnce(testing::Throw(ModelException("Can't find Museum")))
@@ -362,7 +377,7 @@ TEST_F(HandlerTest, returnMuseumByID) {
                       User("username", "email", "password", 1), stoi(id));
 
 
-        /**< Case 3 */
+        /** Case 3 */
         vector<Collection> collectionList;
         expectation =  {
             {"museum", museum.toJSON()},
@@ -381,7 +396,7 @@ TEST_F(HandlerTest, returnMuseumByID) {
         ASSERT_EQ(json::parse(r.content),  expectation);
 
 
-        /**< Case 4 */
+        /** Case 4 */
         collectionList.push_back(Collection("collectionName", "collectionDescription",
                                             "collectionIntroduction", "collectionImage",
                                             museum, 1));
@@ -405,8 +420,10 @@ TEST_F(HandlerTest, returnMuseumByID) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, returnCollectionByID)
  * @brief TEST_F Tests HTTP GET request at /request/collection/[id]
  * No ID is tested in handleGET() tests. Validity of collection JSON objects are tested in model tests.
+ *
  * 4 Test Cases:
  * 1. Invalid IDs (string and greater than INT_MAX)
  * 2. Valid ID, Not found in DB
@@ -420,7 +437,7 @@ TEST_F(HandlerTest, returnCollectionByID) {
     Response r;
     json expectation;
 
-    /**< Case 1 */
+    /** Case 1 */
     id = "AB1";
     usleep(sleeptime);
     r = this->requestTask(methods::GET,  url + id);
@@ -434,7 +451,7 @@ TEST_F(HandlerTest, returnCollectionByID) {
     ASSERT_FALSE(json::parse(r.content)["success"]);
     {
         InSequence s;
-        /**< Case 2 */
+        /** Case 2 */
         id = to_string(INT_MAX);
         EXPECT_CALL(this->model, getCollectionObject(stoi(id)))
                 .WillOnce(testing::Throw(ModelException("Can't find Collection")))
@@ -451,7 +468,7 @@ TEST_F(HandlerTest, returnCollectionByID) {
                               "collectionIntroduction", "collectionImage",
                               museum, stoi(id));
 
-        /**< Case 3 */
+        /** Case 3 */
         vector<Artifact> artifactList;
         expectation =  {
             {"collection", Util::getObjectWithKeys<Collection>(collection,
@@ -472,7 +489,7 @@ TEST_F(HandlerTest, returnCollectionByID) {
         ASSERT_EQ(json::parse(r.content),  expectation);
 
 
-        /**< Case 4 */
+        /** Case 4 */
         artifactList.push_back(Artifact("artifactName", "artifactDescription",
                                         "artifactIntroduction", "artifactImage",
                                         museum, 3));
@@ -496,8 +513,10 @@ TEST_F(HandlerTest, returnCollectionByID) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, returnArtifactByID)
  * @brief TEST_F Tests HTTP GET request at /request/artifact/[id]
  * No ID is tested in handleGET() tests. Validity of artifact JSON objects are tested in model tests.
+ *
  * 4 Test Cases:
  * 1. Invalid IDs (string and greater than INT_MAX)
  * 2. Valid ID, Not found in DB
@@ -511,7 +530,7 @@ TEST_F(HandlerTest, returnArtifactByID) {
     Response r;
     json expectation;
 
-    /**< Case 1 */
+    /** Case 1 */
     id = "AB1";
     usleep(sleeptime);
     r = this->requestTask(methods::GET,  url + id);
@@ -525,7 +544,7 @@ TEST_F(HandlerTest, returnArtifactByID) {
     ASSERT_FALSE(json::parse(r.content)["success"]);
     {
         InSequence s;
-        /**< Case 2 */
+        /** Case 2 */
         id = to_string(INT_MAX);
         EXPECT_CALL(this->model, getArtifact(stoi(id)))
                 .WillOnce(testing::Throw(ModelException("Can't find Artifact")))
@@ -542,7 +561,7 @@ TEST_F(HandlerTest, returnArtifactByID) {
                           "artifactIntroduction", "artifactImage",
                           museum, stoi(id));
 
-        /**< Case 3 */
+        /** Case 3 */
         vector<Collection> collectionList;
         expectation =  {
             {"artifact", Util::getObjectWithKeys<Artifact>(artifact,
@@ -568,7 +587,7 @@ TEST_F(HandlerTest, returnArtifactByID) {
         ASSERT_EQ(json::parse(r.content),  expectation);
 
 
-        /**< Case 4 */
+        /** Case 4 */
         collectionList.push_back(Collection("2collectionName", "2collectionDescription",
                                             "2collectionIntroduction", "2collectionImage",
                                             museum, 321));
@@ -594,8 +613,10 @@ TEST_F(HandlerTest, returnArtifactByID) {
 
 
 /**
+ * @fn TEST_F(HandlerTest, returnEditByID)
  * @brief TEST_F Tests HTTP GET request at /request/edit/[id]
  * No ID is tested in handleGET() tests. Validity of artifact JSON objects are tested in model tests.
+ *
  * 4 Test Cases:
  * 1. Invalid IDs (string and greater than INT_MAX).
  * 2. Valid ID, Edit<Artifact> and Edit<Collection> Object Not found in DB.
@@ -610,7 +631,7 @@ TEST_F(HandlerTest, returnEditByID) {
     Response r;
     json expectation;
 
-    /**< Case 1 */
+    /** Case 1 */
     id = "AB1";
     usleep(sleeptime);
     r = this->requestTask(methods::GET,  url + id);
@@ -624,7 +645,7 @@ TEST_F(HandlerTest, returnEditByID) {
     ASSERT_FALSE(json::parse(r.content)["success"]);
     {
         InSequence s;
-        /**< Case 2 */
+        /** Case 2 */
         id = to_string(INT_MAX);
         EXPECT_CALL(this->model, getEditArtifactObject(stoi(id)))
                 .WillOnce(testing::Throw(ModelException("Can't find Edit Artifact")))
@@ -646,7 +667,7 @@ TEST_F(HandlerTest, returnEditByID) {
         Collection collection("1collectionName", "1collectionDescription",
                               "1collectionIntroduction", "1collectionImage",
                               museum, 12211);
-        /**< Case 3 */
+        /** Case 3 */
         vector<Collection> collectionList =  {collection};
         Edit<Artifact> edit1(artifact, 0, User("a", "b@b.com", "pass"), collectionList, 1,  2134);
         expectation =  Util::getArtifactEditJSON(edit1);
@@ -661,7 +682,7 @@ TEST_F(HandlerTest, returnEditByID) {
         ASSERT_EQ(json::parse(r.content),  expectation);
 
 
-        /**< Case 4 */
+        /** Case 4 */
         collectionList.push_back(Collection("2collectionName", "2collectionDescription",
                                             "2collectionIntroduction", "2collectionImage",
                                             museum, 321));
@@ -680,7 +701,7 @@ TEST_F(HandlerTest, returnEditByID) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_EQ(json::parse(r.content),  expectation);
 
-        /**< Case 5 */
+        /** Case 5 */
         Edit<Collection> edit3(collection, 1, User("12a", "er@13", "af"), -1, 12);
         expectation =  Util::getCollectionEditJSON(edit3);
         EXPECT_CALL(this->model, getEditArtifactObject(stoi(id)))
@@ -703,11 +724,15 @@ TEST_F(HandlerTest, returnEditByID) {
  * Called by many POST request test functions.
  * Validity of user JSON objects are tested in model tests.
  * Validity of Username, Password asserted on front-end.
+ *
  * 3/4 Test Cases for logging in:
+ *
  * <b>[0. Invalid POST object (no user object). Not here. Present in POST request tests]</b>
+ *
  * 1. Invalid POST data (no username & password).
  * 2. Valid data, Username not found in DB.
  * 3. Valid data, Username Found, Password mismatch.
+ *
  * <b>[4. Valid data, Username Found, Password match. Not here. Present POST request tests]</b>
  * @param url The POST url to perform the login test on.
  * @param data The data to send with the POST url. data["user"] must be a valid object of exactly
@@ -722,7 +747,7 @@ void HandlerTest::loginTest(string url, json data) {
     Response r;
     {
         InSequence s;
-        /**< Case 1 */
+        /** Case 1 */
         data["user"] = {
         {"username",  username},
         {"passwefd", "password~*?"}
@@ -733,12 +758,12 @@ void HandlerTest::loginTest(string url, json data) {
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 2 */
+        /** Case 2 */
         data["user"] = {
         {"username",  username},
         {"password", "password~*?"}
     };
-        /**< Case 1 */
+        /** Case 1 */
         EXPECT_CALL(this->model, getUserObject(username))
                 .WillOnce(testing::Throw(ModelException("Can't find User")))
                 .RetiresOnSaturation();
@@ -748,7 +773,7 @@ void HandlerTest::loginTest(string url, json data) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 3 */
+        /** Case 3 */
         EXPECT_CALL(this->model, getUserObject(username))
                 .WillOnce(Return(user))
                 .RetiresOnSaturation();
@@ -770,7 +795,9 @@ void HandlerTest::loginTest(string url, json data) {
  * }
  * Validity of user JSON objects are tested in model tests.
  * Validity of Username, Password asserted on front-end.
+ *
  * 3/4 Test Cases for logging in:
+ *
  * 0. Invalid POST object (no user object).
  * 1. Invalid POST data (no username & password).
  * 2. Valid data, Username not found in DB.
@@ -784,7 +811,7 @@ void HandlerTest::loginTest(string url) {
     json data;
     {
         InSequence s;
-        /**< Case 0 */
+        /** Case 0 */
         data = json::object();
 
         usleep(sleeptime);
@@ -797,19 +824,19 @@ void HandlerTest::loginTest(string url) {
             {"password12", "Bb"},
         };
 
-        /**< Case 2 */
+        /** Case 2 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 3- */
+        /** Cases 3- */
         data = {
             {"username", "test1234"},
             {"password", "pass"},
         };
 
-        /**< Case 3 */
+        /** Case 3 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .WillOnce(Throw(ModelException("User not in DB")))
                 .RetiresOnSaturation();
@@ -821,7 +848,7 @@ void HandlerTest::loginTest(string url) {
 
         User user(data["username"], "email@example.com", "realpassword", 21);
 
-        /**< Case 4 */
+        /** Case 4 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .WillOnce(Return(user))
                 .RetiresOnSaturation();
@@ -834,10 +861,12 @@ void HandlerTest::loginTest(string url) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, validateLogin)
  * @brief TEST_F Tests HTTP POST request at /request/login
  * @see HandlerTest::loginTest()
  * Validity of user JSON objects are tested in model tests.
  * Validity of Username, Password asserted on front-end form validation.
+ *
  * 5 Test Cases for logging in:
  * 1. Empty POST data
  * 2. Invalid POST data (no username & password).
@@ -855,9 +884,9 @@ TEST_F(HandlerTest, validateLogin) {
         {"password", "realpassword"}
     };
 
-    /**< Cases 1-4*/
+    /** Cases 1-4*/
     this->loginTest(url);
-    /**< Case 4*/
+    /** Case 4*/
     User user(data["username"], "email@example.com", "realpassword", 21);
     EXPECT_CALL(this->model, getUserObject((string) data["username"]))
             .Times(testing::AtLeast(1))
@@ -872,8 +901,10 @@ TEST_F(HandlerTest, validateLogin) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, addUser)
  * @brief TEST_F Tests HTTP POST request at /request/register
  * Validity of Username, Password, email asserted on front-end form validation.
+ *
  * 4 Test Cases:
  * 1. Invalid POST data (no data).
  * 2. Invalid POST data (no username/password/email).
@@ -888,7 +919,7 @@ TEST_F(HandlerTest, addUser) {
 
     {
         InSequence s;
-        /**< Case 1 */
+        /** Case 1 */
         data = json::object();
 
         usleep(sleeptime);
@@ -902,13 +933,13 @@ TEST_F(HandlerTest, addUser) {
             {"email12121", 12}
         };
 
-        /**< Case 2 */
+        /** Case 2 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 3- */
+        /** Cases 3- */
         data = {
             {"username", "test1234"},
             {"password", "pass"},
@@ -917,7 +948,7 @@ TEST_F(HandlerTest, addUser) {
         User user(data["username"], data["email"], data["password"], -1);
 
 
-        /**< Case 3 */
+        /** Case 3 */
         EXPECT_CALL(this->model, saveUserToDB(user))
                 .WillOnce(Throw(ModelException("User in DB")))
                 .RetiresOnSaturation();
@@ -927,7 +958,7 @@ TEST_F(HandlerTest, addUser) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 4 */
+        /** Case 4 */
         EXPECT_CALL(this->model, saveUserToDB(user))
                 .Times(1)
                 .RetiresOnSaturation();
@@ -941,9 +972,11 @@ TEST_F(HandlerTest, addUser) {
 
 
 /**
+ * @fn TEST_F(HandlerTest, addMuseum)
  * @brief TEST_F Tests HTTP POST request at /request/add-museum/
  * @see HandlerTest::loginTest()
  * Needs login. Tested by helper function loginTest()
+ *
  * 8 Test Cases:
  * 1. Invalid POST data (no user/museum).
  * 2. Invalid museum POST data (bad museum nested object).
@@ -960,7 +993,7 @@ TEST_F(HandlerTest, addMuseum) {
     json data;
     {
         InSequence s;
-        /**< Case 1 */
+        /** Case 1 */
         data = json::object();
 
         usleep(sleeptime);
@@ -980,13 +1013,13 @@ TEST_F(HandlerTest, addMuseum) {
              }}
         };
 
-        /**< Case 2 */
+        /** Case 2 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 3- */
+        /** Cases 3- */
         data["museum"] = {
         {"name", "museumName"},
         {"description", "museumDescription"},
@@ -994,16 +1027,16 @@ TEST_F(HandlerTest, addMuseum) {
         {"image",  ""}
     };
 
-        /**< Cases 3-5 */
+        /** Cases 3-5 */
         this->loginTest(url, data);
         cout<<"Finished loginTest"<<endl;
         User user(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
 
-        /**< Cases 6- */
+        /** Cases 6- */
         Museum m(data["museum"]["name"],data["museum"]["description"],
                 data["museum"]["introduction"], data["museum"]["image"], user);
 
-        /**< Case 6 */
+        /** Case 6 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1017,7 +1050,7 @@ TEST_F(HandlerTest, addMuseum) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 7 */
+        /** Case 7 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1035,9 +1068,11 @@ TEST_F(HandlerTest, addMuseum) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, addCollection)
  * @brief TEST_F Tests HTTP POST request at /request/add-collection/
  * @see HandlerTest::loginTest()
  * Needs login. Tested by helper function loginTest()
+ *
  * 10 Test Cases:
  * 1. Invalid POST data (no user/museum/collection).
  * 2. Invalid collection POST data (bad collection nested object).
@@ -1058,7 +1093,7 @@ TEST_F(HandlerTest, addCollection) {
 
     {
         InSequence s;
-        /**< Case 1 */
+        /** Case 1 */
         data = json::object();
 
         usleep(sleeptime);
@@ -1080,13 +1115,13 @@ TEST_F(HandlerTest, addCollection) {
              }}
         };
 
-        /**< Case 2 */
+        /** Case 2 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 3- */
+        /** Cases 3- */
         data["collection"] = {
         {"name", "colName"},
         {"description", "colDescription"},
@@ -1094,22 +1129,22 @@ TEST_F(HandlerTest, addCollection) {
         {"image",  ""}
     };
 
-        /**< Case 3 */
+        /** Case 3 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 4- */
+        /** Cases 4- */
         data["museum"] = {
         {"id", 121}
     };
 
-        /**< Cases 4-6 */
+        /** Cases 4-6 */
         this->loginTest(url, data);
         cout<<"Finished loginTest"<<endl;
     }
-    /**< Cases 7- */
+    /** Cases 7- */
     User user(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
     Museum museum("","","","", user, data["museum"]["id"]);
     Collection collection(data["collection"]["name"],data["collection"]["description"],
@@ -1121,7 +1156,7 @@ TEST_F(HandlerTest, addCollection) {
     Edit<Collection> edit(otherCollection, Edit<Collection>::add, user);
     {
         InSequence s;
-        /**< Case 7 */
+        /** Case 7 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1135,7 +1170,7 @@ TEST_F(HandlerTest, addCollection) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 8 */
+        /** Case 8 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1152,7 +1187,7 @@ TEST_F(HandlerTest, addCollection) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 9 */
+        /** Case 9 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1169,7 +1204,7 @@ TEST_F(HandlerTest, addCollection) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 10 */
+        /** Case 10 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1189,9 +1224,11 @@ TEST_F(HandlerTest, addCollection) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, editCollection)
  * @brief TEST_F Tests HTTP POST request at /request/add-collection/
  * @see HandlerTest::loginTest()
  * Needs login. Tested by helper function loginTest()
+ *
  * 11 Test Cases:
  * 1. Invalid POST data (no user/museum/collection).
  * 2. Invalid collection POST data (bad collection nested object).
@@ -1213,7 +1250,7 @@ TEST_F(HandlerTest, editCollection) {
 
     {
         InSequence s;
-        /**< Case 1 */
+        /** Case 1 */
         data = json::object();
 
         usleep(sleeptime);
@@ -1235,13 +1272,13 @@ TEST_F(HandlerTest, editCollection) {
              }}
         };
 
-        /**< Case 2 */
+        /** Case 2 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 3- */
+        /** Cases 3- */
         data["collection"] = {
         {"name", "colName"},
         {"description", "colDescription"},
@@ -1250,22 +1287,22 @@ TEST_F(HandlerTest, editCollection) {
         {"id", 123}
     };
 
-        /**< Case 3 */
+        /** Case 3 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 4- */
+        /** Cases 4- */
         data["museum"] = {
         {"id", 121}
     };
 
-        /**< Cases 4-6 */
+        /** Cases 4-6 */
         this->loginTest(url, data);
         cout<<"Finished loginTest"<<endl;
     }
-    /**< Cases 7- */
+    /** Cases 7- */
     User user(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
     Museum museum("","","","", user, data["museum"]["id"]);
     Collection collection(data["collection"]["name"],data["collection"]["description"],
@@ -1279,7 +1316,7 @@ TEST_F(HandlerTest, editCollection) {
     Edit<Collection> edit(otherCollection, Edit<Collection>::edit, user);
     {
         InSequence s;
-        /**< Case 7 */
+        /** Case 7 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1293,7 +1330,7 @@ TEST_F(HandlerTest, editCollection) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 8 */
+        /** Case 8 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1310,7 +1347,7 @@ TEST_F(HandlerTest, editCollection) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 9 */
+        /** Case 9 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1330,7 +1367,7 @@ TEST_F(HandlerTest, editCollection) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 10 */
+        /** Case 10 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1350,7 +1387,7 @@ TEST_F(HandlerTest, editCollection) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 13 */
+        /** Case 13 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1373,9 +1410,11 @@ TEST_F(HandlerTest, editCollection) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, addArtifact)
  * @brief TEST_F Tests HTTP POST /request/add-artifact
  * @see HandlerTest::loginTest()
  * Needs login. Tested by helper function loginTest()
+ *
  * 12 Test Cases:
  * 1. Invalid POST data (no user/museum/artifact).
  * 2. Invalid artifact POST data (bad artifact nested object).
@@ -1395,10 +1434,10 @@ TEST_F(HandlerTest, addArtifact) {
     string url = "/request/add-artifact";
     Response r;
     json data;
-    /**< Cases 1-6 */
+    /** Cases 1-6 */
     {
         InSequence s;
-        /**< Case 1 */
+        /** Case 1 */
         data = json::object();
 
         usleep(sleeptime);
@@ -1420,13 +1459,13 @@ TEST_F(HandlerTest, addArtifact) {
              }}
         };
 
-        /**< Case 2 */
+        /** Case 2 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 3- */
+        /** Cases 3- */
         data["artifact"] = {
         {"name", "aName"},
         {"description", "aDescription"},
@@ -1435,7 +1474,7 @@ TEST_F(HandlerTest, addArtifact) {
         {"id", 32},
     };
 
-        /**< Case 3 */
+        /** Case 3 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
@@ -1443,16 +1482,16 @@ TEST_F(HandlerTest, addArtifact) {
         usleep(sleeptime);
 
 
-        /**< Cases 4- */
+        /** Cases 4- */
         data["museum"] = {
         {"id", 121}
     };
 
-        /**< Cases 4-6 */
+        /** Cases 4-6 */
         this->loginTest(url, data);
         cout<<"Finished loginTest"<<endl;
     }
-    /**< Cases 7- */
+    /** Cases 7- */
     User user(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
     Museum museum("","","","", user, data["museum"]["id"]);
     Artifact artifact(data["artifact"]["name"], data["artifact"]["description"], data["artifact"]["introduction"],
@@ -1465,7 +1504,7 @@ TEST_F(HandlerTest, addArtifact) {
 
     {
         InSequence s;
-        /**< Case 7 */
+        /** Case 7 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1479,7 +1518,7 @@ TEST_F(HandlerTest, addArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 8 */
+        /** Case 8 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1493,7 +1532,7 @@ TEST_F(HandlerTest, addArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 9 */
+        /** Case 9 */
         data["collection"]  = json::array({132,3144,76543});
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
@@ -1511,7 +1550,7 @@ TEST_F(HandlerTest, addArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 10 */
+        /** Case 10 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1532,7 +1571,7 @@ TEST_F(HandlerTest, addArtifact) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
         cout<<"Reached Curator add"<<endl;
-        /**< Case 11 */
+        /** Case 11 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1555,7 +1594,7 @@ TEST_F(HandlerTest, addArtifact) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 12  */
+        /** Case 12  */
 
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
@@ -1579,9 +1618,11 @@ TEST_F(HandlerTest, addArtifact) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, editArtifact)
  * @brief TEST_F Tests HTTP POST /request/edit-artifact
  * @see HandlerTest::loginTest()
  * Needs login. Tested by helper function loginTest()
+ *
  * 12 Test Cases:
  * 1. Invalid POST data (no user/museum/artifact).
  * 2. Invalid artifact POST data (bad artifact nested object).
@@ -1602,10 +1643,10 @@ TEST_F(HandlerTest, editArtifact) {
     string url = "/request/edit-artifact";
     Response r;
     json data;
-    /**< Cases 1-6 */
+    /** Cases 1-6 */
     {
         InSequence s;
-        /**< Case 1 */
+        /** Case 1 */
         data = json::object();
 
         usleep(sleeptime);
@@ -1627,13 +1668,13 @@ TEST_F(HandlerTest, editArtifact) {
              }}
         };
 
-        /**< Case 2 */
+        /** Case 2 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 3- */
+        /** Cases 3- */
         data["artifact"] = {
         {"name", "aName"},
         {"description", "aDescription"},
@@ -1642,24 +1683,24 @@ TEST_F(HandlerTest, editArtifact) {
         {"id", 32},
     };
 
-        /**< Case 3 */
+        /** Case 3 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
 
-        /**< Cases 4- */
+        /** Cases 4- */
         data["museum"] = {
         {"id", 121}
     };
 
-        /**< Cases 4-6 */
+        /** Cases 4-6 */
         this->loginTest(url, data);
         cout<<"Finished loginTest"<<endl;
     }
 
-    /**< Cases 7- */
+    /** Cases 7- */
     User user(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
     Museum museum("","","","", user, data["museum"]["id"]);
     Artifact artifact(data["artifact"]["name"], data["artifact"]["description"], data["artifact"]["introduction"],
@@ -1672,7 +1713,7 @@ TEST_F(HandlerTest, editArtifact) {
     {Collection("", "", otherMuseum), Collection("", "", otherMuseum), Collection("", "", otherMuseum)});
     {
         InSequence s;
-        /**< Case 7 */
+        /** Case 7 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1687,7 +1728,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
 
-        /**< Case 8 */
+        /** Case 8 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1701,7 +1742,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 9 */
+        /** Case 9 */
         data["collection"]  = json::array({132,3144,76543});
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
@@ -1719,7 +1760,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 10 */
+        /** Case 10 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1739,7 +1780,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 11 */
+        /** Case 11 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1763,7 +1804,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 12 */
+        /** Case 12 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1792,7 +1833,7 @@ TEST_F(HandlerTest, editArtifact) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 13 */
+        /** Case 13 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -1818,9 +1859,11 @@ TEST_F(HandlerTest, editArtifact) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, reviewEdit)
  * @brief TEST_F Tests HTTP POST /request/delete-museum
  * @see HandlerTest::loginTest()
  * Needs login. Tested by helper function loginTest()
+ *
  * 19 Test Cases:
  * 1. Invalid POST data (no user/editId/category/action).
  * 2. Invalid category POST data key.
@@ -1847,10 +1890,10 @@ TEST_F(HandlerTest, reviewEdit) {
     string url = "/request/review-edit";
     Response r;
     json data;
-    /**< Cases 1-6 */
+    /** Cases 1-6 */
     {
         InSequence s;
-        /**< Case 1 */
+        /** Case 1 */
         data = json::object();
 
         usleep(sleeptime);
@@ -1868,21 +1911,21 @@ TEST_F(HandlerTest, reviewEdit) {
              }}
         };
 
-        /**< Case 2 */
+        /** Case 2 */
         usleep(sleeptime);
         r = this->requestTask(methods::POST, url, data);
         ASSERT_EQ(r.status, status_codes::InternalError);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Cases 3- */
+        /** Cases 3- */
         data["category"] = "artifact";
 
-        /**< Cases 3-5 */
+        /** Cases 3-5 */
         this->loginTest(url, data);
         cout<<"Finished loginTest"<<endl;
     }
 
-    /**< Cases 6- */
+    /** Cases 6- */
     User curator(data["user"]["username"], "email@example.com", data["user"]["password"], 21);
     User user(data["user"]["username"], "user@example.com", data["user"]["password"], 22423);
     Museum otherMuseum("","","","", curator, 653);
@@ -1933,7 +1976,7 @@ TEST_F(HandlerTest, reviewEdit) {
     deleteCollectionApproved.approveEdit();
     {
         InSequence s;
-        /**< Case 6 */
+        /** Case 6 */
         data["category"] = "muse32um";
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
@@ -1946,7 +1989,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
 
-        /**< Case 7 */
+        /** Case 7 */
         data["category"] = "museum";
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
@@ -1959,7 +2002,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
 
-        /**< Case 8 */
+        /** Case 8 */
         data["category"] = "collection";
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
@@ -1975,7 +2018,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
 
-        /**< Case 9 */
+        /** Case 9 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(curator))
@@ -1990,7 +2033,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
 
-        /**< Case 10 */
+        /** Case 10 */
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -2005,7 +2048,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
         sleeptime  = 2000;
-        /**< Case 11 */
+        /** Case 11 */
         data["category"] = "artifact";
         data["action"] = false;
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -2024,7 +2067,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 12 */
+        /** Case 12 */
         data["category"] = "artifact";
         data["action"] = false;
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -2043,7 +2086,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 13 */
+        /** Case 13 */
         data["category"] = "collection";
         data["action"] = false;
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -2062,7 +2105,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 14 */
+        /** Case 14 */
         data["category"] = "artifact";
         data["action"] = true;
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -2081,7 +2124,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 15 */
+        /** Case 15 */
         data["category"] = "artifact";
         data["action"] = true;
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -2100,7 +2143,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 16 */
+        /** Case 16 */
         data["category"] = "artifact";
         data["action"] = true;
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -2120,7 +2163,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
 
-        /**< Case 17 */
+        /** Case 17 */
         data["category"] = "collection";
         data["action"] = true;
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -2139,7 +2182,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 18 */
+        /** Case 18 */
         data["category"] = "collection";
         data["action"] = true;
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -2158,7 +2201,7 @@ TEST_F(HandlerTest, reviewEdit) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 19 */
+        /** Case 19 */
         data["category"] = "collection";
         data["action"] = true;
         EXPECT_CALL(this->model, getUserObject((string) data["user"]["username"]))
@@ -2183,8 +2226,10 @@ TEST_F(HandlerTest, reviewEdit) {
 
 
 /**
+ * @fn TEST_F(HandlerTest, getUserProfile)
  * @brief TEST_F Tests HTTP POST request at /request/user-profile
  * @see HandlerTest::loginTest()
+ *
  * 4 Test Cases:
  * 1. Invalid POST data (no data).
  * 2. Invalid POST data (no username/password).
@@ -2204,9 +2249,9 @@ TEST_F(HandlerTest, getUserProfile) {
         {"password", "realpassword"}
     };
     json expectation, result;
-    /**< Cases 1-4*/
+    /** Cases 1-4*/
     this->loginTest(url);
-    /**< Cases 5-*/
+    /** Cases 5-*/
     data["password"] = "realpassword";
     vector<Museum> museumList, curatorMuseumList;
     vector<Edit<Artifact>> artifactEditsList, artifactActionsList1, artifactActionsList2;
@@ -2221,7 +2266,7 @@ TEST_F(HandlerTest, getUserProfile) {
             otherUser("other", "other@example.com", "otherPassword", 2);
         {
             InSequence s;
-            /**< Case 5 */
+            /** Case 5 */
             EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                     .Times(testing::AtLeast(1))
                     .WillRepeatedly(Return(user))
@@ -2252,7 +2297,7 @@ TEST_F(HandlerTest, getUserProfile) {
             ASSERT_EQ(r.status, status_codes::OK);
             ASSERT_EQ(result, expectation);
 
-            /**< Case 6 */
+            /** Case 6 */
             EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                     .Times(testing::AtLeast(1))
                     .WillRepeatedly(Return(user))
@@ -2288,7 +2333,7 @@ TEST_F(HandlerTest, getUserProfile) {
             ASSERT_EQ(result, expectation);
 
 
-            /**< Case 7-8 */
+            /** Case 7-8 */
             museumList = {Museum("Museum1", "", "", "", user, 1),
                           Museum("Museum2", "", "", "", otherUser, 2),
                           Museum("Museum3", "", "", "", user, 3)};
@@ -2312,7 +2357,7 @@ TEST_F(HandlerTest, getUserProfile) {
                 Edit<Collection>(Collection("col3", "", "", "", museumList.at(2)), Edit<Collection>::add, user)
             };
 
-            /**< Case 7 */
+            /** Case 7 */
             EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                     .Times(testing::AtLeast(1))
                     .WillRepeatedly(Return(user))
@@ -2341,7 +2386,7 @@ TEST_F(HandlerTest, getUserProfile) {
             EXPECT_CALL(this->model, checkHeadCurator(user))
                     .WillOnce(Return(false))
                     .RetiresOnSaturation();
-            expectation = json::parse("{  \"actionsList\": [{      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art2\"        },        \"collectionList\": [{            \"id\": -1,            \"name\": \"col13\"          },          {            \"id\": -1,            \"name\": \"col14\"          }        ],        \"museum\": {          \"id\": 1,          \"name\": \"Museum1\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"type\": \"Edit\"    },    {      \"approvalStatus\": \"Under review\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col3\"        },        \"museum\": {          \"id\": 3,          \"name\": \"Museum3\"        }      },      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"type\": \"Addition\"    },    {      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art2\"        },        \"collectionList\": [{            \"id\": -1,            \"name\": \"col13\"          },          {            \"id\": -1,            \"name\": \"col14\"          }        ],        \"museum\": {          \"id\": 1,          \"name\": \"Museum1\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"type\": \"Edit\"    },    {      \"approvalStatus\": \"Under review\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col3\"        },        \"museum\": {          \"id\": 3,          \"name\": \"Museum3\"        }      },      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"type\": \"Addition\"    }  ],  \"editsList\": [{      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art1\"        },        \"collectionList\": [{            \"id\": -1,            \"name\": \"col11\"          },          {            \"id\": -1,            \"name\": \"col12\"          }        ],        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"other\"      },      \"type\": \"Addition\"    },    {      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art2\"        },        \"collectionList\": [{          \"id\": -1,          \"name\": \"col13\"        }],        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"other\"      },      \"type\": \"Deletion\"    },    {      \"approvalStatus\": \"Under review\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col1\"        },        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"id\": -1,      \"reviewer\": {        \"username\": \"other\"      },      \"type\": \"Addition\"    },    {      \"approvalStatus\": \"Approved\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col2\"        },        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"id\": 1,      \"reviewer\": {        \"username\": \"other\"      },      \"type\": \"Edit\"    }  ],  \"museumList\": [{      \"id\": 1,      \"name\": \"Museum1\"    },    {      \"id\": 3,      \"name\": \"Museum3\"    }  ],  \"user\": {    \"email\": \"email@example.com\",    \"id\": 1,    \"username\": \"abc\"  }}");
+            expectation = json::parse("{  \"actionsList\": [{      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art2\"        },        \"collectionList\": [{            \"id\": -1,            \"name\": \"col13\"          },          {            \"id\": -1,            \"name\": \"col14\"          }        ],        \"museum\": {          \"id\": 1,          \"name\": \"Museum1\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"time\": \"\",      \"type\": \"Edit\"    },    {      \"approvalStatus\": \"Under review\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col3\"        },        \"museum\": {          \"id\": 3,          \"name\": \"Museum3\"        }      },      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"time\": \"\",      \"type\": \"Addition\"    },    {      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art2\"        },        \"collectionList\": [{            \"id\": -1,            \"name\": \"col13\"          },          {            \"id\": -1,            \"name\": \"col14\"          }        ],        \"museum\": {          \"id\": 1,          \"name\": \"Museum1\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"time\": \"\",      \"type\": \"Edit\"    },    {      \"approvalStatus\": \"Under review\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col3\"        },        \"museum\": {          \"id\": 3,          \"name\": \"Museum3\"        }      },      \"id\": -1,      \"reviewer\": {        \"username\": \"abc\"      },      \"time\": \"\",      \"type\": \"Addition\"    }  ],  \"editsList\": [{      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art1\"        },        \"collectionList\": [{            \"id\": -1,            \"name\": \"col11\"          },          {            \"id\": -1,            \"name\": \"col12\"          }        ],        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"other\"      },      \"time\": \"\",      \"type\": \"Addition\"    },    {      \"approvalStatus\": \"Under review\",      \"artifact\": {        \"artifact\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"art2\"        },        \"collectionList\": [{          \"id\": -1,          \"name\": \"col13\"        }],        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"category\": \"artifact\",      \"id\": -1,      \"reviewer\": {        \"username\": \"other\"      },      \"time\": \"\",      \"type\": \"Deletion\"    },    {      \"approvalStatus\": \"Under review\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": -1,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col1\"        },        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"id\": -1,      \"reviewer\": {        \"username\": \"other\"      },      \"time\": \"\",      \"type\": \"Addition\"    },    {      \"approvalStatus\": \"Approved\",      \"category\": \"collection\",      \"collection\": {        \"collection\": {          \"description\": \"\",          \"id\": 2,          \"image\": \"\",          \"introduction\": \"\",          \"name\": \"col2\"        },        \"museum\": {          \"id\": 2,          \"name\": \"Museum2\"        }      },      \"id\": 1,      \"reviewer\": {        \"username\": \"other\"      },      \"time\": \"\",      \"type\": \"Edit\"    }  ],  \"museumList\": [{      \"id\": 1,      \"name\": \"Museum1\"    },    {      \"id\": 3,      \"name\": \"Museum3\"    }  ],  \"user\": {    \"email\": \"email@example.com\",    \"id\": 1,    \"username\": \"abc\"  }}");
 
             usleep(sleeptime);
             r = this->requestTask(methods::POST, url, data);
@@ -2350,7 +2395,7 @@ TEST_F(HandlerTest, getUserProfile) {
             ASSERT_EQ(r.status, status_codes::OK);
             ASSERT_EQ(result, expectation);
 
-            /**< Case 8 */
+            /** Case 8 */
             EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                     .Times(testing::AtLeast(1))
                     .WillRepeatedly(Return(user))
@@ -2396,9 +2441,11 @@ TEST_F(HandlerTest, getUserProfile) {
 
 
 /**
+ * @fn TEST_F(HandlerTest, deleteMuseum)
  * @brief TEST_F Tests HTTP POST /request/delete-museum
  * @see HandlerTest::loginTest()
  * Needs login.
+ *
  * 8 Test Cases:
  * 1. Invalid POST data (no data).
  * 2. Invalid POST data (no username/password).
@@ -2418,16 +2465,16 @@ TEST_F(HandlerTest, deleteMuseum) {
         {"username", "abc"},
         {"password", "realpassword"}
     };
-    /**< Cases 1-4*/
+    /** Cases 1-4*/
     this->loginTest(url);
-    /**< Cases 4-*/
+    /** Cases 4-*/
     User user(data["username"], "email@example.com", data["password"], 21);
     Museum museum("","","","", user, stoi(museumID));
     User curator("curator", "curator@example.com", "1234", 22);
     Museum otherMuseum("","","","", curator, stoi(museumID));
     {
         InSequence s;
-        /**< Case 5 */
+        /** Case 5 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -2441,7 +2488,7 @@ TEST_F(HandlerTest, deleteMuseum) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 6 */
+        /** Case 6 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -2458,7 +2505,7 @@ TEST_F(HandlerTest, deleteMuseum) {
         ASSERT_EQ(r.status, status_codes::Unauthorized);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 7 */
+        /** Case 7 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -2478,7 +2525,7 @@ TEST_F(HandlerTest, deleteMuseum) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 8 */
+        /** Case 8 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -2503,9 +2550,11 @@ TEST_F(HandlerTest, deleteMuseum) {
 
 
 /**
+ * @fn TEST_F(HandlerTest, deleteArtifact)
  * @brief TEST_F Tests HTTP POST /request/delete-artifact
  * @see HandlerTest::loginTest()
  * Needs login.
+ *
  * 8 Test Cases:
  * 1. Invalid POST data (no data).
  * 2. Invalid POST data (no username/password).
@@ -2524,9 +2573,9 @@ TEST_F(HandlerTest, deleteArtifact) {
         {"username", "abc"},
         {"password", "realpassword"}
     };
-    /**< Cases 1-4*/
+    /** Cases 1-4*/
     this->loginTest(url);
-    /**< Cases 4-*/
+    /** Cases 4-*/
     User user(data["username"], "email@example.com", data["password"], 21);
     Museum museum("","","","", user, 1213);
     Artifact artifact("", "", "", "",  museum, stoi(artifactID));
@@ -2538,10 +2587,10 @@ TEST_F(HandlerTest, deleteArtifact) {
         Collection("2","","","",otherMuseum, 1653),
         Collection("3","","","",otherMuseum, 1652),
     };
-    Edit<Artifact> edit(otherArtifact, Edit<Artifact>::del, user, {});
+    Edit<Artifact> edit(otherArtifact, Edit<Artifact>::del, user, collectionList);
     {
         InSequence s;
-        /**< Case 5 */
+        /** Case 5 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -2555,7 +2604,7 @@ TEST_F(HandlerTest, deleteArtifact) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 6 */
+        /** Case 6 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -2572,7 +2621,7 @@ TEST_F(HandlerTest, deleteArtifact) {
         ASSERT_EQ(r.status, status_codes::OK);
         ASSERT_TRUE(json::parse(r.content)["success"]);
 
-        /**< Case 7 */
+        /** Case 7 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
@@ -2595,7 +2644,9 @@ TEST_F(HandlerTest, deleteArtifact) {
 }
 
 /**
+ * @fn TEST_F(HandlerTest, resetPassword)
  * @brief TEST_F
+ *
  * 2 Test Cases:
  * 1. Invalid POST data (no username)
  * 2. User not in DB
@@ -2613,12 +2664,12 @@ TEST_F(HandlerTest, resetPassword) {
     ASSERT_FALSE(json::parse(r.content)["success"]);
 
     data["username"] = "testUser";
-    /**< Case 1*/
+    /** Case 1*/
     User user(data["username"], "email@example.com", "oldpassword~", 21);
 
     {
         InSequence s;
-        /**< Case 2 */
+        /** Case 2 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Throw(ModelException("User not in DB.")))
@@ -2630,7 +2681,7 @@ TEST_F(HandlerTest, resetPassword) {
         ASSERT_EQ(r.status, status_codes::Conflict);
         ASSERT_FALSE(json::parse(r.content)["success"]);
 
-        /**< Case 3 */
+        /** Case 3 */
         EXPECT_CALL(this->model, getUserObject((string) data["username"]))
                 .Times(testing::AtLeast(1))
                 .WillRepeatedly(Return(user))
