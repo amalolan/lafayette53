@@ -388,6 +388,7 @@ void Handler::validateLogin(http_request message){
 
 void Handler::addUser(http_request message){
     message.extract_string(false).then([=](utility::string_t s){
+        ucout<<"data "<<s<<std::endl;
         json userJSON = json::parse(s);
         // First validate the JSON.
         Util::validateJSON(userJSON, {"username", "email", "password"});
@@ -399,7 +400,7 @@ void Handler::addUser(http_request message){
         std::string welcomeMessage = (std::string)(userJSON["username"]) + " it is a pleasure having you on our platform!"
                                                             "\nFor further information please contact thead curator!";
         // Send the confirmation email.
-        Util::sendEmail(userJSON["email"], "Welcome to Museum Wikia!", welcomeMessage);
+//        Util::sendEmail(userJSON["email"], "Welcome to Museum Wikia!", welcomeMessage);
         ucout << "success add user\n";
         return message.reply(status_codes::OK, Util::getSuccessJsonStr("User registered."));
     }).then([=] (pplx::task<void> t) {
