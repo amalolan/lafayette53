@@ -218,7 +218,7 @@ private:
      * @arg The JSON object. Schema follows: <br>
      * <code>
      * A user input object which is <br>
-     * {
+     * { <br>
      *    username: string, <br>
      *    password: string <br>
      * } <br>
@@ -227,7 +227,7 @@ private:
      * <code>
      * { <br>
      *    user: {id: int, username:string, email: string}, <br>
-     *    actionsList: [array of unacted edit objects ], <br> @see Util::getArtifactEditJSON()  @see Util::getCollectionEditJSON()
+     *    actionsList: [array of unacted edit objects ], <br> @see Util::getArtifactEditJSON()  @see Util::getCollectionEditJSON() <br>
      *    editsList: [array of edit objects], <br>
      *    museumList: [array of museums of {id: int, name: string} ... ], <br>
      *    headCuratorList: (only present if user is head curator) [array of all museums {id: int, name: string}] <br>
@@ -251,7 +251,7 @@ private:
      * @arg The JSON object. Schema follows: <br>
      * <code>
      * A user input object which is <br>
-     * {
+     * {<br>
      *    username: string, <br>
      *    password: string, <br>
      *    email: string <br>
@@ -269,7 +269,7 @@ private:
      * @arg Schema follows <br>
      * <code>
      * { <br>
-     * username: string
+     * username: string <br>
      * } <br>
      * </code>
      * @result success or failure JSON is sent. @see handle_post()
@@ -285,8 +285,8 @@ private:
      * @arg Schema follows <br>
      * <code>
      * { <br>
-     * user: user object, <br> @see getUserProfile()
-     * museum: museum object with id = null, <br> @see returnMuseumList()
+     * user: user object, <br> @see getUserProfile() <br>
+     * museum: museum object with id = null, <br> @see returnMuseumList() <br>
      * } <br>
      * </code>
      * @result success or failure JSON is sent. @see handle_post()
@@ -303,7 +303,7 @@ private:
      * @arg Schema follows <br>
      * <code>
      * { <br>
-     * user: user object, <br> @see getUserProfile()
+     * user object, <br> @see getUserProfile() <br>
      * } <br>
      * </code>
      * @result success or failure JSON is sent. @see handle_post()
@@ -318,8 +318,8 @@ private:
      * @arg Schema follows <br>
      * <code>
      * { <br>
-     * user: user object, <br> @see getUserProfile()
-     * collection: collection object (ID present for edit, not for add), <br> @see returnMuseumByID()
+     * user: user object, <br> @see getUserProfile() <br>
+     * collection: collection object (ID present for edit, not for add), <br> @see returnMuseumByID() <br>
      * museum: {id: int} <br>
      * } <br>
      * </code>
@@ -336,7 +336,7 @@ private:
      * @arg Schema follows <br>
      * <code>
      * { <br>
-     * user: user object, <br> @see getUserProfile()
+     * user: user object, <br> @see getUserProfile() <br>
      * artifact: artifact object, <br> @see returnCollectionByID() <br>
      * museum: {id: int}, <br>
      * collection: [int array of collectionsIDs]  <br>
@@ -356,7 +356,7 @@ private:
      * @arg Schema follows <br>
      * <code>
      * { <br>
-     * user: user object, <br> @see getUserProfile()
+     * user: user object, <br> @see getUserProfile() <br>
      * } <br>
      * </code>
      * @result success or failure JSON is sent. @see handle_post()
@@ -377,18 +377,19 @@ private:
     std::string reviewEdit(Edit<T> editObject, bool action, User user);
 
     /**
-     * @brief addEditArtifact Helper for responding to POST /request/add-artifact and /request/edit-artifact which adds/edits an artifact in the database.
-     * Since each artifact can be associated with many collections, a list of collections selected by the user to be associated with the artifact is alos sent in the request.
+     * @brief actOnEdit Helper for responding to POST /request/review-edit which approves/denies an edit.
+     *
+     * A curator goes to his user profile, looks at pending edits that he has to approve/deny and performs the operation. This function is resposible for processing that action.
      *
      * Requires log in authorization. If not logged in, an Backend Exception is raised and an Unauthorized status message is sent with a failure JSON.
      * @param message the POST request with an accompanying JSON object containing data.
      * @arg Schema follows <br>
      * <code>
      * { <br>
-     * user: user object, <br> @see getUserProfile()
-     * artifact: artifact object, <br> @see returnCollectionByID() <br>
-     * museum: {id: int}, <br>
-     * collection: [int array of collectionsIDs]  <br>
+     * user: user object, <br> @see getUserProfile() <br>
+     * editId: int, <br>
+     * action: bool, <br>
+     * category: string (either "collection" or "artifact" <br>
      * } <br>
      * </code>
      * @result success or failure JSON is sent. @see handle_post()
