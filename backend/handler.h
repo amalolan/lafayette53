@@ -363,6 +363,7 @@ private:
      */
     void deleteArtifact(http_request message, int artifactID);
 
+
     template <typename T>
     /**
      * @brief reviewEdit Helper function for actOnEdit(). Since Edits can be of different types, this templated function was necessary to avoid code repetition.

@@ -623,7 +623,9 @@ void Handler::getUserProfile(http_request message) {
 template <typename T>
 std::string Handler::reviewEdit(Edit<T> edit, bool approved, User user) {
     T object = edit.getObject();
+
     // If the edit has already been acted upon, raise an error.
+
     if (edit.getStatus() != Edit<T>::pending) {
         throw ModelException("Edit already acted on.");
     }
