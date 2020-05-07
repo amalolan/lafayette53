@@ -1,7 +1,6 @@
 TEMPLATE = app
 CONFIG += console c++11
 CONFIG -= app_bundle
-#CONFIG -= qt
 QT += sql
 QMAKE_CXXFLAGS += -std=gnu++11
 QMAKE_CXXFLAGS_WARN_ON = -w
@@ -55,11 +54,6 @@ INCLUDEPATH +=  ../../gtest                                   \
                 ../../gtest/googlemock                        \
                 ../../gtest/googlemock/include                \
                 ../../gtest/googlemock/include/gmock
-
-#LIBS += -lgtest -L$$PWD/../../
-#LIBS += -lgtest -L$$PWD/../../
-#LIBS += -lgcov
-QMAKE_LFLAGS += -g -fprofile-arcs -ftest-coverage  -O0
 
 LIBS += -lcpprest -lssl -lcrypto -lboost_system -pthread
 
