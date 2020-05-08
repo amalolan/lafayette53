@@ -3,6 +3,9 @@
 #include <iostream>
 #include <exception>
 
+/**
+ * @brief The ModelException class is a custom Exception object for the ModelClass class
+ */
 class ModelException : public std::exception
 {
     std::string _msg;
