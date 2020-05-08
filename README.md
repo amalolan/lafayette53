@@ -4,10 +4,10 @@ Museum Wiki is Wikipedia-like site that hosts museums and artifacts. Anyone can 
 Project Website: https://github.com/iamyevesky/lafayette53 
 
 To Set up the project :
-- [MacOS](https://github.com/iamyevesky/lafayette53/wiki/Run-on-MacOS)
-- [Linux](https://github.com/iamyevesky/lafayette53/wiki/Run-on-Linux)
+- [MacOS](wiki/Run-on-MacOS)
+- [Linux](wiki/Run-on-Linux)
 
-For the tests view [Code Coverage](https://github.com/iamyevesky/lafayette53/wiki/Code-Coverage)
+For the tests view [Code Coverage](wiki/Code-Coverage)
 
 ## User Manual
-For additional information view [User Manual](https://github.com/iamyevesky/lafayette53/wiki/Code-Coverage)
+For additional information view [User Manual](wiki/Code-Coverage)
