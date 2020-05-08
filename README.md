@@ -10,7 +10,7 @@ To Set up the project :
 For the tests view [Code Coverage](https://github.com/iamyevesky/lafayette53/wiki/Code-Coverage)
 
 ## User Manual
-For additional information view [User Manual](https://github.com/iamyevesky/lafayette53/wiki/Code-Coverage)
+For additional information view [User Manual](https://github.com/iamyevesky/lafayette53/wiki#user-manual-for-the-website)
 
 ## License 
 Copyright 2020 Lekso Borashvilli, Peter (Haohong) Li, Malolan Vasu, and Sena Yevenyo.
