@@ -8,10 +8,11 @@
 #include <QJsonDocument>
 #include <iostream>
 
+using json = nlohmann::json;
+
 /**
  * @brief Represents a Museum object
  */
-using json = nlohmann::json;
 class Museum
 {
 public:

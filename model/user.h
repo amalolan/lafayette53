@@ -6,10 +6,11 @@
 #include <QByteArray>
 #include <iostream>
 #include <../nlohmann/json.hpp>
+
+using json = nlohmann::json;
 /**
  * @brief Represents a User object
  */
-using json = nlohmann::json;
 class User
 {
 public:
